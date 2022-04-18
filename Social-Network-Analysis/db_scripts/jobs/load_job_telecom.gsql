@@ -1,0 +1,7 @@
+CREATE LOADING JOB telecomJob FOR GRAPH connectivity {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE hasPhoneCall VALUES($0, gsql_concat($0,$1,$2)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasPhoneCall VALUES($1, gsql_concat($0,$1,$2)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

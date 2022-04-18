@@ -1,0 +1,6 @@
+CREATE LOADING JOB routesJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE flight_to VALUES(gsql_concat($2,"-",$3), gsql_concat($4,"-",$5), _, _) USING SEPARATOR=",", HEADER="true", EOL="\n", QUOTE="double";
+    }
+
+

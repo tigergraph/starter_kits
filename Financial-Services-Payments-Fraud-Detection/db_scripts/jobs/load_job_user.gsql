@@ -1,0 +1,8 @@
+CREATE LOADING JOB userJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX user_account VALUES($0, $2, $4, $7) USING SEPARATOR=",", HEADER="false", EOL="\n";
+      LOAD MyDataSource TO EDGE sets_up VALUES($1, $0) USING SEPARATOR=",", HEADER="false", EOL="\n";
+      LOAD MyDataSource TO EDGE user_account_bank VALUES($0, $6) USING SEPARATOR=",", HEADER="false", EOL="\n";
+    }
+
+

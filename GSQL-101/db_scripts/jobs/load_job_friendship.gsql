@@ -1,0 +1,5 @@
+CREATE LOADING JOB friendshipJob FOR GRAPH social {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE friendship VALUES($0, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+

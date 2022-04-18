@@ -1,0 +1,5 @@
+CREATE LOADING JOB cbJob FOR GRAPH CrunchBasePre_2013 {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX person VALUES($0, $4, $5, _, _, _, _, $6, $8, $11, $12, $13, $14, $19, $20, $33, $34, $37, $38, $39) USING SEPARATOR="\1", HEADER="false", EOL="\n";
+    }
+

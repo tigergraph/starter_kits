@@ -1,0 +1,7 @@
+CREATE LOADING JOB SWITCHJob FOR GRAPH Storage {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE Array_Switch VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Switch_Host VALUES($2, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

@@ -1,0 +1,6 @@
+CREATE LOADING JOB airportsJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Airport VALUES($4, $1, $2, $3, $4, $6, $7) USING SEPARATOR=",", HEADER="true", EOL="\n", QUOTE="double";
+    }
+
+

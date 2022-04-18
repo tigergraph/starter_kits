@@ -1,0 +1,6 @@
+CREATE LOADING JOB personJob FOR GRAPH social {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX person VALUES($0, $0, $2, $1, $3) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

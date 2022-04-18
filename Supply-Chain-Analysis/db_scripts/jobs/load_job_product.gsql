@@ -1,0 +1,6 @@
+CREATE LOADING JOB productJob FOR GRAPH demo_graph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX product VALUES($0, $0, $1, $2) USING SEPARATOR=",", HEADER="false", EOL="\n";
+    }
+
+

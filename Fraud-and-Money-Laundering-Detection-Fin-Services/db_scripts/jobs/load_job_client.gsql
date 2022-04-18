@@ -1,0 +1,6 @@
+CREATE LOADING JOB clientJob FOR GRAPH AntiFraud {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE User_Refer_User VALUES($1, $0) USING SEPARATOR="\t", HEADER="true", EOL="\n";
+    }
+
+

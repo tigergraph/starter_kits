@@ -1,0 +1,7 @@
+CREATE LOADING JOB vehicleJob FOR GRAPH connectivity {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX BusRide VALUES(gsql_concat($1,$2,$3), _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasBusRide VALUES($0, gsql_concat($1,$2,$3)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

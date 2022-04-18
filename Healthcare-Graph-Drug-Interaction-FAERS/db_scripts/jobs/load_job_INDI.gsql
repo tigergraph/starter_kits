@@ -1,0 +1,7 @@
+CREATE LOADING JOB INDIJob FOR GRAPH faers {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Indication VALUES(gsql_concat($0,$2), $2, $3) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasIndications VALUES(gsql_concat($0,$2), gsql_concat($0,$2)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

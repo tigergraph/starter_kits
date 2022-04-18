@@ -1,0 +1,6 @@
+CREATE LOADING JOB videoJob FOR GRAPH Entity_Resolution {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE Has_Keyword VALUES($1, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

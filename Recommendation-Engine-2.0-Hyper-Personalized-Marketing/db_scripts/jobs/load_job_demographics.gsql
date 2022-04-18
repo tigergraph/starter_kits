@@ -1,0 +1,6 @@
+CREATE LOADING JOB demographicsJob FOR GRAPH recommendation {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX demographic VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

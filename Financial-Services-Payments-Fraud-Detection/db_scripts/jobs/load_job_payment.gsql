@@ -1,0 +1,9 @@
+CREATE LOADING JOB paymentJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX payment VALUES($0, $7, $3, $5, $6) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE sends VALUES($1, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE receives VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE used_for VALUES($4, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

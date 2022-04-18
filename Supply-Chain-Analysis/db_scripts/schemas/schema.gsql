@@ -1,0 +1,14 @@
+CREATE GRAPH demo_graph ()
+CREATE SCHEMA_CHANGE JOB change_schema_of_demo_graph FOR GRAPH demo_graph {
+	ADD VERTEX product(PRIMARY_ID pid STRING, name STRING, price FLOAT, formula STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="false";
+	ADD VERTEX site(PRIMARY_ID sid STRING, name STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="false";
+	ADD VERTEX p_order(PRIMARY_ID orderId STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="false";
+	ADD VERTEX stocking(PRIMARY_ID stockingId STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="false";
+	ADD DIRECTED EDGE usedBy(FROM product, TO product, formula_order STRING, useAmount FLOAT) WITH REVERSE_EDGE="reverseUsedBy";
+	ADD DIRECTED EDGE deliver(FROM site, TO site, itemId STRING) WITH REVERSE_EDGE="reverseDeliver";
+	ADD DIRECTED EDGE produce(FROM site, TO product) WITH REVERSE_EDGE="reverseProduce";
+	ADD UNDIRECTED EDGE prodOrder(FROM p_order, TO product, amount INT);
+	ADD UNDIRECTED EDGE prodStocking(FROM stocking, TO product, amount INT);
+}
+RUN SCHEMA_CHANGE JOB change_schema_of_demo_graph
+DROP JOB change_schema_of_demo_graph

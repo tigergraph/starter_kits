@@ -1,0 +1,5 @@
+CREATE LOADING JOB flickrEdgesJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE flickr_link VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+

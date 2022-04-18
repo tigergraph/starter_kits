@@ -1,0 +1,6 @@
+CREATE LOADING JOB flightJob FOR GRAPH connectivity {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Flight VALUES(gsql_concat($2,$3), _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasFlight VALUES($0, gsql_concat($2,$3)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+

@@ -1,0 +1,6 @@
+CREATE LOADING JOB demographicJob FOR GRAPH recommendation {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE demo_feature VALUES($0, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

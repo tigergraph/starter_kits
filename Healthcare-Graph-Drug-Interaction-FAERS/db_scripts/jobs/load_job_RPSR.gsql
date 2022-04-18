@@ -1,0 +1,7 @@
+CREATE LOADING JOB RPSRJob FOR GRAPH faers {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX ReportSource VALUES($2, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasReportSources VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

@@ -1,0 +1,5 @@
+CREATE LOADING JOB claimJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE submitted_by VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+

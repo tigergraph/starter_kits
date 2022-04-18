@@ -1,0 +1,6 @@
+CREATE LOADING JOB bannedJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX IP VALUES($0, "true") USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

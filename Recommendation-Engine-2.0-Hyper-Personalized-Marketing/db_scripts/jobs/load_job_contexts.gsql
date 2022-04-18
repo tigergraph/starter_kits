@@ -1,0 +1,6 @@
+CREATE LOADING JOB contextsJob FOR GRAPH recommendation {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX context VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

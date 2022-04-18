@@ -1,0 +1,14 @@
+CREATE LOADING JOB syslogJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Event VALUES($0, $10, $12, $11, $13, $14) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE From_Device VALUES($0, $6) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Output_To_Resource VALUES($7, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Read_From_Resource VALUES($0, $8) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE User_Event VALUES($9, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Has_IP VALUES($5, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE From_Server VALUES($3, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE To_Server VALUES($0, $4) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE To_Service VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE From_Service VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+

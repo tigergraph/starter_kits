@@ -1,0 +1,7 @@
+CREATE GRAPH sdmGraph ()
+CREATE SCHEMA_CHANGE JOB change_schema_of_sdmGraph FOR GRAPH sdmGraph {
+	ADD VERTEX phone(PRIMARY_ID phone_id STRING, flag UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="false";
+	ADD DIRECTED EDGE phone_phone(FROM phone, TO phone, num_of_call UINT, total_duration UINT, num_of_rejection UINT, start_time UINT, max_duration UINT) WITH REVERSE_EDGE="phone_phone_reversed";
+}
+RUN SCHEMA_CHANGE JOB change_schema_of_sdmGraph
+DROP JOB change_schema_of_sdmGraph

@@ -1,0 +1,6 @@
+CREATE LOADING JOB routesJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE flight_route VALUES($2, $4, $13) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

@@ -1,0 +1,7 @@
+CREATE LOADING JOB REACJob FOR GRAPH faers {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Reaction VALUES($2, $2, $3) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasReactions VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

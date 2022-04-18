@@ -1,0 +1,9 @@
+CREATE LOADING JOB DRUGJob FOR GRAPH faers {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Drug VALUES($4, $4, $5) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX DrugSequence VALUES(gsql_concat($0,$2), $2, $3, $4) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasDrugs VALUES(gsql_concat($0,$2), $4) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasSequences VALUES($0, gsql_concat($0,$2)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

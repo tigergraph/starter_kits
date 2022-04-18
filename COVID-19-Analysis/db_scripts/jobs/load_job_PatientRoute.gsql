@@ -1,0 +1,8 @@
+CREATE LOADING JOB PatientRouteJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX TravelEvent VALUES(gsql_concat($2,$6,$7), $6, $7, $2, $5) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE PATIENT_TRAVELED VALUES($0, gsql_concat($2,$6,$7)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE TRAVEL_EVENT_IN VALUES(gsql_concat($2,$6,$7), $4) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

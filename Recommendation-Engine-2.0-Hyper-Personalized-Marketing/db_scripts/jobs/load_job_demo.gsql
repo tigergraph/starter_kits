@@ -1,0 +1,6 @@
+CREATE LOADING JOB demoJob FOR GRAPH recommendation {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE demo_customer VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

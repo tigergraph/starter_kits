@@ -1,0 +1,8 @@
+CREATE LOADING JOB transactionJob FOR GRAPH AntiFraud {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Transaction VALUES($0, $4, $3) USING SEPARATOR="\t", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE User_Recieve_Transaction VALUES($1, $0) USING SEPARATOR="\t", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE User_Transfer_Transaction VALUES($2, $0) USING SEPARATOR="\t", HEADER="true", EOL="\n";
+    }
+
+

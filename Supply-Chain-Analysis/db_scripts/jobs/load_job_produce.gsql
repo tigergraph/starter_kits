@@ -1,0 +1,7 @@
+CREATE LOADING JOB produceJob FOR GRAPH demo_graph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX site VALUES($0, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE produce VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

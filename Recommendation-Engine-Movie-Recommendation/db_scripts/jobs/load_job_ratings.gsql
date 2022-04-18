@@ -1,0 +1,6 @@
+CREATE LOADING JOB ratingsJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE rate VALUES($0, $1, $2, $3) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

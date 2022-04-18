@@ -1,0 +1,6 @@
+CREATE LOADING JOB productsJob FOR GRAPH recommendation {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX product VALUES($0, $1, _, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

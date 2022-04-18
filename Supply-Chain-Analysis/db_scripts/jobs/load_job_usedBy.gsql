@@ -1,0 +1,6 @@
+CREATE LOADING JOB usedByJob FOR GRAPH demo_graph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE usedBy VALUES($1, $0, $2, $3) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

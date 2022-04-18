@@ -1,0 +1,6 @@
+CREATE LOADING JOB workingJob FOR GRAPH EnterpriseGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE WorkFor VALUES($0, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

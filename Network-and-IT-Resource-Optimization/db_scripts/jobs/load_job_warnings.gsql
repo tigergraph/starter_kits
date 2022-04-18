@@ -1,0 +1,7 @@
+CREATE LOADING JOB warningsJob FOR GRAPH Storage {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE Alert_App VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE AHA_Alert VALUES($1, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

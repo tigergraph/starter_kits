@@ -1,0 +1,6 @@
+CREATE LOADING JOB deliverJob FOR GRAPH demo_graph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE deliver VALUES($0, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

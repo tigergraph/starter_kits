@@ -1,0 +1,7 @@
+CREATE LOADING JOB contactUpdatesJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX ContactOnDate VALUES(gsql_concat($0,$2), $1, $2, $3, $4, $5) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE wasUpdated VALUES(gsql_concat($0,$2), $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

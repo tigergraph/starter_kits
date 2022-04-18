@@ -1,0 +1,7 @@
+CREATE LOADING JOB hotelJob FOR GRAPH connectivity {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX HotelStay VALUES(gsql_concat($1,$3,$2), _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasHotelStay VALUES($0, gsql_concat($1,$3,$2)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

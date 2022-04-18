@@ -1,0 +1,6 @@
+CREATE LOADING JOB dataJob FOR GRAPH sdmGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE phone_phone VALUES($0, $1, $2, $3, $4, $5, $6) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

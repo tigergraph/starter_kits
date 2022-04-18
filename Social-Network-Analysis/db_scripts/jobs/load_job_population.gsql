@@ -1,0 +1,8 @@
+CREATE LOADING JOB populationJob FOR GRAPH connectivity {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Person VALUES($3, $0, $4, $6, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasPhone VALUES($3, $5) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasHomeAddress VALUES($3, $7) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

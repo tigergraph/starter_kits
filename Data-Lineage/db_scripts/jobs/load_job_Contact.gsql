@@ -1,0 +1,11 @@
+CREATE LOADING JOB ContactJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Contact VALUES($0, _, $5, $6, $25, $32, $33, $34, $36, $38, $39, $40, $42, $43, $44, $45, $46, $67, $68, $69, $70, $71, $72, $73, $74, $75, $76, $86, $87, $89, $90, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX LeadSource VALUES($36) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX ContactOnDate VALUES(gsql_concat($0,$43), $36, $43, $32, $25, $33) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE belongs_to VALUES($0, $3) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE is_from VALUES($0, $36) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE wasUpdated VALUES(gsql_concat($0,$43), $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

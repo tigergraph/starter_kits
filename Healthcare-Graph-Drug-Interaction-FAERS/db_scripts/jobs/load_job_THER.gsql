@@ -1,0 +1,7 @@
+CREATE LOADING JOB THERJob FOR GRAPH faers {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Therapy VALUES(gsql_concat($0,$2), $2, $3, $4) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE isUsedInTherapy VALUES(gsql_concat($0,$2), gsql_concat($0,$2)) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

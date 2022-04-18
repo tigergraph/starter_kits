@@ -1,0 +1,9 @@
+CREATE LOADING JOB DEMOJob FOR GRAPH faers {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Patient VALUES($0, $13, $14, $15, $16, $18, $19, $22) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX PharmaCompany VALUES($11, $11) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX ReportedCase VALUES($0, $1, $2, $7, $11, $23, $24) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE hasPatient VALUES($0, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE relatedTo VALUES($0, $11) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+

@@ -1,0 +1,6 @@
+CREATE LOADING JOB resourceJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Resource VALUES($0, $3, $2, $4, $5) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

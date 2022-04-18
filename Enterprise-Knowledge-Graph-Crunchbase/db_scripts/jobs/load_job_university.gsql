@@ -1,0 +1,6 @@
+CREATE LOADING JOB universityJob FOR GRAPH CrunchBasePre_2013 {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX university VALUES($0, $1) USING SEPARATOR="\1", HEADER="false", EOL="\n";
+    }
+
+

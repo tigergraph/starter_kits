@@ -1,0 +1,6 @@
+CREATE LOADING JOB bankJob FOR GRAPH connectivity {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE hasBankAccount VALUES($1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

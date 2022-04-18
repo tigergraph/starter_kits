@@ -1,0 +1,9 @@
+CREATE LOADING JOB CampaignMemberJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX CampaignMember VALUES($0, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE is_part_of VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE is_connected_to VALUES($4, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE is_active_as VALUES($3, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

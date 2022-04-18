@@ -1,0 +1,6 @@
+CREATE LOADING JOB criminalJob FOR GRAPH connectivity {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE hasCaseReport VALUES($0, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

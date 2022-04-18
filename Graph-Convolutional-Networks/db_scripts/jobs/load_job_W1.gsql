@@ -1,0 +1,7 @@
+CREATE LOADING JOB W1Job FOR GRAPH CitationGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX LAYER_1 VALUES($1, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE LAYER_0_LAYER_1 VALUES($0, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

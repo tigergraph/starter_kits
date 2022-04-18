@@ -1,0 +1,7 @@
+CREATE LOADING JOB matrixJob FOR GRAPH LowRankApproximation {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX MATRIX_ROW VALUES($0, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX MATRIX_COLUMN VALUES($1, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE MATRIX_ELEMENT VALUES($0, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+

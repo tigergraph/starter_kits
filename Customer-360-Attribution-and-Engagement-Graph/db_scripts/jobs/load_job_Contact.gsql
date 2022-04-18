@@ -1,0 +1,8 @@
+CREATE LOADING JOB ContactJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Contact VALUES($0, $4, $5, $13, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $30, $31, $32, $33, $35, $36) USING SEPARATOR=",", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD MyDataSource TO VERTEX LeadSource VALUES($19) USING SEPARATOR=",", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD MyDataSource TO EDGE belongs_to VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD MyDataSource TO EDGE is_from VALUES($0, $19) USING SEPARATOR=",", HEADER="true", EOL="\n", QUOTE="double";
+    }
+

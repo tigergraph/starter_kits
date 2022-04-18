@@ -1,0 +1,6 @@
+CREATE LOADING JOB userDeviceJob FOR GRAPH AntiFraud {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE User_to_Device VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n";
+    }
+
+

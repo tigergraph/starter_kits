@@ -1,0 +1,97 @@
+CREATE QUERY multi_transaction (VERTEX<Transaction> transaction) FOR GRAPH AntiFraud SYNTAX v2 {
+ /*
+   This query is motivated by detecting money laundering activities between two groups. Given 
+   a transaction, it finds the network of users related to the sender, and finds the network 
+   of users related to the receiver. Then, it finds all transactions among the two networks.
+
+   Intuitively, this query can help data analysts to visualize the money laundering activities, 
+   since it can visualize the transactions between the sender and receiver groups, and the 
+   transaction patterns within each network.
+
+    1) Start from an input transaction, find its sender and receiver
+    2) Start from the sender, via Device_Token and Payment_Instrument edges find users within 4 steps. 
+    3) Start from the receiver, via Device_Token and Payment_Instrument edges find users within 4 steps.
+    4) Record transactions cross the sender and receiver groups.
+
+    Sample input:
+    transaction: any integer between 1 and 500.
+  */  
+
+  // Declare flags to indicate a user is a sender or a receiver
+  OrAccum<BOOL> @from_receiver, @from_sender;
+
+  // Declare set to store sender/receiver in sender/receiver group.
+  SetAccum<VERTEX> @@receiver_set, @@sender_set;
+  SetAccum<EDGE> @@edge_set;
+
+  // Assign the input transaction to the "Start" variable, which is a SET.
+  Start (ANY) = {transaction};
+
+  /* 1. Find the sender and receiver of the input transaction, mark them. And
+   now start becomes {sender, receiver} set. */
+  Start = SELECT t 
+      FROM Start:s-((<User_Receive_Transaction_Rev|<User_Transfer_Transaction_Rev):e)-:t
+      ACCUM
+          // mark different groups according to edge type
+          CASE WHEN 
+            e.type == "User_Receive_Transaction_Rev" 
+          THEN
+            t.@from_receiver += TRUE,
+            @@receiver_set += t
+          ELSE
+            t.@from_sender += TRUE,
+            @@sender_set += t
+          END,
+          @@edge_set += e;
+
+  /* 2. Via the User_to_Device, User_to_Payment edge types, traverse 4 steps and 
+  put sender reachable users to the sender set, and receiver reachable 
+  users to the receiver set */
+  WHILE Start.size() > 0 LIMIT 4 DO
+      Start = SELECT t 
+          FROM Start:s-((User_to_Device|User_to_Payment):e)-:t
+          WHERE t.@from_receiver == FALSE 
+              AND t.@from_sender == FALSE
+          ACCUM 
+              t.@from_receiver += s.@from_receiver,
+              t.@from_sender += s.@from_sender,
+              @@edge_set += e
+          POST-ACCUM
+              CASE WHEN 
+                t.type == "User" AND t.@from_sender == TRUE 
+              THEN
+                @@sender_set += t
+              WHEN 
+                t.@from_receiver == TRUE 
+              THEN
+                @@receiver_set += t
+              END
+          HAVING t.@from_receiver OR t.@from_sender;
+  END;
+
+  // 3. From the receiver set, mark the transactions 1-step related to its group member
+  Start = {@@receiver_set};
+  Start = SELECT t 
+      FROM Start:s-((User_Receive_Transaction>|User_Transfer_Transaction>):e)-:t
+      WHERE t != transaction
+      ACCUM 
+          t.@from_receiver += s.@from_receiver,
+          @@edge_set += e;
+
+  /* 4. From the sender set, find transactions 1-step related to its group member,
+  then ecord those transactions 1-step related to both a sender member and a receiver member */
+  Start = {@@sender_set};
+  Start = SELECT t 
+      FROM Start:s-((User_Receive_Transaction>|User_Transfer_Transaction>):e)-:t
+      WHERE t != transaction
+      ACCUM
+          t.@from_sender += s.@from_sender,
+          @@edge_set += e
+      HAVING t.@from_receiver AND t.@from_sender;
+ 
+  // Print cross sender and receiver group transactions.
+  PRINT Start;
+  
+  // Print within sender and receiver subgraph
+  PRINT @@edge_set;
+}

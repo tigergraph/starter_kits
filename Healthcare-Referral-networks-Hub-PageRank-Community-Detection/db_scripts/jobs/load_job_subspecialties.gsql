@@ -1,0 +1,6 @@
+CREATE LOADING JOB subspecialtiesJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE subspecialty_prescriber VALUES($1, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

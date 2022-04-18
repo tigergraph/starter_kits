@@ -1,0 +1,10 @@
+CREATE LOADING JOB videoJob FOR GRAPH Entity_Resolution {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Video_Play_Event VALUES($0, $3, $4) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX Account VALUES($1, _, _, _, _, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX Video VALUES($2, _, _, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Has_Play_Event VALUES($1, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Play_Video VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

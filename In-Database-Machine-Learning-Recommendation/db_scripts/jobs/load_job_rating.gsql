@@ -1,0 +1,8 @@
+CREATE LOADING JOB ratingJob FOR GRAPH Recommender {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX USER VALUES($0, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO VERTEX MOVIE VALUES($1, _, _, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE rate VALUES($0, $1, $2, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

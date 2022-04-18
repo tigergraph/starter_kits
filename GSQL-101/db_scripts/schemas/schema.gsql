@@ -1,0 +1,7 @@
+CREATE GRAPH social ()
+CREATE SCHEMA_CHANGE JOB change_schema_of_social FOR GRAPH social {
+	ADD VERTEX person(PRIMARY_ID name STRING, name STRING, age INT, gender STRING, state STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="false";
+	ADD UNDIRECTED EDGE friendship(FROM person, TO person, connect_day DATETIME);
+}
+RUN SCHEMA_CHANGE JOB change_schema_of_social
+DROP JOB change_schema_of_social

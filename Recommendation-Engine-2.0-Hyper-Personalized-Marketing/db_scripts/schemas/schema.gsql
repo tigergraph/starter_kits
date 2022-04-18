@@ -1,0 +1,18 @@
+CREATE GRAPH recommendation ()
+CREATE SCHEMA_CHANGE JOB change_schema_of_recommendation FOR GRAPH recommendation {
+	ADD VERTEX product(PRIMARY_ID id STRING, name STRING, latitude FLOAT, longitude FLOAT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+	ADD VERTEX feature(PRIMARY_ID id STRING, name STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+	ADD VERTEX customer(PRIMARY_ID id STRING, name STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+	ADD VERTEX history(PRIMARY_ID id STRING, name STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+	ADD VERTEX demographic(PRIMARY_ID id STRING, name STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+	ADD VERTEX context(PRIMARY_ID id STRING, ctxValue STRING) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+	ADD UNDIRECTED EDGE demo_customer(FROM demographic, TO customer);
+	ADD UNDIRECTED EDGE customer_history(FROM customer, TO history);
+	ADD UNDIRECTED EDGE history_product(FROM history, TO product);
+	ADD UNDIRECTED EDGE demo_feature(FROM demographic, TO feature, affinity DOUBLE);
+	ADD UNDIRECTED EDGE customer_feature(FROM customer, TO feature, affinity DOUBLE);
+	ADD UNDIRECTED EDGE product_feature(FROM product, TO feature, weight DOUBLE);
+	ADD UNDIRECTED EDGE product_context(FROM product, TO context);
+}
+RUN SCHEMA_CHANGE JOB change_schema_of_recommendation
+DROP JOB change_schema_of_recommendation

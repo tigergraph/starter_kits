@@ -1,0 +1,6 @@
+CREATE LOADING JOB citeJob FOR GRAPH CitationGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE CITE VALUES($0, $1, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

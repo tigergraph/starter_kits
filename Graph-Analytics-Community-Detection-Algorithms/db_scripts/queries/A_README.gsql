@@ -1,0 +1,9 @@
+CREATE QUERY A_README() FOR GRAPH MyGraph {
+/*
+  IMPORANT : PLEASE INSTALL AND RUN the insert_all_referrals QUERY FIRST.
+	
+	THE REFERRAL EDGE IS USED IN OTHER QUERIES.
+*/
+	
+	print "I read this!";
+}

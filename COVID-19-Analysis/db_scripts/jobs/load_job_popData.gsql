@@ -1,0 +1,6 @@
+CREATE LOADING JOB popDataJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Province VALUES($0, _, $1, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

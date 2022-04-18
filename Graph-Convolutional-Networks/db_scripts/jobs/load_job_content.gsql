@@ -1,0 +1,7 @@
+CREATE LOADING JOB contentJob FOR GRAPH CitationGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX WORD VALUES($1, $1) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE HAS VALUES($0, $1, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

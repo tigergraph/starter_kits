@@ -1,0 +1,11 @@
+CREATE LOADING JOB LUNJob FOR GRAPH Storage {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE Server_LUN VALUES($10, $0, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE LUN_Server VALUES($0, $10, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE LUN_Pool VALUES($0, $4, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Pool_Lun VALUES($4, $0, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Array_Pool VALUES($12, $4, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Pool_Array VALUES($4, $12, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

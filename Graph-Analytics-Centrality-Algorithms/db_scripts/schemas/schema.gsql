@@ -1,0 +1,8 @@
+CREATE GRAPH MyGraph ()
+CREATE SCHEMA_CHANGE JOB change_schema_of_MyGraph FOR GRAPH MyGraph {
+	ADD VERTEX Airport(PRIMARY_ID id STRING, name STRING, city STRING, country STRING, IATA STRING, latitude DOUBLE, longitude DOUBLE, score DOUBLE) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true";
+	ADD DIRECTED EDGE flight_to(FROM Airport, TO Airport, miles INT, num_flights INT) WITH REVERSE_EDGE="reverse_flight_to";
+	ADD UNDIRECTED EDGE flight_route(FROM Airport, TO Airport, miles INT);
+}
+RUN SCHEMA_CHANGE JOB change_schema_of_MyGraph
+DROP JOB change_schema_of_MyGraph

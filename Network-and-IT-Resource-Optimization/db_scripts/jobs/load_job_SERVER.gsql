@@ -1,0 +1,7 @@
+CREATE LOADING JOB SERVERJob FOR GRAPH Storage {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE App_Server VALUES($2, $0, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Server_App VALUES($0, $2, _) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

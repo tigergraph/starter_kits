@@ -1,0 +1,6 @@
+CREATE LOADING JOB personJob FOR GRAPH EnterpriseGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO EDGE PersonInvestCompany VALUES($0, $1, $2, $3, $4) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

@@ -1,0 +1,8 @@
+CREATE LOADING JOB serverJob FOR GRAPH MyGraph {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX Alert VALUES($0, $2) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Server_Alert VALUES($1, $0) USING SEPARATOR=",", HEADER="true", EOL="\n";
+      LOAD MyDataSource TO EDGE Alert_Has_Type VALUES($0, $3) USING SEPARATOR=",", HEADER="true", EOL="\n";
+    }
+
+

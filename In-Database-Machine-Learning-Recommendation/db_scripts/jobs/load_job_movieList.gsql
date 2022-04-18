@@ -1,0 +1,5 @@
+CREATE LOADING JOB movieListJob FOR GRAPH Recommender {
+      DEFINE FILENAME MyDataSource;
+      LOAD MyDataSource TO VERTEX MOVIE VALUES($0, $1, _, _) USING SEPARATOR="#", HEADER="true", EOL="\n";
+    }
+
