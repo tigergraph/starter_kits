@@ -1,4 +1,4 @@
-CREATE QUERY infectionSubgraph(vertex<Patient> p) FOR GRAPH MyGraph { 
+CREATE QUERY infectionSubgraph(vertex<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
 	/**********************************************************
 	 * This query takes a single patient and finds all all infections and potential infections. 
 	 * Potential infections are determined by who came into contact with this person 
@@ -31,7 +31,7 @@ CREATE QUERY infectionSubgraph(vertex<Patient> p) FOR GRAPH MyGraph {
 	              accum t.@visited = true,
 	                    @@edgeSet += e; 
 	
-	  People = select t from Infected:s-(reverse_INFECTED_BY:e)-:t
+	  People = select t from Infected:s-(reverse_INFECTED_BY>:e)-:t
 	           where (STARTTIME <= t.symptom_onset_date and ENDTIME >= t.symptom_onset_date)
 	             and t.@visited == false
 	           accum t.@visited = true,

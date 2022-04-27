@@ -1,4 +1,4 @@
-CREATE QUERY ageDistribution() FOR GRAPH MyGraph { 
+CREATE QUERY ageDistribution() FOR GRAPH MyGraph SYNTAX V2 { 
 	/**********************************************************
 	 * This query returns the distribution of the number of 
 	 * recorded deceased patients per age year. 
