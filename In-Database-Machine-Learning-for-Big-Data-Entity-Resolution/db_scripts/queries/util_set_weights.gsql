@@ -1,0 +1,18 @@
+CREATE QUERY util_set_weights(
+  DOUBLE ip_wt=0.5, DOUBLE email_wt=0.5, DOUBLE phone_wt=0.5,
+  DOUBLE last_name_wt=0.75, DOUBLE address_wt=0.5, DOUBLE device_wt=0.5)
+  FOR GRAPH Entity_Resolution SYNTAX v2{
+  
+  MapAccum<STRING, FLOAT> @@wt_map;
+  @@wt_map += ("User_IP" -> ip_wt);
+  @@wt_map += ("User_Email" -> email_wt);
+  @@wt_map += ("User_Phone" -> phone_wt);
+  @@wt_map += ("User_Last_Name" -> last_name_wt);
+  @@wt_map += ("User_Address" -> address_wt);
+  @@wt_map += ("User_Device" -> device_wt);
+
+  Weight_vertex = SELECT w FROM Weights:w
+      POST-ACCUM w.wt_map = @@wt_map;
+
+  PRINT "init_weight_vertex: Done" AS endMsg;
+}

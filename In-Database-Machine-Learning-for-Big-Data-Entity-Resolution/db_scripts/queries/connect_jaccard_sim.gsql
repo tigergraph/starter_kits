@@ -1,0 +1,49 @@
+CREATE QUERY connect_jaccard_sim (FLOAT threshold=0.5, INT topK=100,
+  BOOL verbose=FALSE)
+  FOR GRAPH Entity_Resolution SYNTAX V2 {
+/* 
+Calculate Jaccard similarity between each vertex and every other vertex.
+  Jaccard(set A, set B) = overlap_size / (size_A + size_B - overlap_size)
+*/
+  TYPEDEF TUPLE <VERTEX A, VERTEX B, FLOAT sim> SimilarityTuple;
+  MapAccum<VERTEX, INT> @@deg;               // degree of each VERTEX
+  MapAccum<VERTEX<User>, INT> @intersection; // num neighbors in common
+  HeapAccum<SimilarityTuple>(topK, sim DESC) @@jaccard_heap;
+  SumAccum<INT> @@insert_count, @@path_count;
+  ListAccum<STRING> @@etype_list;  
+  @@etype_list += ["User_IP","User_Email","User_Phone"];
+  @@etype_list += ["User_Last_Name","User_Address","User_Device"];
+  IF verbose THEN PRINT @@etype_list; END;
+
+  // Calculate the number of eligible neighbors of each vertex
+	Start = SELECT s FROM User:s
+			ACCUM FOREACH e IN @@etype_list DO
+        @@deg += (s -> s.outdegree(e))
+      END;
+
+  // Find paths from UserA->neighbor->UserB: count A&B's common neighbors
+	Others = SELECT B
+      FROM User:A -()- (IP|Email|Phone|Last_Name|Address|Device):n
+           -()- User:B
+      WHERE B != A
+      ACCUM
+        A.@intersection += (B -> 1), // tally each path A->B
+        @@path_count += 1;
+  IF verbose THEN PRINT @@path_count; END;
+  
+  // Calculate Jaccard(A,B). Keep the scores > threshold
+  Result = SELECT A FROM User:A
+    ACCUM FOREACH (B, overlap) IN A.@intersection DO
+      FLOAT score = overlap*1.0/(@@deg.get(A) + @@deg.get(B) - overlap),
+      IF score > threshold THEN
+        INSERT INTO EDGE SameAs VALUES (A, B, score), // FOR Entity Res
+        @@insert_count += 1,
+        IF score != 1 THEN
+          @@jaccard_heap += SimilarityTuple(A,B,score)
+        END
+      END 
+    END;
+  
+	PRINT @@jaccard_heap;
+  PRINT to_string(@@insert_count) + " SameAs edges inserted" AS endMsg;
+}

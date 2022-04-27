@@ -1,4 +1,4 @@
-CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT split = 10, INT outputLevel = 0) FOR GRAPH MyGraph {
+CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT split = 10, INT outputLevel = 0) FOR GRAPH MyGraph {
 
 /*
  * Louvain Method with Parallelism and Refinement
@@ -85,12 +85,11 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
         
 
 # Initialize: count edges and set a unique cluster ID for each vertex
-
         Start (ANY) = {Prescriber.*};
 
         S (ANY) = SELECT s 
 
-            FROM Start:s -((referral|reverse_referral):e)-> :t
+            FROM Start:s -((referral>|<referral):e)- :t
 
             ACCUM @@totalWeight += e.num_patient,
 
@@ -110,7 +109,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
         S = SELECT s 
 
-            FROM Start:s -((referral|reverse_referral):e)-> :t
+            FROM Start:s -((referral>|<referral):e)- :t
 
             WHERE s.@cid > t.@cid
 
@@ -132,7 +131,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
         S = SELECT s
 
-            FROM Start:s-((referral|reverse_referral):e)-:t
+            FROM Start:s-((referral>|<referral):e)-:t
 
             WHERE s.@cid == t.@cid
 
@@ -180,7 +179,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
                         S = SELECT s 
 
-                            FROM Start:s -((referral|reverse_referral):e)-> :t
+                            FROM Start:s -((referral>|<referral):e)- :t
 
                             WHERE s.@uid % partitions == loop    # for different split
 
@@ -242,7 +241,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
                 T1 = SELECT s
 
-                     FROM Start:s-((referral|reverse_referral):e)-:t
+                     FROM Prescriber:s-((referral>|<referral):e)-:t
 
                      WHERE s.@cid == t.@cid
 
@@ -259,7 +258,6 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
 
 # Phase 2 --  Merge     
-
         iteration2 = 0;
 
         WHILE (iteration2 < 2 OR @@modularity2 - last_modularity2 > epsilon) LIMIT iter2 DO
@@ -330,7 +328,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
                         S = SELECT s
 
-                            FROM Start:s -((referral|reverse_referral):e)-:t
+                            FROM Start:s -((referral>|<referral):e)-:t
 
                             WHERE s.@cid != t.@cid AND @@totIncidentCluster.get(s.@uid) > 0 AND @@totIncidentCluster.get(t.@cid) > 0   #@@totIncidentCluster keeps changing, can be 0
 
@@ -418,7 +416,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
                         S = SELECT s
 
-                            FROM Start:s-((referral|reverse_referral):e)-:t
+                            FROM Start:s-((referral>|<referral):e)-:t
 
                             WHERE s.@cid == t.@cid
 
@@ -472,7 +470,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
                 S = SELECT s 
 
-                    FROM Start:s -((referral|reverse_referral):e)-> :t
+                    FROM Start:s -((referral>|<referral):e)- :t
 
                     WHERE abs(s.@weight - @@totIncidentCluster.get(s.@cid)) > epsilon OR abs(t.@weight - @@totIncidentCluster.get(t.@cid)) > epsilon OR (abs(s.@weight - @@totIncidentCluster.get(s.@cid)) < epsilon AND abs(t.@weight - @@totIncidentCluster.get(t.@cid)) < epsilon AND s.@cid > t.@cid)   # at least one cluster not only itself, or use smaller label
 
@@ -522,7 +520,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 
                 T1 = SELECT s
 
-                     FROM Start:s-((referral|reverse_referral):e)-:t
+                     FROM Start:s-((referral>|<referral):e)-:t
 
                      WHERE s.@cid == t.@cid
 

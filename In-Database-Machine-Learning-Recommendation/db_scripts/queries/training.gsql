@@ -1,4 +1,4 @@
-CREATE QUERY training(DOUBLE learning_rate = 0.001, DOUBLE regularization_factor = 0.00005, INT Iter=100) FOR GRAPH Recommender {
+CREATE QUERY training(DOUBLE learning_rate = 0.001, DOUBLE regularization_factor = 0.00005, INT Iter=100) FOR GRAPH Recommender SYNTAX V2 {
 	//This query trains the recommender model using gradient descent algorithm 
 	//The number of features is set as 19. This number has to be the same as the num_latent_factors in the initialization query
 	//The query inputs are the learning rate, regularization_factor and the number of training iterations
@@ -38,14 +38,14 @@ CREATE QUERY training(DOUBLE learning_rate = 0.001, DOUBLE regularization_factor
 	@@RMSE_training = 0;
 	@@RMSE_validation = 0;
 	USERs = SELECT s FROM USERs:s
-	        ACCUM
+	        POST-ACCUM
 	          s.@Gradient.reallocate(num_latent_factors);
 
   MOVIEs = SELECT s FROM MOVIEs:s
-	        ACCUM
+	        POST-ACCUM
 	          s.@Gradient.reallocate(num_latent_factors);
 
-	USERs = SELECT s FROM USERs:s -(rate:e)-> MOVIE:t
+	USERs = SELECT s FROM USERs:s -(rate:e)- MOVIE:t
 	        ACCUM
 	          DOUBLE delta = dotProduct_ArrayAccum_ArrayAccum(s.@theta,t.@x),    //The dotProduct_ArrayAccum_ArrayAccum() function return the dot product of two vectors
 	          delta = delta-e.rating,
@@ -58,7 +58,8 @@ CREATE QUERY training(DOUBLE learning_rate = 0.001, DOUBLE regularization_factor
 	          END
 	        POST-ACCUM
 	          s.@Gradient += product_ArrayAccum_const(s.@theta,regularization_factor),
-	          s.@theta += product_ArrayAccum_const(s.@Gradient,-learning_rate),
+	          s.@theta += product_ArrayAccum_const(s.@Gradient,-learning_rate)
+          POST-ACCUM
 	          t.@Gradient += product_ArrayAccum_const(t.@x,regularization_factor),
 	          t.@x += product_ArrayAccum_const(t.@Gradient,-learning_rate);
 

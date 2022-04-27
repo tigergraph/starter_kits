@@ -1,5 +1,5 @@
 CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT split = 10, INT outputLevel = 0,
-        Bool sortByPreID, Bool sortByCommID) FOR GRAPH MyGraph {
+        Bool sortByPreID, Bool sortByCommID) FOR GRAPH MyGraph SYNTAX V2 {
 
 /*
 * Louvain Method with Parallelism and Refinement
@@ -53,7 +53,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 # Initialize: count edges and set a unique cluster ID for each vertex
 	Start (ANY) = {Prescriber.*};
 	S (ANY) = SELECT s 
-		FROM Start:s -((referral|reverse_referral):e)-> :t
+		FROM Start:s -((referral>|reverse_referral>):e)- :t
 		ACCUM @@totalWeight += e.num_patient,
 			s.@weight += e.num_patient
 		POST-ACCUM s.@vid = getvid(s),
@@ -64,7 +64,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 # Special first iteration of Phase 1
 	iteration = 1;
 	S = SELECT s 
-		FROM Start:s -((referral|reverse_referral):e)-> :t
+		FROM Start:s -((referral>|reverse_referral>):e)- :t
 		WHERE s.@cid > t.@cid
 		ACCUM s.@largestDeltaQ += vDeltaQ(t, t.@cid, e.num_patient - 2 * s.@weight * s.@weight/ @@totalWeight) 
 			 # weightToCluster is just e.num_patient
@@ -75,7 +75,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 			s.@largestDeltaQ.clear()
 	;
 	S = SELECT s
-		FROM Start:s-((referral|reverse_referral):e)-:t
+		FROM Start:s-((referral>|reverse_referral>):e)-:t
 		WHERE s.@cid == t.@cid
 		ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@totalWeight)
 	;
@@ -100,7 +100,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 		loop = 0;
 		WHILE (loop < partitions) DO 
 			S = SELECT s 
-			FROM Start:s -((referral|reverse_referral):e)-> :t
+			FROM Start:s -((referral>|reverse_referral>):e)- :t
 			WHERE s.@uid % partitions == loop    # for different split
 				 # At least one cluster not singlet(a cluster on its own). If both clusters are singlets, consider only when the label of target is smaller to avoid swap
 				 AND (( abs(s.@weight - @@totIncidentCluster.get(s.@cid)) > epsilon   # s is not a singlet 
@@ -132,7 +132,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 		last_modularity = @@modularity;
 		@@modularity = 0;
 		T1 = SELECT s
-			FROM Start:s-((referral|reverse_referral):e)-:t
+			FROM Start:s-((referral>|reverse_referral>):e)-:t
 			WHERE s.@cid == t.@cid
 			ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@totalWeight)
 		;
@@ -176,7 +176,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 			iteration = iteration + 1;
 			# Calculate.num_patient incident from vertex to cluster in coarsened graph; change every interation
 			S = SELECT s
-				FROM Start:s -((referral|reverse_referral):e)-:t  
+				FROM Start:s -((referral>|reverse_referral>):e)-:t  
 	      # @totIncidentCluster keeps changing, can be 0
 				WHERE s.@cid != t.@cid AND @@totIncidentCluster.get(s.@uid) > 0 AND @@totIncidentCluster.get(t.@cid) > 0
 				# from s, incident to some clusters. Not consider the same cluster
@@ -223,7 +223,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 			last_modularity = @@modularity;           
 			@@modularity = 0;
 			S = SELECT s
-			   FROM Start:s-((referral|reverse_referral):e)-:t
+			   FROM Start:s-((referral>|reverse_referral>):e)-:t
 			   WHERE s.@cid == t.@cid
 			   ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@totalWeight)
 			;
@@ -249,7 +249,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 	WHILE (iteration < 2 OR @@modularity - last_modularity > epsilon) LIMIT iter3 DO
 		iteration = iteration + 1;
 		S = SELECT s 
-			FROM Start:s -((referral|reverse_referral):e)-> :t
+			FROM Start:s -((referral>|reverse_referral>):e)- :t
 			WHERE abs(s.@weight - @@totIncidentCluster.get(s.@cid)) > epsilon OR abs(t.@weight - @@totIncidentCluster.get(t.@cid)) > epsilon OR (abs(s.@weight - @@totIncidentCluster.get(s.@cid)) < epsilon AND abs(t.@weight - @@totIncidentCluster.get(t.@cid)) < epsilon AND s.@cid > t.@cid)   # at least one cluster not only itself, or use smaller label
 			ACCUM s.@weightToCluster += (t.@cid -> e.num_patient)
 			POST-ACCUM
@@ -274,7 +274,7 @@ CREATE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10, INT iter3 = 10, INT sp
 		last_modularity = @@modularity;
 		@@modularity = 0;
 		T1 = SELECT s
-			FROM Start:s-((referral|reverse_referral):e)-:t
+			FROM Start:s-((referral>|reverse_referral>):e)-:t
 			WHERE s.@cid == t.@cid
 			ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@totalWeight)
 		;

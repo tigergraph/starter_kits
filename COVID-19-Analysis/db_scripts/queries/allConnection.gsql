@@ -1,4 +1,4 @@
-CREATE QUERY allConnection(VERTEX<Patient> p) FOR GRAPH MyGraph { 
+CREATE QUERY allConnection(VERTEX<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
   /******************************************
 	* Grabing all connections of a specified Patient
   * Sample Parameter: patient 4100000006
@@ -7,7 +7,7 @@ CREATE QUERY allConnection(VERTEX<Patient> p) FOR GRAPH MyGraph {
 	seed = {p};
 	
 	S1 = SELECT s
-	       FROM seed:s -(:e)->:t
+	       FROM seed:s -(:e)-:t
 	       ACCUM @@edgeList += e;
 	
   PRINT  @@edgeList; 

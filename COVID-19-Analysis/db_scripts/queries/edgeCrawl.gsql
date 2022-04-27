@@ -1,4 +1,4 @@
-CREATE QUERY edgeCrawl()FOR GRAPH MyGraph { 
+CREATE QUERY edgeCrawl()FOR GRAPH MyGraph SYNTAX V2 { 
   /**************************************
 	* S1 = Grabbing all Patients that a Patient Infected
 	* S2 = Grabbing all Patients belonging to a well known Case
@@ -10,7 +10,7 @@ CREATE QUERY edgeCrawl()FOR GRAPH MyGraph {
 	seed = {Patient.*};
 	
 	S1 = SELECT s
-	       FROM seed:s -(INFECTED_BY:e)-> :t
+	       FROM seed:s -(INFECTED_BY>:e)- :t
 	       ACCUM @@edgeList += e;
 	
 	S2 = SELECT s

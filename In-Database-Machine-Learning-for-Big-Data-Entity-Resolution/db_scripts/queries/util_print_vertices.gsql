@@ -1,0 +1,6 @@
+CREATE QUERY util_print_vertices (STRING v_type="Weights")
+FOR GRAPH Entity_Resolution SYNTAX v2 { 
+  
+  Vertices = {v_type}; // Get all vertices of type v_typpe
+  PRINT Vertices;
+}

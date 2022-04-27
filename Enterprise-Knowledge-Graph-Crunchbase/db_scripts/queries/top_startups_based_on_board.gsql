@@ -1,0 +1,166 @@
+CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
+  STRING max_funding_round="b", INT past_n_years=10) 
+  FOR GRAPH CrunchBasePre_2013 SYNTAX V2 {
+/*
+    Rank startups based on the number of times that a current board member
+    working for a 'top' investment firm (financialORG) was also a board member
+    of a previous startup that had a successful exit.
+
+    k_orgs = number of top financialORGs to include
+    num_persons = number of most successful board members to include
+    max_funding_round = string from the ordered list:
+      ["angel","seed","a","b","c","d","e","f","g"]
+
+    Sample Inputs:
+       past_n_years = #, k_orgs = # top financial 
+       organizations, num_persons = # top people.
+    k_orgs: 30,  num_persons: 2,  cutoff_round: b,  past_n_years: 15;
+    k_orgs: 8,   num_persons: 1,  cutoff_round: a， past_n_years: 15;
+    k_orgs: 10,  num_persons: 3,  cutoff_round: d,  past_n_years: 10;
+    k_orgs: 20,  num_persons: 1,  cutoff_round: b， past_n_years: 20;
+    
+    Traversal Patterns:
+      company > company|IPO
+      funds < financialORG > person > company > funding_rounds
+      
+    Steps:
+    1. Tag each company with its IPO time or acquisition time
+    2. Rank financial organizations who raised the most money in past N years
+    3. Find people who work for a top k financial organization (2.
+    4. Rank top persons (3) by the number of times they were on the board
+    of a startup before its successful exit
+    5. Find pre-exit companies that have a top board member (4)
+    6. Filter top startups (5) by the funding round cutoff
+    
+    Data is from Crunchbase 2013 Snapshot under the
+    Creative Commons Attribution License [CC-BY].
+    The starter kit dataset was reduced on Nov. 20th, 2020.
+*/
+    ListAccum<STRING> @@code_list;
+    SetAccum<STRING> @@allowed_funding_rounds;
+    SumAccum<DOUBLE> @amount;
+    SetAccum<VERTEX> @@comp_set;
+    SetAccum<VERTEX> @board_set;
+    SetAccum<VERTEX> @@display_vertex_set;
+    SetAccum<EDGE> @@display_edge_set;
+    OrAccum @visited = FALSE;
+    AndAccum @early = TRUE;
+    ListAccum<DATETIME> @t_exit;
+    DATETIME TIME_END = to_datetime("2013-12-31 23:59:59");
+    DATETIME T0 = to_datetime("1970-01-01 00:00:00");
+    INT SECS_PER_YR = 31556952; // accounting for leap years
+
+    // Prep: Store currency exchange rates in a lookup table (map)
+    MapAccum<STRING, DOUBLE> @@currency2USD;
+    @@currency2USD += ("USD" -> 1);
+    @@currency2USD += ("AUD" -> 1.28);
+    @@currency2USD += ("CAD" -> 1.25);
+    @@currency2USD += ("EUR" -> 0.85);
+    @@currency2USD += ("GBP" -> 0.76);
+    @@currency2USD += ("JPY" -> 112.84);
+    @@currency2USD += ("SEK" -> 8.14);
+
+    // Prep: Make a list of funding rounds up to the cutoff round 
+    @@code_list = ["angel", "seed", "a", "b", "c", "d", "e", "f", "g"];
+    FOREACH i in range[0, @@code_list.size()-1] DO
+        IF @@code_list.get(i) == lower(trim(max_funding_round)) THEN
+            @@allowed_funding_rounds += @@code_list.get(i);
+            BREAK;
+        ELSE 
+            @@allowed_funding_rounds += @@code_list.get(i);
+        END;
+    END;
+
+    // 1. Tag each company with its IPO date or acquisition date
+    Comp = SELECT c
+        FROM (company) :c - ((company_ipo|acquired_by>): e) - (IPO|company): x
+        ACCUM
+            CASE WHEN
+              e.type == "company_ipo" AND datetime_diff(x.public_at, T0) != 0
+            THEN
+              c.@t_exit += x.public_at
+            END,
+            CASE WHEN
+              e.type == "acquired_by" AND datetime_diff(e.acquired_at,T0) != 0
+            THEN
+              c.@t_exit += e.acquired_at
+            END;
+    
+    // 2. Rank financial organizations who raised the most money in past N years
+    Top_orgs = SELECT org
+        FROM (financialORG): org - (financial_funds: e) - funds: f
+        WHERE datetime_diff(TIME_END, f.funded_at) <= past_n_years*SECS_PER_YR
+        ACCUM org.@amount +=
+            (f.raised_amount / @@currency2USD.get(f.raised_currency_code)),
+            f.@visited = TRUE
+        ORDER BY org.@amount DESC 
+        LIMIT k_orgs;
+
+    // 2B. Mark the top organizations as visited
+    Top_orgs = SELECT org
+        FROM Top_orgs: org
+        POST-ACCUM org.@visited = TRUE;
+
+  // 3. Find people who work for a top k financial organization (2)
+  Persons_at_top_orgs = SELECT p
+      FROM Top_orgs: o - (work_for_fOrg: e) - person: p;
+ 
+    /* 4. Rank top persons (3) by the number of times they were on the board
+    of a startup before its success exit.
+    */
+    Top_board_members = SELECT p
+        FROM Persons_at_top_orgs: p - (work_for_company :w) - company: c
+        WHERE (w.title LIKE "%Board%" OR w.title LIKE "%board%")
+            AND c.@t_exit.size() != 0 AND datetime_diff(w.start_at, T0) != 0
+            AND datetime_diff(c.@t_exit.get(0), w.start_at) > 0
+        ACCUM
+            @@comp_set += c,
+            c.@board_set += p,
+            p.@amount += 1
+        ORDER BY p.@amount DESC 
+        LIMIT num_persons;
+
+    // 5. Find pre-exit companies that have a top board member (4)
+    Top_startups = SELECT c
+        FROM Top_board_members: s - (work_for_company: w) - company: c
+        WHERE (w.title LIKE "%Board%" OR w.title LIKE "%board%")
+            AND w.start_at != T0
+            AND c.status == "operating" AND c NOT IN @@comp_set;
+
+    // 6. Filter top startups (5) by the funding round cutoff
+    Top_early_startups = SELECT r
+        FROM Top_startups: s - (company_funding_rounds: e) - funding_rounds: r
+        ACCUM 
+            s.@visited += TRUE,
+            IF @@allowed_funding_rounds.contains(r.funding_round_code) THEN
+                r.@visited = TRUE
+            ELSE
+                s.@early += FALSE
+            END;
+
+    // Trace back to find paths to display
+    Paths (ANY) = Top_board_members;
+    WHILE TRUE LIMIT 2 DO
+      Paths =
+      SELECT tgt
+      FROM Paths :s - ((company_funding_rounds | acquired_by> | company_ipo |
+        work_for_company | work_for_fOrg | financial_funds): e) - :tgt
+      WHERE (
+        e.type == "work_for_company"
+        AND (
+          (datetime_diff(e.start_at, T0) != 0 AND tgt.@board_set.contains(s))
+          OR tgt.type == "company" AND tgt.@visited AND tgt.@early)
+        ) OR (
+          (e.type == "work_for_fOrg" OR e.type == "financial_funds"
+            OR e.type == "company_funding_rounds")
+          AND tgt.@visited == TRUE
+        ) OR 
+          e.type == "company_ipo" OR e.type == "acquired_by"
+      ACCUM @@display_vertex_set += tgt,
+          @@display_edge_set += e;
+    END;
+
+    PRINT Top_board_members;
+    PRINT @@display_vertex_set;
+    PRINT @@display_edge_set;
+}

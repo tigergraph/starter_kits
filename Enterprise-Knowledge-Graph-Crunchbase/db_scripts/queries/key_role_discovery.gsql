@@ -1,0 +1,59 @@
+CREATE QUERY key_role_discovery(STRING company_name="FriendFeed", INT k=5)
+  FOR GRAPH CrunchBasePre_2013 SYNTAX V2 {
+    /*
+        Data is from Crunchbase 2013 Snapshot under the
+        Creative Commons Attribution License [CC-BY].
+        The starter kit dataset was reduced on Nov. 20th, 2020.
+
+        Given a company name `company_name`, find the subgraph of parent
+        companies and persons in key roles (CEO, founder, board director,
+        executive, etc.) within k hops.
+
+        Traversal pattern:
+            company -(repeat up to k times)-> company -> person
+    
+        Sample Inputs:
+        company_name: LinkedIn     k: 2;
+        company_name: LuckyCal,    k: 8;
+        company_name: FriendFeed,  k: 5;
+    */
+    OrAccum @visited;
+    SetAccum<VERTEX> @@output_vertices;
+    SetAccum<EDGE> @@output_edges;
+    DATETIME TNULL = to_datetime("1970-01-01 00:00:00");
+
+    // Find the company whose name is the input string
+    Linked_companies (ANY) = SELECT tgt
+        FROM company:tgt
+        WHERE lower(trim(tgt.name)) == lower(trim(company_name))
+        ACCUM @@output_vertices += tgt
+        POST-ACCUM tgt.@visited = TRUE;
+
+    // Find all key roles & investor/acquirer company's key roles within k steps
+    WHILE TRUE LIMIT k DO
+        Linked_companies = SELECT tgt
+            FROM Linked_companies:s
+                - ((invested_by_company> | acquired_by> | work_for_company):e) 
+                - (company | person):tgt
+            WHERE s.type == "company" AND tgt.@visited == FALSE AND
+              (e.type == "work_for_company" AND
+                (e.title LIKE "%founder%" OR e.title LIKE "%Founder%" OR
+                 e.title LIKE "%CEO%" OR e.title LIKE "% ceo%" OR
+                 e.title LIKE "%CTO%" OR e.title LIKE "% cto%" OR
+                 ((e.title LIKE "%oard%irectors%" OR e.title LIKE "%xecutive%")
+                   AND datetime_diff(e.end_at, TNULL) == 0))
+                ) OR
+                 e.type != "work_for_company"
+            ACCUM @@output_vertices += tgt, @@output_edges += e
+            POST-ACCUM tgt.@visited = TRUE;
+    END;
+    
+    IF @@output_vertices.size() != 0 THEN
+        Results = {@@output_vertices}; // conversion to output more that just id
+        PRINT Results;
+        PRINT @@output_edges;
+    ELSE
+        PRINT "No parties with key relations to the company found within ", k,
+            " steps" AS msg;
+    END;
+}

@@ -1,35 +1,40 @@
-CREATE QUERY jaccard_nbor_reaction(VERTEX source, STRING etype, INT topK, INT sampSize) FOR GRAPH faers { 
-	//example: ReportedCase=100640876, etype=hasReactions, topK=100, sampSize=100
-/* This query calculates the Jaccard Similarity between a given vertex and every other vertex.
-Jaccard similarity = intersection_size / (size_A + size_B - intersection_size)
-1. The JSON and FILE version keeps the top k pairs of vertices. The result in FILE version is not in order.
-2. The Attribute version insert edges between the pairs, with the score as an edge attribute.
-   A similarity edge with one FLOAT attribute in the schema is required for this version.
+CREATE QUERY jaccard_nbor_reaction(VERTEX source, STRING etype
+  ="hasReactions", INT top_k=100, INT sampSize=100) FOR GRAPH faers
+  SYNTAX v1 { 
+  //example: ReportedCase=100640876
+/*
+Calculates the Jaccard Similarity between a given vertex and every other
+vertex. A simplified version of the generic purpose algorithm
+jacccard_nbor_ss in the GSQL Graph Data Science Library
+https://github.com/tigergraph/gsql-graph-algorithms
+
+Note: In versions 3.5 and earlier, the SAMPLE clause was only supported in Syntax V1, 
+so this query uses Syntax V1. The default Syntax V2 may be used in future versions that support SAMPLE.
 */
-        SumAccum<INT> @intersection_size, @@set_size_A, @set_size_B;
-        SumAccum<FLOAT> @similarity;
-        SumAccum<INT> @@tSize;
+    SumAccum<INT> @intersection_size, @@set_size_A, @set_size_B;
+    SumAccum<FLOAT> @similarity;
+    SumAccum<INT> @@tSize;
         
-        Start (ANY) = {source};
-        Start = SELECT s
-        	FROM Start:s
-                ACCUM @@set_size_A += s.outdegree(etype);
+    Start (ANY) = {source};
+    Start = SELECT s
+        FROM Start:s
+        ACCUM @@set_size_A += s.outdegree(etype);
 
-        Subjects = SELECT t
-                   FROM Start:s-(etype:e)-:t;
+    Neighbors = SELECT t
+        FROM Start:s-(etype:e)-:t;
 
-        Others = SELECT t
-                 FROM Subjects:s -(:e)- :t
-                 SAMPLE sampSize EDGE when s.outdegree(etype) > sampSize
-                 WHERE t != source
-                 ACCUM t.@intersection_size += 1,
-                       t.@set_size_B = t.outdegree(etype)
-                 POST-ACCUM t.@similarity = t.@intersection_size*1.0/(@@set_size_A + t.@set_size_B - t.@intersection_size),
-                        @@tSize += 1
-                 ORDER BY t.@similarity DESC
-                 LIMIT topK;
+    Others = SELECT t
+        FROM Neighbors:s -(:e)- :t
+        SAMPLE sampSize EDGE when s.outdegree(etype) > sampSize
+        WHERE t != source
+        ACCUM t.@intersection_size += 1,
+            t.@set_size_B = t.outdegree(etype)
+        POST-ACCUM t.@similarity = t.@intersection_size*1.0/
+                  (@@set_size_A + t.@set_size_B - t.@intersection_size),
+            @@tSize += 1
+        ORDER BY t.@similarity DESC
+        LIMIT top_k;
 
-
-        PRINT Others;
-        PRINT @@tSize;
+    PRINT Others;
+    PRINT @@tSize, Others.size();
 }

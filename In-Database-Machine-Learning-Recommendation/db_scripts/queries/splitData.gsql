@@ -1,4 +1,4 @@
-CREATE QUERY splitData() FOR GRAPH Recommender {
+CREATE QUERY splitData() FOR GRAPH Recommender SYNTAX V2 {
   // This query split rating data into validation set and training set. 
 	// The fraction of testing data is set to be 30%. (i.e. 30% of the rating data will be used for model validation
 	// and the rest 70% will be used for model training).
@@ -11,7 +11,7 @@ CREATE QUERY splitData() FOR GRAPH Recommender {
 	INT remainer;
 	remainer = 100*validationDataFraction;                     // remainer is used for filtering the training data
 	USERs = {USER.*};
-	USERs = SELECT s FROM USERs:s -(rate:e)-> MOVIE:t
+	USERs = SELECT s FROM USERs:s -(rate:e)- MOVIE:t
 	        ACCUM
 	          @@cnt_total += 1,
 	          IF (getvid(t)+getvid(s)) % 100 < remainer THEN   // select the validation data

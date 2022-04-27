@@ -1,24 +1,34 @@
-CREATE QUERY CustomerJourney(vertex<Contact> customer, set<string> campaignTypes, datetime startTime, datetime endTime) FOR GRAPH MyGraph {
+CREATE QUERY CustomerJourney(VERTEX<Contact> customer,
+  SET<string> campaignTypes, DATETIME startTime, DATETIME endTime)
+  SYNTAX v2 {
 /*
   Sample input:
-	    Contact: Sam-Eisenberg
-	    startTime: 2018-06-01
-	    endTime: 2018-10-01
+    Contact: Sam-Eisenberg
+    campaignTypes: Webinar, Demo Signup / Trial
+    startTime: 2018-06-01
+    endTime: 2018-10-01
 */
 	
-	SumAccum<string> @camType, @camName, @camDesc;
-	Customer = { customer };
-  print Customer;
-	Company = select t from Customer -(belongs_to)-> Account:t;
-	print Company;
-	campaign = select c
-	           from Customer-(is_connected_to)-> CampaignMember:c
-	           where c.CreatedDate >= startTime and c.CreatedDate <= endTime
-	           ;
-	campaign = select c from campaign:c -(is_part_of)-> Campaign:t
-	           where campaignTypes.size() == 0 or t.Campaign_Type in campaignTypes
-	           accum c.@camType = t.Campaign_Type,
-	                 c.@camName = t.Name,
-	                 c.@camDesc = t.Description;
-	print campaign as Campaign;
+    SumAccum<STRING> @camType, @camName, @camDesc;
+    Customer = { customer };
+    PRINT Customer;
+
+    Company = SELECT t FROM Customer -(belongs_to>)- Account:t;
+    PRINT Company;
+
+    Campaign_Mems =
+        SELECT c
+        FROM Customer-(is_connected_to>)- CampaignMember:c
+        WHERE c.CreatedDate >= startTime
+            AND c.CreatedDate <= endTime;
+  
+    Campaigns =
+        SELECT c FROM Campaign_Mems:c -(is_part_of>)- Campaign:t
+        WHERE campaignTypes.size() == 0 
+            OR t.Campaign_Type IN campaignTypes
+        ACCUM c.@camType = t.Campaign_Type,
+            c.@camName = t.Name,
+            c.@camDesc = t.Description;
+  
+    PRINT Campaigns;
 }

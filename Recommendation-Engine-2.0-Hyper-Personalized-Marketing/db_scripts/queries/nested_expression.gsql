@@ -1,0 +1,81 @@
+CREATE QUERY nested_expression(set<vertex<customer>> p, set<vertex<context>> c) FOR GRAPH recommendation API("v2") SYNTAX v2 {
+/**
+Recommend the highest rated product for a customer while taking into account the weather and the time of the day.
+
+input: 
+p: C001
+c: GW
+*/
+  TYPEDEF TUPLE<vertex<product> v, double f0> OrderTuple_3;
+
+  AvgAccum @Agg_3_avg_score;
+  HeapAccum<OrderTuple_3>(1, f0 DESC) @@OrderHeap_3;
+  SetAccum<vertex<product>> @@OrderVertexSet_3;
+  SetAccum<edge> @@FinalEdgeSet_5;
+  SetAccum<edge> @@FinalEdgeSet_6;
+  SetAccum<edge> @@FinalEdgeSet_7;
+  SetAccum<vertex<customer>> @@FinalVertexSet_1;
+  SetAccum<vertex<feature>> @@FinalVertexSet_2;
+  SetAccum<vertex<product>> @@FinalVertexSet_3;
+  SetAccum<vertex<context>> @@FinalVertexSet_4;
+
+  VertexSet_1 = { p };
+  VertexSet_4 = { c };
+  VertexSet_3 = 
+        SELECT alias_schema_3
+        FROM VertexSet_1:alias_schema_1 -(customer_feature:cf)- feature:alias_schema_2,
+             product:alias_schema_3 -(product_feature:pf)- feature:alias_schema_2,
+             product:alias_schema_3 -(product_context:alias_schema_7)- VertexSet_4:alias_schema_4
+        ACCUM alias_schema_3.@Agg_3_avg_score += (cf.affinity * pf.weight)
+        POST-ACCUM @@OrderHeap_3 += OrderTuple_3(alias_schema_3, alias_schema_3.@Agg_3_avg_score)
+        ;
+
+  WHILE (@@OrderHeap_3.size() > 0) DO
+    @@OrderVertexSet_3 += @@OrderHeap_3.pop().v;
+  END;
+  VertexSet_3 = { @@OrderVertexSet_3 };
+
+  VertexSet_3 = 
+        SELECT alias_schema_3
+        FROM VertexSet_1:alias_schema_1 -(customer_feature:cf)- feature:alias_schema_2,
+             VertexSet_3:alias_schema_3 -(product_feature:pf)- feature:alias_schema_2,
+             VertexSet_3:alias_schema_3 -(product_context:alias_schema_7)- VertexSet_4:alias_schema_4
+        ACCUM @@FinalEdgeSet_5 += cf,
+              @@FinalEdgeSet_6 += pf,
+              @@FinalEdgeSet_7 += alias_schema_7
+        POST-ACCUM @@FinalVertexSet_1 += alias_schema_1
+        POST-ACCUM @@FinalVertexSet_2 += alias_schema_2
+        POST-ACCUM @@FinalVertexSet_3 += alias_schema_3
+        POST-ACCUM @@FinalVertexSet_4 += alias_schema_4
+        ;
+
+  PRINT @@FinalEdgeSet_5;
+
+  PRINT @@FinalEdgeSet_6;
+
+  PRINT @@FinalEdgeSet_7;
+
+  VertexSet_1 = { @@FinalVertexSet_1 };
+  PRINT VertexSet_1[
+    VertexSet_1.name AS name
+  ];
+
+  VertexSet_2 = { @@FinalVertexSet_2 };
+  PRINT VertexSet_2[
+    VertexSet_2.name AS name
+  ];
+
+  VertexSet_3 = { @@FinalVertexSet_3 };
+  PRINT VertexSet_3[
+    VertexSet_3.name AS name,
+    VertexSet_3.latitude AS latitude,
+    VertexSet_3.longitude AS longitude,
+    VertexSet_3.@Agg_3_avg_score AS avg_score
+  ];
+
+  VertexSet_4 = { @@FinalVertexSet_4 };
+  PRINT VertexSet_4[
+    VertexSet_4.ctxValue AS ctxValue
+  ];
+
+}

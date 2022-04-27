@@ -1,0 +1,213 @@
+CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
+    INT return_size = 3, STRING sector = "software")
+    FOR GRAPH CrunchBasePre_2013 SYNTAX V2 {
+    /*
+        Find the most promising startups led by successful founders, filtered by 
+        funding round cutoff and business sector.
+        Example: If return_size is 3, round cutoff is "c", and industry sector 
+        is "software", then return the top 3 startups that pass those filters, 
+        ranked by how many IPOs happened after their founders' contribution to 
+        their past companies.
+        
+        max_funding_round = string from the ordered list:
+              ["angel","seed","a","b","c","d","e","f","g"]
+        
+        Sample inputs:
+        1.  max_funding_round: c       return_size: 3     sector: software
+        2.  max_funding_round: angel   return_size: 5     sector: mobile
+        3.  max_funding_round: a       return_size: 2     sector: games_video
+    
+        Steps:
+        (1) Find all companies that have IPOed or gotten Acquired.
+        (2) Find employees who contributed to the companies in step (1).
+        (3) Find startups whose founders worked for the companies in step (1).
+        (4) Select startups from step (3) based on the round cutoff and sector.
+        (5) Find companies whose founders have the most successful connections.
+    
+        Traversal Pattern:
+          funding_rounds -> company -> person -> company -> IPO/acquired
+
+        Data is from Crunchbase 2013 Snapshot under the
+           Creative Commons Attribution License [CC-BY].
+        The starter kit dataset was reduced on Nov. 20th, 2020.
+    */
+
+    // Declare a tuple to store a company and its IPO/acquired numbers
+    TYPEDEF TUPLE<VERTEX<company> company, INT score> Company_Score;
+    // Declare a heap to store `return_size` number of companies
+    HeapAccum<Company_Score>(return_size, score DESC) @@top_companies_heap;
+
+    ListAccum<STRING> @@code_list;
+    SetAccum<VERTEX> @@output_vertex_set;
+    SetAccum<EDGE> @@output_edge_set;
+    SetAccum<VERTEX> @parent_vertex_set;
+    SetAccum<EDGE> @parent_edge_set;
+    SetAccum<STRING> @@allowed_funding_rounds;
+    SetAccum<VERTEX> @@temp_vertex_set;
+
+    SumAccum<INT> @num_good_exits;
+    MinAccum<DATETIME> @min_public_date;
+    AndAccum @is_still_startup = TRUE;
+    AndAccum @early_startup = TRUE;
+
+    // Declare map to store when an employee left which company
+    MapAccum<VERTEX<person>,
+        MapAccum<VERTEX<company>, DATETIME>> @@person_company_leave_date_map;
+    MapAccum<VERTEX<person>,
+        MapAccum<VERTEX<company>, EDGE>> @@person_company_employment_map;
+    ListAccum<VERTEX<company>> @company_list;
+    DATETIME TNULL = to_datetime("1970-01-01 00:00:00");
+
+    // Prep: Make a list of funding rounds up to the cutoff round 
+    @@code_list = ["angel", "seed", "a", "b", "c", "d", "e", "f", "g"];
+    FOREACH i in range[0, @@code_list.size()-1] DO
+        IF @@code_list.get(i) == lower(trim(max_funding_round)) THEN
+            @@allowed_funding_rounds += @@code_list.get(i);
+            BREAK;
+        ELSE 
+            @@allowed_funding_rounds += @@code_list.get(i);
+        END;
+    END;
+    
+    // Declare starting vertex sets
+    Companies = {company.*};
+
+    // 1. find companies that have IPOed, been Acquired, or are early startups 
+    // 1-1. Companies that have IPOed
+    IPO_companies = SELECT c
+        FROM IPO :i - (company_ipo :e) - company :c
+        //Filter out companies with null acquisition time (not yet acquired)
+        WHERE datetime_diff(i.public_at, TNULL) != 0
+        ACCUM
+            c.@parent_vertex_set += i,
+            c.@parent_edge_set += e,
+            c.@min_public_date = i.public_at,
+            c.@is_still_startup += FALSE;
+    
+    // 1-2. Companies that have been Acquired
+    Acquired_companies = SELECT c
+        FROM Companies :s - (acquire> :e) - company :c
+        //Filter out compaies with null acquisition time (not yet acquired)
+        WHERE datetime_diff(e.acquired_at, TNULL) != 0
+        ACCUM
+            c.@parent_vertex_set += s,
+            c.@parent_edge_set += e,
+            c.@min_public_date = e.acquired_at,
+            c.@is_still_startup += FALSE;
+
+    // Join the sets of Acquired and IPOed companies together
+    IPO_acquired_companies = IPO_companies UNION Acquired_companies;  
+
+    // 1-3. Mark companies whose funding hasn't exceeded max_funding_round 
+    Startups = Companies MINUS IPO_acquired_companies;
+    Early_startups = SELECT c
+        FROM Startups :c - (company_funding_rounds :e) - funding_rounds :f
+        ACCUM c.@early_startup += 
+            @@allowed_funding_rounds.contains(f.funding_round_code); 
+      
+    /* 2. Get people who worked for a successful-exit company (1) early enough
+      to satisfy the max_funding_round limit. Store their data in global maps.
+    */
+    Startup_employees = SELECT p
+        FROM IPO_acquired_companies :c - (work_for_company :e) - person :p
+        WHERE datetime_diff(e.start_at, TNULL) != 0
+            AND datetime_diff(e.end_at, TNULL) != 0
+            AND datetime_diff(e.start_at, c.@min_public_date) < 0
+        ACCUM
+            @@person_company_employment_map += (p -> (c -> e)),
+            @@person_company_leave_date_map += (p -> (c -> e.end_at));
+
+    /* 3. Find startups where successful-exit employees (2) are now a founder
+     Filter by industry and funding round. Tally the founder:successes.
+    */
+    New_startups = SELECT c
+        FROM Startup_employees :p - (work_for_company :e) - company :c
+        WHERE c.@is_still_startup 
+            AND c.@early_startup
+            AND c.status != "acquired"
+            AND c.status != "ipo"
+            AND e.title LIKE "%ounder%"
+            AND lower(trim(c.category_code)) == lower(trim(sector))
+            AND datetime_diff(e.start_at, TNULL) != 0
+            AND datetime_diff(e.end_at, TNULL) != 0
+        ACCUM
+        // Tally the founder:past-success relationships per new company
+            FOREACH (past_company, leave_date)
+            IN @@person_company_leave_date_map.get(p) DO
+                IF datetime_diff(e.start_at, leave_date) > 0 THEN
+                    p.@parent_edge_set +=
+                    @@person_company_employment_map.get(p).get(past_company),
+                    p.@company_list += past_company,
+                    c.@parent_vertex_set += p,
+                    c.@parent_edge_set += e,
+                    c.@num_good_exits += 1
+                END
+            END
+        HAVING c.@num_good_exits > 0;
+   
+    // 4. Find companies where founders had the most successful past endeavors
+    Top_companies = SELECT c
+        FROM New_startups :c
+        ACCUM @@top_companies_heap += Company_Score(c, c.@num_good_exits);
+    PRINT @@top_companies_heap;
+
+    FOREACH item IN @@top_companies_heap DO
+        @@output_vertex_set += item.company;
+    END;
+
+  // OUTPUT: Build sets of vertices and edges to output and display
+    // The top `return_size` companies
+    Result = {@@output_vertex_set};
+
+    // Add top company's funding_rounds to the output
+    Funding_rounds = SELECT f
+        FROM Result :c - (company_funding_rounds :e) - funding_rounds :f
+        ACCUM @@output_vertex_set += f, @@output_edge_set += e;
+
+    // Add founders with past successes to the output
+    Top_companies = SELECT c
+        FROM Result :c
+        ACCUM
+            @@temp_vertex_set += c.@parent_vertex_set,
+            @@output_vertex_set += c.@parent_vertex_set,
+            @@output_edge_set += c.@parent_edge_set;
+
+    Result = {@@temp_vertex_set};
+    @@temp_vertex_set.clear();
+
+    // Add past successful startups of founders to the output
+    Top_employees = SELECT p
+        FROM Result :p
+        ACCUM @@output_edge_set += p.@parent_edge_set,
+            FOREACH item IN p.@company_list DO
+                @@temp_vertex_set += item, @@output_vertex_set += item
+            END;
+
+    Result = {@@temp_vertex_set};
+    @@temp_vertex_set.clear();
+
+    // Gather set of companies that employees have worked at
+    Top_companies = SELECT c
+        FROM Result :c
+        ACCUM @@temp_vertex_set += c.@parent_vertex_set;
+
+    Vertices_to_clear = {@@temp_vertex_set};
+    @@temp_vertex_set.clear();
+
+    // Remove past employee companies from set of top companies
+    Cleared_vertices = SELECT c
+        FROM Vertices_to_clear :c
+        WHERE c.@parent_vertex_set.size() != 0
+        POST-ACCUM c.@parent_vertex_set.clear(), c.@parent_edge_set.clear();
+
+    // Add together remaining top companies and their funding information
+    Top_companies = SELECT c
+        FROM Result :c
+        ACCUM
+            @@output_vertex_set += c.@parent_vertex_set,
+            @@output_edge_set += c.@parent_edge_set;
+
+    Result = {@@output_vertex_set};
+    PRINT Result;
+    PRINT @@output_edge_set;
+}

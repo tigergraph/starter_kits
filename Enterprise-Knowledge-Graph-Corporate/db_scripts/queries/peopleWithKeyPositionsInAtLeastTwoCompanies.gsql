@@ -1,0 +1,45 @@
+CREATE QUERY peopleWithKeyPositionsInAtLeastTwoCompanies() FOR GRAPH EnterpriseGraph API("v2") SYNTAX v2 {
+/**
+Find all the people who are a CEO, Director or Vice President in at least two different companies
+*/
+
+  SetAccum<edge> @@FinalEdgeSet_4;
+  SetAccum<edge> @@FinalEdgeSet_5;
+  SetAccum<vertex<Company>> @@FinalVertexSet_1;
+  SetAccum<vertex<Person>> @@FinalVertexSet_2;
+  SetAccum<vertex<Company>> @@FinalVertexSet_3;
+
+  VertexSet_1 = 
+        SELECT c2
+        FROM Person:alias_schema_2 -(WorkFor:alias_schema_4)- Company:c2,
+             Person:alias_schema_2 -(WorkFor:alias_schema_5)- Company:c1
+        WHERE (c2 != c1) AND 
+              ((alias_schema_4.title == "CEO") OR ((alias_schema_4.title == "Director") OR (alias_schema_4.title == "Vice President"))) AND 
+              ((alias_schema_5.title == "CEO") OR ((alias_schema_5.title == "Director") OR (alias_schema_5.title == "Vice President")))
+        ACCUM @@FinalEdgeSet_4 += alias_schema_4,
+              @@FinalEdgeSet_5 += alias_schema_5
+        POST-ACCUM @@FinalVertexSet_1 += c2
+        POST-ACCUM @@FinalVertexSet_2 += alias_schema_2
+        POST-ACCUM @@FinalVertexSet_3 += c1
+        ;
+
+  PRINT @@FinalEdgeSet_4;
+
+  PRINT @@FinalEdgeSet_5;
+
+  VertexSet_1 = { @@FinalVertexSet_1 };
+  PRINT VertexSet_1[
+    VertexSet_1.registered_capital AS registered_capital
+  ];
+
+  VertexSet_2 = { @@FinalVertexSet_2 };
+  PRINT VertexSet_2[
+    VertexSet_2.gender AS gender
+  ];
+
+  VertexSet_3 = { @@FinalVertexSet_3 };
+  PRINT VertexSet_3[
+    VertexSet_3.registered_capital AS registered_capital
+  ];
+
+}

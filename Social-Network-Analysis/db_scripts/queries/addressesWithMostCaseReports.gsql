@@ -1,0 +1,54 @@
+CREATE QUERY addressesWithMostCaseReports() FOR GRAPH connectivity API("v2") SYNTAX v2 {
+/**
+Find the top 10 addresses with the most number of case reports
+*/
+  TYPEDEF TUPLE<vertex<Address> v, double f0> OrderTuple_3;
+
+  SetAccum<vertex> @Agg_3_numberOfPeopleWithCaseReports_set;
+  SumAccum<int> @Agg_3_numberOfPeopleWithCaseReports;
+  HeapAccum<OrderTuple_3>(10, f0 DESC) @@OrderHeap_3;
+  SetAccum<vertex<Address>> @@OrderVertexSet_3;
+  SetAccum<edge> @@FinalEdgeSet_5;
+  SetAccum<vertex<Person>> @@FinalVertexSet_2;
+  SetAccum<vertex<Address>> @@FinalVertexSet_3;
+
+  VertexSet_3 = 
+        SELECT alias_schema_3
+        FROM Person:p -(hasCaseReport:alias_schema_4)- CaseReport:alias_schema_1,
+             Person:p -(hasHomeAddress:alias_schema_5)- Address:alias_schema_3
+        ACCUM alias_schema_3.@Agg_3_numberOfPeopleWithCaseReports_set += p
+        POST-ACCUM alias_schema_3.@Agg_3_numberOfPeopleWithCaseReports = alias_schema_3.@Agg_3_numberOfPeopleWithCaseReports_set.size(),
+                   @@OrderHeap_3 += OrderTuple_3(alias_schema_3, alias_schema_3.@Agg_3_numberOfPeopleWithCaseReports)
+        ;
+
+  WHILE (@@OrderHeap_3.size() > 0) DO
+    @@OrderVertexSet_3 += @@OrderHeap_3.pop().v;
+  END;
+  VertexSet_3 = { @@OrderVertexSet_3 };
+
+  VertexSet_3 = 
+        SELECT alias_schema_3
+        FROM Person:p -(hasCaseReport:alias_schema_4)- CaseReport:alias_schema_1,
+             Person:p -(hasHomeAddress:alias_schema_5)- VertexSet_3:alias_schema_3
+        ACCUM @@FinalEdgeSet_5 += alias_schema_5
+        POST-ACCUM @@FinalVertexSet_2 += p
+        POST-ACCUM @@FinalVertexSet_3 += alias_schema_3
+        ;
+
+  PRINT @@FinalEdgeSet_5;
+
+  VertexSet_2 = { @@FinalVertexSet_2 };
+  PRINT VertexSet_2[
+    VertexSet_2.fullName AS fullName,
+    VertexSet_2.dob AS dob,
+    VertexSet_2.email AS email,
+    VertexSet_2.gender AS gender,
+    VertexSet_2.ethic_group AS ethic_group
+  ];
+
+  VertexSet_3 = { @@FinalVertexSet_3 };
+  PRINT VertexSet_3[
+    VertexSet_3.@Agg_3_numberOfPeopleWithCaseReports AS numberOfPeopleWithCaseReports
+  ];
+
+}

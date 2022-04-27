@@ -1,0 +1,14 @@
+CREATE QUERY get_account_subgraph(SET<STRING> account_ids, BOOL include_attributes=FALSE)
+  FOR GRAPH Entity_Resolution SYNTAX v2 { 
+  
+  ListAccum<EDGE> @@edges_to_display;
+  INT numAccounts;
+  INT numUsers;
+  Accounts = to_vertex_set(account_ids, "Account");
+  Users = SELECT u 
+        FROM Accounts:a -(Has_Account:e)- User:u 
+        ACCUM @@edges_to_display += e;
+
+    
+  PRINT "get_account_subgraph works!"; 
+}
