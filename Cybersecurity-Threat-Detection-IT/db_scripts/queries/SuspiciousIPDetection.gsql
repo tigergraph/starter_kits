@@ -1,4 +1,4 @@
-CREATE QUERY SuspiciousIPDetection(vertex<IP> inputIP, int k) FOR GRAPH MyGraph { 
+CREATE QUERY SuspiciousIPDetection(vertex<IP> inputIP, int k) FOR GRAPH MyGraph SYNTAX V2 { 
   
 	// this query does feature extraction for malicious IP prediction.
 	// the feature is number of shortest paths to banned ips.

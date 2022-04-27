@@ -1,4 +1,4 @@
-CREATE QUERY FootprintingDetection(datetime start_date = to_datetime("2019-05-01 11:10:00"), datetime end_date = to_datetime("2019-05-01 11:15:00")) FOR GRAPH MyGraph { 
+CREATE QUERY FootprintingDetection(datetime start_date = to_datetime("2019-05-01 11:10:00"), datetime end_date = to_datetime("2019-05-01 11:15:00")) FOR GRAPH MyGraph SYNTAX V2 { 
 	
 	// this query detects user id that calls many endpoints of a service in short period of time in order to find its vulnerability
 	// [user id] -> [request events] -> [service]
@@ -15,11 +15,11 @@ CREATE QUERY FootprintingDetection(datetime start_date = to_datetime("2019-05-01
            where s.Start_Date > start_date and s.Start_Date < end_date
 	           and s.Event_Type == "request";
 	
-	events = select events from events-(User_Event)-:user
-	         accum events.@apiMap += (user -> events.Endpoint);
+	events = select event from events:event-(User_Event)-:user
+	         accum event.@apiMap += (user -> event.Endpoint);
 	
-	services = select s from events-(To_Service)-:s
-	           accum s.@apiMap += events.@apiMap
+	services = select s from events:event-(To_Service)-:s
+	           accum s.@apiMap += event.@apiMap
 	           post-accum
 	              case when s.@apiMap.size() > 1 then
 	               // calculate the mean
