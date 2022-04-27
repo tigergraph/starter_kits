@@ -1,0 +1,38 @@
+CREATE QUERY initialize_users() FOR GRAPH Entity_Resolution SYNTAX v2 { 
+// Create a user vertex for each account and connecs the attributes
+// (IP, Email, Device, Phone, Last_Name, address) of the account to the user. 
+  
+	// Initialize each account with a user 
+	Accounts = SELECT s FROM Account:s
+		WHERE s.outdegree("Has_Account")==0
+		ACCUM 
+			INSERT INTO User VALUES(s.id),
+			INSERT INTO Has_Account VALUES(s.id, s);
+	
+	// Connect the User to all the attributes of their account
+	IPs = SELECT attr FROM Accounts:s -(Has_IP:e)- IP:attr
+		ACCUM
+		  INSERT INTO User_IP VALUES(s.id, attr);
+	
+	Emails = SELECT attr FROM Accounts:s -(Has_Email:e)- Email:attr
+		ACCUM
+		  INSERT INTO User_Email VALUES(s.id, attr);
+		
+	Devices = SELECT attr FROM Accounts:s -(Has_Device:e)- Device:attr
+		ACCUM
+		  INSERT INTO User_Device VALUES(s.id,attr);
+	
+	Phones = SELECT attr FROM Accounts:s -(Has_Phone:e)- Phone:attr
+		ACCUM
+		  INSERT INTO User_Phone VALUES(s.id, attr);
+	
+	Last_Names = SELECT attr FROM Accounts:s -(Has_Last_Name:e)- Last_Name:attr
+		ACCUM
+		  INSERT INTO User_Last_Name VALUES(s.id, attr);
+	
+	Addresses = SELECT attr FROM Accounts:s -(Has_Address:e)- Address:attr
+		ACCUM
+		  INSERT INTO User_Address VALUES(s.id, attr);
+  // Note: Insertions will not be visible until after the query completes.
+    PRINT "s1_initialize_users: Done" AS endMsg; 
+}

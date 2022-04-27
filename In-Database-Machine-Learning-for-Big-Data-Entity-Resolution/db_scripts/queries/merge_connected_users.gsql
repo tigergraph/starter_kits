@@ -1,0 +1,95 @@
+CREATE QUERY merge_connected_users(FLOAT threshold=1.0, BOOL verbose=FALSE)  FOR GRAPH Entity_Resolution SYNTAX V2 {
+/*Connect users having sufficient shared attributes. The linking score between
+  Group users connected by SameAs edges:
+  1. Find connected users using the connected component algorithm.
+  2. In each component, select a lead user.
+  3. In each component, connect all attributes from other users to the lead user 
+  4. Delete the users that are not the lead user.
+  */
+	
+  // MinAccum<VERTEX> selects the vertex with the minimum internal ID
+	MinAccum<VERTEX<User>> @min_user_id;
+  INT iteration = 1;
+	bool converged = FALSE;
+  
+	// Initialize each user with itself as the lead of the component
+	Users = {User.*};
+	Updated_users = SELECT s FROM Users:s
+		POST-ACCUM
+			s.@min_user_id = s;
+
+	// 1. Assign the min vertex ID of a connected component to every other member.
+	WHILE (Updated_users.size() > 0) DO
+    IF verbose THEN PRINT iteration, Updated_users.size(); END;
+		Updated_users = SELECT t
+			FROM Updated_users:s -(SameAs:e)- User:t
+      WHERE e.similarity >= threshold
+	      // Propagate the internal IDs from source to target vertex
+      ACCUM t.@min_user_id += s.@min_user_id   // t gets the lesser of t & s ids
+			HAVING t.@min_user_id != t.@min_user_id' // accum' is accum's previous val
+      ;
+    iteration = iteration + 1;
+	END;
+	
+	// The SameAs edge is no longer needed after finding the connected components
+	DELETE e FROM Users:s -(SameAs:e)- :t;
+
+	// 2. The rest of the query merge all the users in each connected component into one vertex. 
+	Not_lead = SELECT s FROM Users:s
+	    WHERE s != s.@min_user_id;
+  IF verbose THEN PRINT Users.size(); END;
+	
+	converged = (Not_lead.size()==0);
+  
+	// 3. Transfer each of the Attribute vertices to the lead user.
+  Accounts = SELECT t FROM Not_lead:s -(Has_Account:e)- Account:t
+		ACCUM
+			VERTEX<User> lead_usr = s.@min_user_id,
+			INSERT INTO Has_Account VALUES (lead_usr, t),
+			DELETE (e)
+		;
+  
+  IPs = SELECT t FROM Not_lead:s -(User_IP:e)- IP:t
+	  ACCUM
+			VERTEX<User> lead_usr = s.@min_user_id,
+			INSERT INTO User_IP VALUES (lead_usr, t),
+			DELETE (e)
+		;
+	Emails = SELECT t FROM Not_lead:s -(User_Email:e)- Email:t
+	  ACCUM
+			VERTEX<User> lead_usr = s.@min_user_id,
+			INSERT INTO User_Email VALUES (lead_usr, t),
+			DELETE (e)
+		;
+	Phones = SELECT t FROM Not_lead:s -(User_Phone:e)- Phone:t
+	  ACCUM
+			VERTEX<User> lead_usr = s.@min_user_id,
+			INSERT INTO User_Phone VALUES (lead_usr, t),
+			DELETE (e)
+		;
+	Last_Names = SELECT t FROM Not_lead:s -(User_Last_Name:e)- Last_Name:t
+	  ACCUM
+			VERTEX<User> lead_usr = s.@min_user_id,
+			INSERT INTO User_Last_Name VALUES (lead_usr, t),
+			DELETE (e)
+		;
+	Addresses = SELECT t FROM Not_lead:s -(User_Address:e)- Address:t
+	  ACCUM
+			VERTEX<User> lead_usr = s.@min_user_id,
+			INSERT INTO User_Address VALUES (lead_usr, t),
+			DELETE (e)
+		;
+	Devices = SELECT t FROM Not_lead:s -(User_Device:e)- Device:t
+	  ACCUM
+			VERTEX<User> lead_usr = s.@min_user_id,
+			INSERT INTO User_Device VALUES (lead_usr, t),
+			DELETE (e)
+		;
+	// 4. Delete the non-lead User vertices
+	Not_lead = SELECT s FROM Not_lead:s
+		POST-ACCUM
+			DELETE (s);
+	
+	// Print whether any grouping has been performed
+	 PRINT converged;
+}

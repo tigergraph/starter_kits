@@ -1,0 +1,72 @@
+CREATE QUERY score_similar_attributes(
+  bool do_last_name=TRUE, bool do_address=TRUE, bool print_only=FALSE)
+  FOR GRAPH Entity_Resolution
+SYNTAX v2 { 
+  /* Considering only User-User pairs where this is already some match
+  of attribute values, compare their names and their addresses using
+  JaroWinkler distance (score [0,1] for [nothing in common,identical]).
+  Use this to add a prorated weight to their existing similarity scores.
+  */
+  
+  TYPEDEF TUPLE <STRING A, STRING B> String_pair;
+  MapAccum<VERTEX, MapAccum<VERTEX, FLOAT>> @@sim_score; //by vertex pair
+  SumAccum<INT> @@name_match, @@addr_match, @@name_update, @@addr_update;
+  SumAccum<INT> @@sim_update;
+  ListAccum<String_pair> @@string_pairs;
+  FLOAT name_wt = 0.0;
+  FLOAT addr_wt = 0.0;
+
+  // Get weights of Last_Name and Address from the global Weight vertex
+  Wt = SELECT w FROM Weights:w 
+        POST-ACCUM
+          IF do_last_name THEN
+            name_wt = w.wt_map.get("User_Last_Name") END,
+          IF do_address THEN
+            addr_wt = w.wt_map.get("User_Address") END
+  ;
+  Connected_users = SELECT A
+    // Find all linked users, plus each user's last name
+    FROM User:A -(SameAs:e)- User:B,
+         User:A -()- Last_Name:A_name,
+         User:B -()- Last_Name:B_name
+    WHERE A.id < B.id    // filter so we don't count (A,B) & (B,A)
+    ACCUM @@name_match += 1,
+    // If names aren't identical compute JaroWinkler * weight
+      IF do_last_name AND A_name.val != B_name.val THEN
+        FLOAT sim = jaroWinklerDistance(A_name.id,B_name.id) * name_wt,
+        @@sim_score += (A -> (B -> sim)),
+        @@string_pairs += String_pair(A_name.id,B_name.id),
+        IF sim != 0 THEN @@name_update += 1 END
+      END
+  ;
+  Connected_users = SELECT A
+    // Find all linked users, plus each user's address
+    FROM Connected_users:A -(SameAs:e)- User:B,
+         User:A -()- Address:A_addr,
+         User:B -()- Address:B_addr
+    WHERE A.id < B.id    // filter so we don't count (A,B) & (B,A)
+    ACCUM @@addr_match += 1,
+    // If addresses aren't identical compute JaroWinkler * weight
+      IF do_address AND A_addr.val != B_addr.val THEN
+        FLOAT sim = jaroWinklerDistance(A_addr.id,B_addr.id) * addr_wt,
+        @@sim_score += (A -> (B -> sim)),
+        @@string_pairs += String_pair(A_addr.id, B_addr.id),
+        IF sim != 0 THEN @@addr_update += 1 END
+      END
+  ;
+  // Add the new similarity scores to the existing scores
+  
+  IF NOT print_only THEN
+    Connected_users = SELECT A 
+      FROM Connected_users:A -(SameAs:e)- User:B 
+      WHERE A.id < B.id
+      ACCUM e.similarity = e.similarity + @@sim_score.get(A).get(B)
+    ;
+  END;
+  
+  PRINT name_wt, addr_wt;
+  PRINT @@name_match, @@addr_match, @@name_update, @@addr_update;
+  PRINT @@sim_score.size() AS num_scores;
+  PRINT @@string_pairs;
+  PRINT @@sim_score;
+}

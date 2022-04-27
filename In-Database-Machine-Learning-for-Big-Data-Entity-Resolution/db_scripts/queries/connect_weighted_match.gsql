@@ -1,0 +1,41 @@
+CREATE QUERY connect_weighted_match(float threshold=0.2, bool verbose=false) FOR GRAPH Entity_Resolution SYNTAX v2{ 
+  /*
+  Connect users that have sufficient shared attributes. The linking score between
+  two users is defined as the weighted sum of their shared attributes.
+  Two users will be linked if the linking sc ore is above the threshold.
+  */
+	MapAccum<VERTEX<User>, SumAccum<FLOAT>> @score;
+  MapAccum<STRING, DOUBLE> @@wt_map;
+  SumAccum<INT> @@insert_count, @@attr_count;
+
+  // Copy Weights map to a global accumulator, so it's always available
+  Wt = SELECT w FROM Weights:w 
+        POST-ACCUM @@wt_map += w.wt_map;
+  IF verbose THEN PRINT @@wt_map; END;
+
+	// For each attribute connected to users,
+  // store the weight to each user in the score map
+	Attributes = SELECT attr
+	  FROM User:usr -((User_IP|User_Email|User_Last_Name|User_Phone|User_Address|User_Device):e)- :attr
+	  ACCUM
+      @@attr_count += 1,
+      attr.@score += (usr -> @@wt_map.get(e.type));
+  IF verbose THEN PRINT @@attr_count; END;
+
+	// For each pair of users connected via attributes, aggregate all attribute
+  // weights. Connect the users with a SameAs edge if the score > threshold.
+	Attrs = SELECT attr 
+	  FROM Attributes:attr -((User_IP|User_Email|User_Last_Name|User_Phone|User_Address|User_Device):e)- :usr
+    ACCUM
+      usr.@score += attr.@score
+    POST-ACCUM
+      FOREACH (neighbor_user,score) in usr.@score DO
+        IF neighbor_user != usr AND score >= threshold THEN
+          INSERT INTO SameAs VALUES (usr, neighbor_user, score),
+          @@insert_count += 1
+        END
+      END
+	  ;
+  PRINT to_string(@@insert_count) + " SameAs edges inserted; "
+   + "s2_connect_weighted_match: Done" AS endMsg; 
+}

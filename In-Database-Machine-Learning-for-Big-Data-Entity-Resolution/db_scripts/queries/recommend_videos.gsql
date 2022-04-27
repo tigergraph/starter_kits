@@ -1,0 +1,56 @@
+CREATE QUERY recommend_videos(vertex<Account> inputAcc, int k=5)
+FOR GRAPH Entity_Resolution SYNTAX v2 { 
+	/* Recommend videos to User:
+  1. Find all the accounts related to the input account
+     (according to the entity resolution).
+  2. Find all the videos these accounts have played.
+  3. Find all the un-watched videos which have the most genres
+     or keywords in common with the played videos.
+  *********************************************************
+	 * Example parameters:
+	 *   Account : 407
+	 *   k : 5
+	 **********************************************************/
+	
+  SetAccum<VERTEX<Account>> @@connected_accts;
+	MapAccum<VERTEX, int> @map;
+	OrAccum @visited;
+	SumAccum<uint> @cnt;
+	ListAccum<EDGE> @@edge_list;  // record all the edges we want to display
+	
+	Source_acct = {inputAcc};
+
+  // Get all the accounts linked through the same user as the source account
+  Related_accts = SELECT acct
+    FROM Source_acct:s -(Has_Account:e1)- User:u -(Has_Account:e2)- Account:acct
+    ACCUM @@edge_list += e1, @@edge_list += e2;
+	
+  // This block is just for collecting edges to display
+	Attributes = SELECT attr
+    FROM Related_accts:s-((Has_IP|Has_Email|Has_Last_Name|Has_Phone|Has_Address|Has_Device):e)-:attr
+	  ACCUM @@edge_list += e;
+	
+  // Get the videos played by the accounts of intereset
+	Played_vids = SELECT t
+    FROM Related_accts:s -(Has_Play_Event:e1)- :v -(Play_Video:e2)- :t
+    ACCUM t.@cnt += 1,    // tag each video played by this User
+      @@edge_list += e1, @@edge_list += e2; 
+	
+  // Tag each genre or keyword of a video played by this User
+	Video_features = SELECT t FROM Played_vids:s-((Has_Genre|Has_Keyword):e)-:t 
+    ACCUM t.@cnt += s.@cnt, @@edge_list += e;
+	
+  // Count genres or keywords an unwatched video has in common with tagged videos
+	Recommended_vids = SELECT t FROM Video_features:s-((Has_Genre|Has_Keyword):e)-:t 
+	         WHERE t.@cnt == 0
+	         ACCUM t.@cnt += s.@cnt, t.@map += (s->s.@cnt)
+	         ORDER BY t.@cnt DESC LIMIT k;
+	
+	PRINT Recommended_vids;
+	
+  // Show connections (edges) to the features of the recommended videos
+	Recommended_vids = SELECT s FROM Recommended_vids:s-((Has_Genre|Has_Keyword):e)-:t
+	        ACCUM @@edge_list += e;
+	
+	PRINT @@edge_list;
+}

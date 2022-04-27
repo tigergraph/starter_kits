@@ -1,0 +1,11 @@
+CREATE QUERY util_delete_users(bool are_you_sure=FALSE) FOR GRAPH Entity_Resolution SYNTAX V2 { 
+  
+  IF are_you_sure THEN
+    All_users = {User.*};
+    DELETE s from All_users:s;
+    PRINT "All User vertices have been deleted. " +
+     "Run initialize_users to create a new set of Users" AS endMsg;
+  ELSE
+    PRINT "No action taken" AS endMsg;
+  END;
+}

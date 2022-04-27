@@ -1,0 +1,8 @@
+CREATE QUERY util_count_vertices(STRING v_type="User") FOR GRAPH Entity_Resolution SYNTAX V2 { 
+  
+  SumAccum<INT> @@v_count;
+  
+  Source = {v_type};
+  H = SELECT v FROM Source:v ACCUM @@v_count += 1;
+  PRINT @@v_count;
+}

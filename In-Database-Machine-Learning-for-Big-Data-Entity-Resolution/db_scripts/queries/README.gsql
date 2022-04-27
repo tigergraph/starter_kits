@@ -1,0 +1,45 @@
+CREATE QUERY README() FOR GRAPH Entity_Resolution SYNTAX V2 { 
+
+  STRING version = "Schema, data, and queries updated January 24, 2022";
+/* 
+	This starter kit finds Accounts that share many of the same or similar
+  personal attributes and therefore seem to represent the same User. It
+  offers multiple ways to check for similarity and then to link the
+  similar Accounts to a single User.
+  Run the queries in one of the following two sequences:
+   
+  Method 1: Jaccard similarity
+  1. Run initialize_users to create a tentative User linked to each Account.
+  2. Run connect_jaccard_sim to link Users whose attribute neighborhoods
+     are sufficiently similar.
+  3. Run merge_connected_users.
+  4. Repeat steps 2 (connect_jaccard_sim) and 3 (merge_connected_users)
+     until the output of merge_connected_users says Converged=TRUE.
+  
+  Method 2: Exact and approximate matching
+  1a. Run initialize_users to create a tentative User linked to each Account.
+  1b. Run util_set_weights to load weights used to calibrate the scoring.
+	2a. Run connect_weighted_match to link Users whose matching attribute
+     values score enough points.
+  2b. Run score_similar_attributes to add additional points for 
+      approximate matches.
+  3. Run merge_similar_users.
+  4. Repeat steps 2a, 2b, and 3
+     until the output of merge_similar_users says Converged=TRUE.
+  
+  *** NOTE:
+  To RESET the database back to the beginning, run util_delete_vertices.
+  On small machines, it can take 30 seconds for the deletes to fine.
+  Wait until you see there are zero User vertices, either from running
+  util_count_vertices or from the statistics on the Load Data page.
+  ***
+  
+  Once the Entity Resolution is complete, you can see some of the results:
+  get_entity_subgraph: finds the User of a given Account, the other
+    Accounts of that User, and the attribute vertices of this User.
+	recommend_videos: find all the accounts linked via entity resolution to
+    the input account, then list videos that have the most features in common
+    with the videos already watched by this user.
+	*/ 
+  PRINT version;
+}
