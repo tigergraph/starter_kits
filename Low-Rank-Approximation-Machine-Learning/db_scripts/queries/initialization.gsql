@@ -1,4 +1,4 @@
-CREATE QUERY initialization(float sdv = 0.1, float mean = 0.1) FOR GRAPH LowRankApproximation { 
+CREATE QUERY initialization(float sdv = 0.1, float mean = 0.1) FOR GRAPH LowRankApproximation SYNTAX V2 { 
 	// This query initialize the row vectors for the matrix U and the matrix V
 	// The elements in the row vectors are initialized by a normal distributed random number generator
 	// The query inputs are the standard deviation and the mean of the normal distribution 

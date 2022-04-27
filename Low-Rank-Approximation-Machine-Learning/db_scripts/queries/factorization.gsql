@@ -1,4 +1,4 @@
-CREATE QUERY factorization(DOUBLE learning_rate = 0.001, DOUBLE regularization_factor = 0.00005, INT Iter=30) FOR GRAPH LowRankApproximation {
+CREATE QUERY factorization(DOUBLE learning_rate = 0.001, DOUBLE regularization_factor = 0.00005, INT Iter=30) FOR GRAPH LowRankApproximation SYNTAX V2 {
 	//This query factorize the loaded sparse matrix into two low-rank matrices U and V using gradient descent algorithm 
 	//The length of row vectors is set as 19. This number has to be the same as the len_of_rowVector in the initialization query
 	//The query inputs are the learning rate, regularization_factor and the number of iterations
@@ -36,14 +36,14 @@ CREATE QUERY factorization(DOUBLE learning_rate = 0.001, DOUBLE regularization_f
 	@@RMSE = 0;
 	iteration = iteration+1;
 	MATRIX_U = SELECT s FROM MATRIX_U:s
-	        ACCUM
+	        POST-ACCUM
 	          s.@Gradient.reallocate(len_of_rowVector);
 
   MATRIX_V = SELECT s FROM MATRIX_V:s
-	        ACCUM
+	        POST-ACCUM
 	          s.@Gradient.reallocate(len_of_rowVector);
 
-	MATRIX_U = SELECT s FROM MATRIX_U:s -(MATRIX_ELEMENT:e)-> MATRIX_COLUMN:t
+	MATRIX_U = SELECT s FROM MATRIX_U:s -(MATRIX_ELEMENT:e)- MATRIX_COLUMN:t
 	        ACCUM
 	          DOUBLE delta = dotProduct_ArrayAccum_ArrayAccum(s.@u,t.@v),    //The dotProduct_ArrayAccum_ArrayAccum() function return the dot product of two vectors
 	          delta = delta-e.element_value,
@@ -52,7 +52,8 @@ CREATE QUERY factorization(DOUBLE learning_rate = 0.001, DOUBLE regularization_f
 	          t.@Gradient += product_ArrayAccum_const(s.@u,delta)
 	        POST-ACCUM
 	          s.@Gradient += product_ArrayAccum_const(s.@u,regularization_factor),
-	          s.@u += product_ArrayAccum_const(s.@Gradient,-learning_rate),
+	          s.@u += product_ArrayAccum_const(s.@Gradient,-learning_rate)
+          POST-ACCUM
 	          t.@Gradient += product_ArrayAccum_const(t.@v,regularization_factor),
 	          t.@v += product_ArrayAccum_const(t.@Gradient,-learning_rate);
 
