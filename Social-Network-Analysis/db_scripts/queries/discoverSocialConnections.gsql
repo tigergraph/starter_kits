@@ -1,4 +1,4 @@
-CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k) for graph connectivity
+CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k) for graph connectivity SYNTAX v2
 {
   
 	/* 

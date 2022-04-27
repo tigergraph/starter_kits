@@ -1,4 +1,4 @@
-CREATE QUERY personSameAsWho(VERTEX<Person> source, INT topK) FOR GRAPH connectivity {
+CREATE QUERY personSameAsWho(VERTEX<Person> source, INT topK) FOR GRAPH connectivity SYNTAX V2 {
 /* 
   --- Dataset has been shrunk on Nov.20th,2020 ---
 
