@@ -1,0 +1,8 @@
+CREATE QUERY A_README() FOR GRAPH MyGraph SYNTAX V2 { 
+  /************************************************************
+	 * IMPORTANT : PLEASE INSTALL AND RUN THE addWeights QUERY
+	 *             BEFORE RUNNING OTHER QUERIES.
+	 ***********************************************************/
+	
+  PRINT "I read it";
+}
