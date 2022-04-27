@@ -1,13 +1,13 @@
-CREATE QUERY getPatients(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
+CREATE OR REPLACE QUERY getPatients(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
   
 	ListAccum<EDGE> @@list;
 	
 	start_set = {inputPrescriber};
 	
-	claims = SELECT t FROM start_set:s-(reverse_submitted_by:e)-:t
+	claims = SELECT t FROM start_set:s-(<submitted_by:e)-:t
 	         ACCUM @@list += e;
 	
-	patients = SELECT t FROM claims:s-(associated:e)-:t
+	patients = SELECT t FROM claims:s-(associated>:e)-:t
 	           ACCUM @@list +=e;
 	
 	print claims, @@list;

@@ -1,4 +1,4 @@
-CREATE QUERY Print_community(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
+CREATE OR REPLACE QUERY Print_community(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
   /* Write query logic here */ 
   //PRINT "Print_community works!";
 	
@@ -11,7 +11,7 @@ CREATE QUERY Print_community(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGra
 	
 	Start = {Prescriber.*};
 	
-	Start = select s from Start:s-(referral:e)-:t 
+	Start = select s from Start:s-(referral>:e)-:t 
 	        where s.communityId == @@cid and s.communityId == t.communityId
 	        accum @@edgeList += e;
 	

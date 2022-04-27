@@ -1,4 +1,4 @@
-CREATE QUERY getKhopNeighbor(int k, vertex input) FOR GRAPH MyGraph { 
+CREATE OR REPLACE QUERY getKhopNeighbor(int k, vertex input) FOR GRAPH MyGraph { 
 	
 	OrAccum<BOOL> @visited;
 	ListAccum<EDGE> @@edgeList;
