@@ -1,4 +1,4 @@
-CREATE QUERY getCommunity(STRING prescriberId, INT communityId) FOR GRAPH MyGraph {
+CREATE QUERY getCommunity(STRING prescriberId, INT communityId) FOR GRAPH MyGraph SYNTAX V2 {
 	/* This query finds the vertices and interconnecting edges associated either with the given
 	 * prescriberId, or if the prescriberId is not provided (empty string), then
 	 * for the given communityId.
@@ -22,7 +22,7 @@ CREATE QUERY getCommunity(STRING prescriberId, INT communityId) FOR GRAPH MyGrap
 	
 	// Get all the vertices and intercomnnecting edges with the give commId
 	commVertices = SELECT s
-	  FROM Start:s -(referral:e)-> :t
+	  FROM Start:s -(referral>:e)- :t
 	  WHERE s.communityId == commId AND t.communityId == commId
 	  ACCUM @@edgeList += e;
 	PRINT commVertices[commVertices.Prescriber_id];
