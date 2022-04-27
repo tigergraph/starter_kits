@@ -1,33 +1,35 @@
-CREATE QUERY CustJourney_Subgraph(vertex<Contact> customer, vertex<Opportunity> opportunity) FOR GRAPH MyGraph { 
+CREATE QUERY CustJourney_Subgraph(VERTEX<Contact> customer)
+  SYNTAX v2{ 
 /*
   Sample input:
-	  Contact: Sam-Eisenberg
-	  opportunity: 0063600000gEoe0AAC
-
+    Contact: Sam-Eisenberg
 */
-	SetAccum<edge> @@displaySet;
-  SetAccum<vertex> @@vertexSet;
+    SetAccum<EDGE> @@displaySet;
+    SetAccum<VERTEX> @@vertexSet;
 
-	cust = { customer };
+    cust = { customer };
 		
-	acct = select t from cust:c -(belongs_to:e)-> Account:t
-	       accum @@displaySet += e, @@vertexSet += t;
+    acct = SELECT t FROM cust:c -(belongs_to>:e)- Account:t
+        ACCUM @@displaySet += e, @@vertexSet += t;
 	
-  opp = select t from cust -(Has_Role:e)-> Opportunity:t 
-	      accum @@displaySet += e, @@vertexSet += t;
+    opp = SELECT t FROM cust -(Has_Role>:e)- Opportunity:t 
+        ACCUM @@displaySet += e, @@vertexSet += t;
 	
-	campaign_members =
-	        select t
-	        from cust -(is_connected_to:e)-> CampaignMember:t
-	        accum @@vertexSet += cust, @@vertexSet += t, @@displaySet += e;
+    campaign_members =
+        SELECT t
+        FROM cust -(is_connected_to>:e)- CampaignMember:t
+        ACCUM @@vertexSet += cust, @@vertexSet += t,
+            @@displaySet += e;
 	
-	campaigns = select t from campaign_members -(is_part_of:e)-> Campaign:t
-	            accum @@vertexSet += t, @@displaySet += e;
+    campaigns =
+        SELECT t
+        FROM campaign_members -(is_part_of>:e)- Campaign:t
+        ACCUM @@vertexSet += t, @@displaySet += e;
 	
-	Verts = @@vertexSet;
+    Verts = @@vertexSet;
 	
-	print Verts;
-	//print@@vertexSet;
+    PRINT Verts;
+    //print@@vertexSet;
 
-	print @@displaySet;
+    PRINT @@displaySet;
 }
