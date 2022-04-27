@@ -1,4 +1,4 @@
-CREATE QUERY initialization(float sdv = 0.1, float mean = 0.1) FOR GRAPH Recommender { 
+CREATE QUERY initialization(float sdv = 0.1, float mean = 0.1) FOR GRAPH Recommender SYNTAX V2 { 
 	// This query initialize the latent factor vectors for the users and the movies
 	// The elements in the latent factor vectors are initialized by a normal distributed random number generator
 	// The query inputs are the standard deviation and the mean of the normal distribution 

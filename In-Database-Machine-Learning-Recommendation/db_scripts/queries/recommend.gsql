@@ -1,4 +1,4 @@
-CREATE QUERY recommend(VERTEX<USER> user) FOR GRAPH Recommender {
+CREATE QUERY recommend(VERTEX<USER> user) FOR GRAPH Recommender SYNTAX V2 {
 	//This query output the top-10 movies recommended to a user
 	//The movies are recommended based on the rating prediction
 	SumAccum<DOUBLE> @predicted_rating;
