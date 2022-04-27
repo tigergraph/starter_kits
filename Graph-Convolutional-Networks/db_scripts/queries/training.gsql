@@ -6,7 +6,7 @@ CREATE QUERY training(
 	DOUBLE keepProb = 1.0, #keep probability for the dropout regularization 
 	DOUBLE lambda = 0.00005, # L2 regularization factor
 	INT MaxIter = 10) # number of epochs
-FOR GRAPH CitationGraph { 
+FOR GRAPH CitationGraph SYNTAX V2 { 
 	/*This query trains the graph convolutional neural network on the training dataset and evaluates the loss on the validation data and the prediction accuracy on the testing data. */
   ArrayAccum<SumAccum<DOUBLE>> @@W_0[1433][16]; #1433 by 16
 	ArrayAccum<SumAccum<DOUBLE>> @@W_1[16][7];   #16 by 7
@@ -37,12 +37,12 @@ FOR GRAPH CitationGraph {
 	INT test_cnt = 1000;
 	## load weights into @@W_0 and @@W_1
 	WORDs = {WORD.*};
-	LAYER_0s = SELECT t FROM WORDs:s -(:e)->LAYER_0:t
+	LAYER_0s = SELECT t FROM WORDs:s -(:e)- LAYER_0:t
 	           ACCUM 
 	             @@W_0[s.indx][t.indx] += e.weight;
 
 	
-	LAYER_1s = SELECT t FROM LAYER_0s:s -(:e)->LAYER_1:t
+	LAYER_1s = SELECT t FROM LAYER_0s:s -(:e)- LAYER_1:t
 	           ACCUM
 	             @@W_1[s.indx][t.indx] += e.weight;
 	
@@ -72,7 +72,7 @@ WHILE iter < MaxIter  DO
 	          ;
 
 	## convolve
-	Start = SELECT s FROM Start:s -(CITE:e)->PAPER:t
+	Start = SELECT s FROM Start:s -(CITE:e)- PAPER:t
 	        ACCUM t.@z_0 += product_ArrayAccum_const(s.@zeta_0,e.weight)
 	        POST-ACCUM
 	          s.@z_0 = ReLU_ArrayAccum(s.@z_0),
@@ -82,7 +82,7 @@ WHILE iter < MaxIter  DO
 	          ;
 	          
 	## convolve
-	Start = SELECT s FROM Start:s -(CITE:e)->PAPER:t
+	Start = SELECT s FROM Start:s -(CITE:e)- PAPER:t
 	        ACCUM t.@z_1 += product_ArrayAccum_const(s.@zeta_1,e.weight)
 	        POST-ACCUM
 	          s.@y = softmax_ArrayAccum(s.@z_1),
@@ -103,7 +103,7 @@ WHILE iter < MaxIter  DO
 
 	## backpropagation
 	
-	Training1 = SELECT t FROM Start:s -(CITE:e)->PAPER:t
+	Training1 = SELECT t FROM Start:s -(CITE:e)- PAPER:t
 	        WHERE s.train
 	        ACCUM t.@dzeta_1 += product_ArrayAccum_const(s.@dz_1,e.weight)
 	        POST-ACCUM
@@ -115,7 +115,7 @@ WHILE iter < MaxIter  DO
 	            END
 	          END
 	          ;
-	Training0 = SELECT t FROM Training1:s -(CITE:e)->PAPER:t
+	Training0 = SELECT t FROM Training1:s -(CITE:e)- PAPER:t
 	        ACCUM t.@dzeta_0 += product_ArrayAccum_const(s.@dz_0,e.weight)
 	        POST-ACCUM
 	          FOREACH (k,v) IN t.@words DO
@@ -146,11 +146,11 @@ END;
 	
 	## persist @@W_0 and @@W_1 in weights
 	WORDs = {WORD.*};
-	LAYER_0s = SELECT t FROM WORDs:s -(:e)->LAYER_0:t
+	LAYER_0s = SELECT t FROM WORDs:s -(:e)- LAYER_0:t
 	           ACCUM 
 	             e.weight = @@W_0[s.indx][t.indx];
 
-	LAYER_1s = SELECT t FROM LAYER_0s:s -(:e)->LAYER_1:t
+	LAYER_1s = SELECT t FROM LAYER_0s:s -(:e)- LAYER_1:t
 	           ACCUM
 	             e.weight = @@W_1[s.indx][t.indx];
 	

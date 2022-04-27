@@ -1,4 +1,4 @@
-CREATE QUERY README(/* Parameters here */) FOR GRAPH CitationGraph { 
+CREATE QUERY README(/* Parameters here */) FOR GRAPH CitationGraph SYNTAX V2 { 
   /* 
 The recommendation system can predict the movie ratings based on the latent factor (model-based) method.
 To train the latent factor model, run the queries below in sequence 
