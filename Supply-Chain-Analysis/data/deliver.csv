@@ -1,0 +1,14 @@
+src_site_bid,dest_site_bid,item_master_bid
+site4,site3,CAR RIMS
+site5,site4,ALUMINUM RODS
+site5,site9,STEEL RODS
+site5,site15,STEEL RODS
+site8,site13,CONTROLLER
+site14,site4,ABS MODULE
+site9,site2,BELTS
+site2,site12,TIRES
+site11,site12,RUBBER
+site2,site1,TIRES
+site15,site1,TRUCK RIM
+site8,site14,CONTROLLER
+site7,site13,VALVE STEM
