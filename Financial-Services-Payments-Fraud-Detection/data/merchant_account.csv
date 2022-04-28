@@ -1,0 +1,136 @@
+id,created_date,mobile,createEpoch,email,Bank
+merchant1,7/13/19,(510) 378-8387,1562976000,merchant1@domain..com,Bank of America
+merchant2,4/12/04,(805) 447-1000,1081728000,merchant2@domain..com,BNY Mellon
+merchant3,5/10/01,3108082222,989452800,merchant3@domain..com,BBVA
+merchant4,5/2/16,(650) 944-6000,1462147200,merchant4@domain..com,American Express 95
+merchant5,1/6/11,(480) 627-4427,1294272000,merchant5@domain..com,Bank of Montreal
+merchant6,11/14/03,(405) 641-1629,1068768000,merchant6@domain..com,Bank of America
+merchant7,5/13/18,(800) 847-2911,1526169600,merchant7@domain..com,Bank of America
+merchant8,4/20/09,(319) 398-8511,1240185600,merchant8@domain..com,Bank of America
+merchant9,6/21/05,(212) 559-1000,1119312000,merchant9@domain..com,Bank of America
+merchant10,4/23/18,(713) 876-1966,1524441600,merchant10@domain..com,Bank of America
+merchant11,3/8/07,(647) 287-1764,1173312000,merchant11@domain..com,Bank of America
+merchant12,10/23/07,(720) 840-6984,1193097600,merchant12@domain..com,Bank of America
+merchant13,2/12/14,+91 95 60602621,1392163200,merchant13@domain..com,Bank of America
+merchant14,2/12/18,(917) 891-5490,1518393600,merchant14@domain..com,Bank of America
+merchant15,12/20/11,(973) 686-5007,1324339200,merchant15@domain..com,Bank of America
+merchant16,5/3/05,+1 (914) 249-5743,1115078400,merchant16@domain..com,Bank of America
+merchant17,2/26/16,+1 636 980 6639,1456444800,merchant17@domain..com,Bank of America
+merchant18,12/12/10,8.18E+11,1292112000,merchant18@domain..com,Bank of America
+merchant19,11/7/04,-7665,1099785600,merchant19@domain..com,Bank of America
+merchant20,8/6/12,+81 (80) 1182-6159,1344211200,merchant20@domain..com,Bank of America
+merchant21,8/5/12,+1 310 347 8902,1344124800,merchant21@domain..com,Bank of America
+merchant24,1/26/16,+1 (516) 423 1200,1453766400,merchant24@domain..com,BBVA
+merchant25,10/7/01,+1 (650) 743-0004,1002412800,merchant25@domain..com,BBVA
+merchant26,9/8/12,+1 (650) 799-7020,1347062400,merchant26@domain..com,BBVA
+merchant27,12/6/17,(800) 847-2911,1512518400,merchant27@domain..com,BBVA
+merchant28,6/3/12,+1 415 205-9363,1338681600,merchant28@domain..com,BBVA
+merchant29,9/1/17,9.73E+11,1504224000,merchant29@domain..com,BBVA
+merchant30,7/8/02,(408) 535-1500,1026086400,merchant30@domain..com,BBVA
+merchant31,10/19/01,-11012,1003449600,merchant31@domain..com,BBVA
+merchant32,9/24/17,(408) 535-1500,1506211200,merchant32@domain..com,BBVA
+merchant33,7/22/03,(650) 944-6000,1058832000,merchant33@domain..com,BBVA
+merchant34,1/14/03,(650) 506-7000,1042502400,merchant34@domain..com,BBVA
+merchant35,6/14/17,(781) 494-5800,1497398400,merchant35@domain..com,BBVA
+merchant36,6/23/08,(212) 897-6900,1214179200,merchant36@domain..com,BBVA
+merchant37,4/3/04,(925) 283-9555,1080950400,merchant37@domain..com,BBVA
+merchant38,12/27/05,(440) 352-8444,1135641600,merchant38@domain..com,BBVA
+merchant39,3/10/00,(503) 790-2500,952646400,merchant39@domain..com,BBVA
+merchant40,2/6/01,(800) 325-2424,981417600,merchant40@domain..com,BBVA
+merchant41,6/10/12,(703) 984-8400,1339286400,merchant41@domain..com,BBVA
+merchant42,7/6/16,(323) 655-5789,1467763200,merchant42@domain..com,BBVA
+merchant43,11/9/04,(206) 973-5100,1099958400,merchant43@domain..com,BBVA
+merchant46,3/5/07,(323) 655-5789,1173052800,merchant46@domain..com,BBVA
+merchant47,8/4/05,(323) 655-5789,1123113600,merchant47@domain..com,BBVA
+merchant48,1/10/12,(703) 224-1000,1326153600,merchant48@domain..com,BBVA
+merchant49,6/13/18,(479) 273-4000,1528848000,merchant49@domain..com,Bank of Montreal
+merchant50,2/25/12,(408) 383-9200,1330128000,merchant50@domain..com,Bank of Montreal
+merchant51,10/16/16,+44 2071-665500,1476576000,merchant51@domain..com,Bank of Montreal
+merchant52,4/28/07,(416) 734-1000,1177718400,merchant52@domain..com,Bank of Montreal
+merchant53,7/28/03,(800) 847-2911,1059350400,merchant53@domain..com,Bank of Montreal
+merchant54,10/9/18,(714) 566-1000,1539043200,merchant54@domain..com,Bank of Montreal
+merchant55,5/4/06,(281) 583-4400,1146700800,merchant55@domain..com,Bank of Montreal
+merchant56,7/14/14,(212) 559-1000,1405296000,merchant56@domain..com,Bank of Montreal
+merchant57,5/17/01,(800) 543-3562,990057600,merchant57@domain..com,Bank of Montreal
+merchant58,12/8/13,(650) 857-1501,1386460800,merchant58@domain..com,Bank of Montreal
+merchant59,9/26/05,(408) 536-6000,1127692800,merchant59@domain..com,Bank of Montreal
+merchant60,1/21/08,(650) 621-7700,1200873600,merchant60@domain..com,Bank of Montreal
+merchant61,11/28/15,(323) 655-5789,1448668800,merchant61@domain..com,Bank of Montreal
+merchant62,8/19/17,949-231-8188,1503100800,merchant62@domain..com,Bank of Montreal
+merchant63,9/21/11,-7934,1316563200,merchant63@domain..com,Bank of Montreal
+merchant64,12/16/10,-14428,1292457600,merchant64@domain..com,Bank of Montreal
+merchant65,3/22/15,(650) 787-1459,1426982400,merchant65@domain..com,Bank of Montreal
+merchant68,1/20/14,(415) 848-8400,1390176000,merchant68@domain..com,Bank of Montreal
+merchant69,5/24/14,(415) 357-7600,1400889600,merchant69@domain..com,American Express 95
+merchant70,3/11/17,507519999,1489190400,merchant70@domain..com,American Express 95
+merchant71,4/16/11,(331) 332-2547,1302912000,merchant71@domain..com,American Express 95
+merchant72,10/21/06,(714) 250-3000,1161388800,merchant72@domain..com,American Express 95
+merchant73,4/16/16,(714) 250-3000,1460764800,merchant73@domain..com,American Express 95
+merchant74,3/12/16,(714) 250-3000,1457740800,merchant74@domain..com,American Express 95
+merchant75,6/15/00,(714) 250-3000,961027200,merchant75@domain..com,American Express 95
+merchant76,11/3/06,(888) 546-5118,1162512000,merchant76@domain..com,American Express 95
+merchant77,7/25/16,(212) 323-0200,1469404800,merchant77@domain..com,American Express 95
+merchant78,2/27/14,(650) 432-3495,1393459200,merchant78@domain..com,American Express 95
+merchant79,2/9/10,(800) 847-2911,1265673600,merchant79@domain..com,American Express 95
+merchant80,6/1/02,617.945.0108,1022889600,merchant80@domain..com,Mastercard
+merchant81,12/1/02,(212) 395-1000,1038700800,merchant81@domain..com,Mastercard
+merchant82,3/7/14,(203) 912-1859,1394150400,merchant82@domain..com,Mastercard
+merchant83,8/26/05,(203) 249-6367,1125014400,merchant83@domain..com,Mastercard
+merchant84,8/19/12,(203) 810-1000,1345334400,merchant84@domain..com,Mastercard
+merchant85,12/17/01,(212) 553-1653,1008547200,merchant85@domain..com,Mastercard
+merchant86,1/9/04,(212) 484-8000,1073606400,merchant86@domain..com,Mastercard
+merchant87,2/19/06,(323) 985-8000,1140307200,merchant87@domain..com,Mastercard
+merchant88,2/14/15,(224) 521-8000,1423872000,merchant88@domain..com,Mastercard
+merchant89,5/8/00,(720) 332-1000,957744000,merchant89@domain..com,Mastercard
+merchant90,4/17/10,(303) 248-6708,1271462400,merchant90@domain..com,Mastercard
+merchant91,3/24/06,-412003,1143158400,merchant91@domain..com,Mastercard
+merchant92,3/19/14,(619) 729-7723,1395187200,merchant92@domain..com,Mastercard
+merchant93,8/19/14,-13418934596,1408406400,merchant93@domain..com,Mastercard
+merchant96,8/2/03,(425) 378-4000,1059782400,merchant96@domain..com,Mastercard
+merchant97,4/1/15,(365) 165-1776,1427846400,merchant97@domain..com,Mastercard
+merchant98,11/4/02,(212) 761-4000,1036368000,merchant98@domain..com,Mastercard
+merchant99,10/10/12,(703) 861-3608,1349827200,merchant99@domain..com,Mastercard
+merchant100,5/24/03,(202) 358-1580,1053734400,merchant100@domain..com,Mastercard
+merchant101,9/26/16,(704) 386-5681,1474848000,merchant101@domain..com,Mastercard
+merchant102,9/25/08,+44 20 7888-8888,1222300800,merchant102@domain..com,Visa
+merchant103,7/23/08,(805) 557-2300,1216771200,merchant103@domain..com,Visa
+merchant104,6/7/07,(816) 588-3558,1181174400,merchant104@domain..com,Visa
+merchant105,2/11/03,(818) 599-2280,1044921600,merchant105@domain..com,Visa
+merchant106,6/28/05,(205) 268-1000,1119916800,merchant106@domain..com,Visa
+merchant107,12/15/13,(714) 250-3000,1387065600,merchant107@domain..com,Visa
+merchant108,8/18/13,(952) 591-3000,1376784000,merchant108@domain..com,Visa
+merchant109,8/18/13,(480) 677-0682,1376784000,merchant109@domain..com,Visa
+merchant110,6/19/11,(480) 370-4595,1308441600,merchant110@domain..com,Visa
+merchant111,7/25/15,6129861552,1437782400,merchant111@domain..com,Visa
+merchant112,3/19/14,(925) 279-2300,1395187200,merchant112@domain..com,Visa
+merchant115,1/11/10,(408) 299-5001,1263168000,merchant115@domain..com,Visa
+merchant116,2/27/14,(408) 967-1000,1393459200,merchant116@domain..com,Visa
+merchant117,12/7/05,(646) 823-9527,1133913600,merchant117@domain..com,Visa
+merchant118,6/24/10,(212) 401-8700,1277337600,merchant118@domain..com,Visa
+merchant119,10/7/13,(334) 303-4533,1381104000,merchant119@domain..com,Visa
+merchant120,8/14/04,(703) 919-7925,1092441600,merchant120@domain..com,Visa
+merchant121,4/16/12,(408) 299-5001,1334534400,merchant121@domain..com,Visa
+merchant122,11/24/16,(210) 821-4105,1479945600,merchant122@domain..com,Visa
+merchant123,6/12/00,(703) 375-9507,960768000,merchant123@domain..com,Visa
+merchant124,4/9/07,(888) 762-2265,1176076800,merchant124@domain..com,Visa
+merchant125,11/27/03,(412) 467-1059,1069891200,merchant125@domain..com,Visa
+merchant126,11/27/16,(562) 435-3666,1480204800,merchant126@domain..com,Visa
+merchant127,5/24/03,(405) 848-8000,1053734400,merchant127@domain..com,Visa
+merchant128,1/24/11,(800) 847-2911,1295827200,merchant128@domain..com,Visa
+merchant129,12/27/08,(212) 401-8700,1230336000,merchant129@domain..com,Visa
+merchant130,7/16/12,(405) 848-8000,1342396800,merchant130@domain..com,Visa
+merchant131,9/28/18,(908) 740-4000,1538092800,merchant131@domain..com,Visa
+merchant132,2/11/15,(212) 855-1000,1423612800,merchant132@domain..com,Visa
+merchant133,2/3/06,(800) 847-2911,1138924800,merchant133@domain..com,Visa
+merchant134,9/13/01,240-344-8986,1000339200,merchant134@domain..com,Visa
+merchant135,6/22/11,(203) 810-1000,1308700800,merchant135@domain..com,Visa
+merchant136,12/6/07,(702) 891-1111,1196899200,merchant136@domain..com,Visa
+merchant137,10/18/17,(702) 891-1111,1508284800,merchant137@domain..com,Visa
+merchant138,1/12/04,(206) 972-6600,1073865600,merchant138@domain..com,Visa
+merchant140,8/17/11,(318) 388-9000,1313539200,merchant140@domain..com,Visa
+merchant141,5/16/12,(318) 388-9000,1337126400,merchant141@domain..com,Visa
+merchant142,8/10/07,(310) 783-2000,1186704000,merchant142@domain..com,Visa
+merchant143,2/8/01,(800) 511-2265,981590400,merchant143@domain..com,Visa
+merchant144,3/4/05,(415) 507-5000,1109894400,merchant144@domain..com,Visa
+merchant145,9/9/03,+86 183817054866,1063065600,merchant145@domain..com,Visa
+merchant146,3/1/02,+86 18101880503,1014940800,merchant146@domain..com,Visa

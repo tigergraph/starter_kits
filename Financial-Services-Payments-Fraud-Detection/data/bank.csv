@@ -1,0 +1,8 @@
+Bank_id,Name,ABA_Routing_Number,Swift_Code
+American Express 95,American Express Credit Card,124085066,AEIBPKK1XXX
+BNY Mellon,Bank of New York Mellon,21000018,IRVTUS3N
+BBVA,BBVA Texas,113010547,BBVAESMM
+Bank of Montreal,Bank of Montreal,BOFMCAM2,BOFMCAM2
+Bank of America,Bank of America California,121000358,BOFAUS3NXXX
+Mastercard,Mastercard credit card,,MACSUS33
+Visa,Visa credit card,,VISAUS6S

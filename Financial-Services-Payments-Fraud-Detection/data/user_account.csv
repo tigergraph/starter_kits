@@ -1,0 +1,150 @@
+id,user,created_date,mobile,createEpoch,email,Bank,trust_score
+user_account1,user1,7/13/19,(510) 378-8387,1562976000,user1@domain..com,American Express 95,0.5
+user_account2,user2,4/12/04,(805) 447-1000,1081728000,user2@domain..com,BNY Mellon,0.5
+user_account3,user3,5/10/01,3108082222,989452800,user3@domain..com,BBVA,0.5
+user_account4,user4,5/2/16,(650) 944-6000,1462147200,user4@domain..com,American Express 95,0.5
+user_account5,user5,1/6/11,(480) 627-4427,1294272000,user5@domain..com,Bank of Montreal,0.5
+user_account6,user6,11/14/03,(405) 641-1629,1068768000,user6@domain..com,Bank of America,0.5
+user_account7,user7,5/13/18,(800) 847-2911,1526169600,user7@domain..com,Bank of America,0.5
+user_account8,user8,4/20/09,(319) 398-8511,1240185600,user8@domain..com,Bank of America,0.5
+user_account9,user9,6/21/05,(212) 559-1000,1119312000,user9@domain..com,Bank of America,0.5
+user_account10,user10,4/23/18,(713) 876-1966,1524441600,user10@domain..com,Bank of America,0.5
+user_account11,user11,3/8/07,(647) 287-1764,1173312000,user11@domain..com,Bank of America,0.5
+user_account12,user12,10/23/07,(720) 840-6984,1193097600,user12@domain..com,Bank of America,0.5
+user_account13,user13,2/12/14,+91 95 60602621,1392163200,user13@domain..com,Bank of America,0.5
+user_account14,user14,2/12/18,(917) 891-5490,1518393600,user14@domain..com,Bank of America,0.5
+user_account15,user15,12/20/11,(973) 686-5007,1324339200,user15@domain..com,Bank of America,0.5
+user_account16,user16,5/3/05,+1 (914) 249-5743,1115078400,user16@domain..com,Bank of America,0.5
+user_account17,user17,2/26/16,+1 636 980 6639,1456444800,user17@domain..com,Bank of America,0.5
+user_account18,user18,12/12/10,8.18E+11,1292112000,user18@domain..com,Bank of America,0.5
+user_account19,user19,11/7/04,-7665,1099785600,user19@domain..com,Bank of America,0.5
+user_account20,user20,8/6/12,+81 (80) 1182-6159,1344211200,user20@domain..com,Bank of America,0.5
+user_account21,user21,8/5/12,+1 310 347 8902,1344124800,user21@domain..com,Bank of America,0.5
+user_account24,user24,1/26/16,+1 (516) 423 1200,1453766400,user24@domain..com,BBVA,0.5
+user_account25,user25,10/7/01,+1 (650) 743-0004,1002412800,user25@domain..com,BBVA,0.5
+user_account26,user26,9/8/12,+1 (650) 799-7020,1347062400,user26@domain..com,BBVA,0.5
+user_account27,user27,12/6/17,(800) 847-2911,1512518400,user27@domain..com,BBVA,0.5
+user_account28,user28,6/3/12,+1 415 205-9363,1338681600,user28@domain..com,BBVA,0.5
+user_account29,user29,9/1/17,9.73E+11,1504224000,user29@domain..com,BBVA,0.5
+user_account30,user30,7/8/02,(408) 535-1500,1026086400,user30@domain..com,BBVA,0.5
+user_account31,user31,10/19/01,-11012,1003449600,user31@domain..com,BBVA,0.5
+user_account32,user32,9/24/17,(408) 535-1500,1506211200,user32@domain..com,BBVA,0.5
+user_account33,user33,7/22/03,(650) 944-6000,1058832000,user33@domain..com,BBVA,0.5
+user_account34,user34,1/14/03,(650) 506-7000,1042502400,user34@domain..com,BBVA,0.5
+user_account35,user35,6/14/17,(781) 494-5800,1497398400,user35@domain..com,BBVA,0.5
+user_account36,user36,6/23/08,(212) 897-6900,1214179200,user36@domain..com,BBVA,0.5
+user_account37,user37,4/3/04,(925) 283-9555,1080950400,user37@domain..com,BBVA,0.5
+user_account38,user38,12/27/05,(440) 352-8444,1135641600,user38@domain..com,BBVA,0.5
+user_account39,user39,3/10/00,(503) 790-2500,952646400,user39@domain..com,BBVA,0.5
+user_account40,user40,2/6/01,(800) 325-2424,981417600,user40@domain..com,BBVA,0.5
+user_account41,user41,6/10/12,(703) 984-8400,1339286400,user41@domain..com,BBVA,0.5
+user_account42,user42,7/6/16,(323) 655-5789,1467763200,user42@domain..com,BBVA,0.5
+user_account43,user43,11/9/04,(206) 973-5100,1099958400,user43@domain..com,BBVA,0.5
+user_account46,user46,3/5/07,(323) 655-5789,1173052800,user46@domain..com,BBVA,0.5
+user_account47,user47,8/4/05,(323) 655-5789,1123113600,user47@domain..com,BBVA,0.5
+user_account48,user48,1/10/12,(703) 224-1000,1326153600,user48@domain..com,BBVA,0.5
+user_account49,user49,6/13/18,(479) 273-4000,1528848000,user49@domain..com,Bank of Montreal,0.5
+user_account50,user50,2/25/12,(408) 383-9200,1330128000,user50@domain..com,Bank of Montreal,0.5
+user_account51,user51,10/16/16,+44 2071-665500,1476576000,user51@domain..com,Bank of Montreal,0.5
+user_account52,user52,4/28/07,(416) 734-1000,1177718400,user52@domain..com,Bank of Montreal,0.5
+user_account53,user53,7/28/03,(800) 847-2911,1059350400,user53@domain..com,Bank of Montreal,0.5
+user_account54,user54,10/9/18,(714) 566-1000,1539043200,user54@domain..com,Bank of Montreal,0.5
+user_account55,user55,5/4/06,(281) 583-4400,1146700800,user55@domain..com,Bank of Montreal,0.5
+user_account56,user56,7/14/14,(212) 559-1000,1405296000,user56@domain..com,Bank of Montreal,0.5
+user_account57,user57,5/17/01,(800) 543-3562,990057600,user57@domain..com,Bank of Montreal,0.5
+user_account58,user58,12/8/13,(650) 857-1501,1386460800,user58@domain..com,Bank of Montreal,0.5
+user_account59,user59,9/26/05,(408) 536-6000,1127692800,user59@domain..com,Bank of Montreal,0.5
+user_account60,user60,1/21/08,(650) 621-7700,1200873600,user60@domain..com,Bank of Montreal,0.5
+user_account61,user61,11/28/15,(323) 655-5789,1448668800,user61@domain..com,Bank of Montreal,0.5
+user_account62,user62,8/19/17,949-231-8188,1503100800,user62@domain..com,Bank of Montreal,0.5
+user_account63,user63,9/21/11,-7934,1316563200,user63@domain..com,Bank of Montreal,0.5
+user_account64,user64,12/16/10,-14428,1292457600,user64@domain..com,Bank of Montreal,0.5
+user_account65,user65,3/22/15,(650) 787-1459,1426982400,user65@domain..com,Bank of Montreal,0.5
+user_account68,user68,1/20/14,(415) 848-8400,1390176000,user68@domain..com,Bank of Montreal,0.5
+user_account69,user69,5/24/14,(415) 357-7600,1400889600,user69@domain..com,American Express 95,0.5
+user_account70,user70,3/11/17,507519999,1489190400,user70@domain..com,American Express 95,0.5
+user_account71,user71,4/16/11,(331) 332-2547,1302912000,user71@domain..com,American Express 95,0.5
+user_account72,user72,10/21/06,(714) 250-3000,1161388800,user72@domain..com,American Express 95,0.5
+user_account73,user73,4/16/16,(714) 250-3000,1460764800,user73@domain..com,American Express 95,0.5
+user_account74,user74,3/12/16,(714) 250-3000,1457740800,user74@domain..com,American Express 95,0.5
+user_account75,user75,6/15/00,(714) 250-3000,961027200,user75@domain..com,American Express 95,0.5
+user_account76,user76,11/3/06,(888) 546-5118,1162512000,user76@domain..com,American Express 95,0.5
+user_account77,user77,7/25/16,(212) 323-0200,1469404800,user77@domain..com,American Express 95,0.5
+user_account78,user78,2/27/14,(650) 432-3495,1393459200,user78@domain..com,American Express 95,0.5
+user_account79,user79,2/9/10,(800) 847-2911,1265673600,user79@domain..com,American Express 95,0.5
+user_account80,user80,6/1/02,617.945.0108,1022889600,user80@domain..com,Mastercard,0.5
+user_account81,user81,12/1/02,(212) 395-1000,1038700800,user81@domain..com,Mastercard,0.5
+user_account82,user82,3/7/14,(203) 912-1859,1394150400,user82@domain..com,Mastercard,0.5
+user_account83,user83,8/26/05,(203) 249-6367,1125014400,user83@domain..com,Mastercard,0.5
+user_account84,user84,8/19/12,(203) 810-1000,1345334400,user84@domain..com,Mastercard,0.5
+user_account85,user85,12/17/01,(212) 553-1653,1008547200,user85@domain..com,Mastercard,0.5
+user_account86,user86,1/9/04,(212) 484-8000,1073606400,user86@domain..com,Mastercard,0.5
+user_account87,user87,2/19/06,(323) 985-8000,1140307200,user87@domain..com,Mastercard,0.5
+user_account88,user88,2/14/15,(224) 521-8000,1423872000,user88@domain..com,Mastercard,0.5
+user_account89,user89,5/8/00,(720) 332-1000,957744000,user89@domain..com,Mastercard,0.5
+user_account90,user90,4/17/10,(303) 248-6708,1271462400,user90@domain..com,Mastercard,0.5
+user_account91,user91,3/24/06,-412003,1143158400,user91@domain..com,Mastercard,0.5
+user_account92,user92,3/19/14,(619) 729-7723,1395187200,user92@domain..com,Mastercard,0.5
+user_account93,user93,8/19/14,-13418934596,1408406400,user93@domain..com,Mastercard,0.5
+user_account96,user96,8/2/03,(425) 378-4000,1059782400,user96@domain..com,Mastercard,0.5
+user_account97,user97,4/1/15,(365) 165-1776,1427846400,user97@domain..com,Mastercard,0.5
+user_account98,user98,11/4/02,(212) 761-4000,1036368000,user98@domain..com,Mastercard,0.5
+user_account99,user99,10/10/12,(703) 861-3608,1349827200,user99@domain..com,Mastercard,0.5
+user_account100,user100,5/24/03,(202) 358-1580,1053734400,user100@domain..com,Mastercard,0.5
+user_account101,user101,9/26/16,(704) 386-5681,1474848000,user101@domain..com,Mastercard,0
+user_account102,user102,9/25/08,+44 20 7888-8888,1222300800,user102@domain..com,Visa,0.5
+user_account103,user103,7/23/08,(805) 557-2300,1216771200,user103@domain..com,Visa,0.5
+user_account104,user104,6/7/07,(816) 588-3558,1181174400,user104@domain..com,Visa,0.5
+user_account105,user105,2/11/03,(818) 599-2280,1044921600,user105@domain..com,Visa,0.5
+user_account106,user106,6/28/05,(205) 268-1000,1119916800,user106@domain..com,Visa,0.5
+user_account107,user107,12/15/13,(714) 250-3000,1387065600,user107@domain..com,Visa,0.5
+user_account108,user108,8/18/13,(952) 591-3000,1376784000,user108@domain..com,Visa,0
+user_account109,user109,8/18/13,(480) 677-0682,1376784000,user109@domain..com,Visa,0.5
+user_account110,user110,6/19/11,(480) 370-4595,1308441600,user110@domain..com,Visa,0.5
+user_account111,user111,7/25/15,6129861552,1437782400,user111@domain..com,Visa,0.5
+user_account112,user112,3/19/14,(925) 279-2300,1395187200,user112@domain..com,Visa,0.5
+user_account115,user115,1/11/10,(408) 299-5001,1263168000,user115@domain..com,Visa,0.5
+user_account116,user116,2/27/14,(408) 967-1000,1393459200,user116@domain..com,Visa,0.5
+user_account117,user117,12/7/05,(646) 823-9527,1133913600,user117@domain..com,Visa,0.5
+user_account118,user118,6/24/10,(212) 401-8700,1277337600,user118@domain..com,Visa,0.5
+user_account119,user119,10/7/13,(334) 303-4533,1381104000,user119@domain..com,Visa,0.5
+user_account120,user120,8/14/04,(703) 919-7925,1092441600,user120@domain..com,Visa,0.5
+user_account121,user121,4/16/12,(408) 299-5001,1334534400,user121@domain..com,Visa,0.5
+user_account122,user122,11/24/16,(210) 821-4105,1479945600,user122@domain..com,Visa,0.5
+user_account123,user123,6/12/00,(703) 375-9507,960768000,user123@domain..com,Visa,0.5
+user_account124,user124,4/9/07,(888) 762-2265,1176076800,user124@domain..com,Visa,0.5
+user_account125,user125,11/27/03,(412) 467-1059,1069891200,user125@domain..com,Visa,0.5
+user_account126,user126,11/27/16,(562) 435-3666,1480204800,user126@domain..com,Visa,0.5
+user_account127,user127,5/24/03,(405) 848-8000,1053734400,user127@domain..com,Visa,0.5
+user_account128,user128,1/24/11,(800) 847-2911,1295827200,user128@domain..com,Visa,0.5
+user_account129,user129,12/27/08,(212) 401-8700,1230336000,user129@domain..com,Visa,0.5
+user_account130,user130,7/16/12,(405) 848-8000,1342396800,user130@domain..com,Visa,0.5
+user_account131,user131,9/28/18,(908) 740-4000,1538092800,user131@domain..com,Visa,0.5
+user_account132,user132,2/11/15,(212) 855-1000,1423612800,user132@domain..com,Visa,0.5
+user_account133,user133,2/3/06,(800) 847-2911,1138924800,user133@domain..com,Visa,0.5
+user_account134,user134,9/13/01,240-344-8986,1000339200,user134@domain..com,Visa,0.5
+user_account135,user135,6/22/11,(203) 810-1000,1308700800,user135@domain..com,Visa,0.5
+user_account136,user136,12/6/07,(702) 891-1111,1196899200,user136@domain..com,Visa,0.5
+user_account137,user137,10/18/17,(702) 891-1111,1508284800,user137@domain..com,Visa,0.5
+user_account138,user138,1/12/04,(206) 972-6600,1073865600,user138@domain..com,Visa,0.5
+user_account140,user140,8/17/11,(318) 388-9000,1313539200,user140@domain..com,Visa,0.5
+user_account141,user141,5/16/12,(318) 388-9000,1337126400,user141@domain..com,Visa,0.5
+user_account142,user142,8/10/07,(310) 783-2000,1186704000,user142@domain..com,Visa,0.5
+user_account143,user143,2/8/01,(800) 511-2265,981590400,user143@domain..com,Visa,0.5
+user_account144,user144,3/4/05,(415) 507-5000,1109894400,user144@domain..com,Visa,0.5
+user_account145,user145,9/9/03,+86 183817054866,1063065600,user145@domain..com,Visa,0.5
+user_account146,user146,3/1/02,+86 18101880503,1014940800,user146@domain..com,Visa,0.5
+user_account147,user147,4/1/11,(702) 891-1111,1301616000,user147@domain..com,Bank of Montreal,0.5
+user_account148,user148,11/1/08,7176683048,1225497600,user148@domain..com,Bank of Montreal,0.5
+user_account149,user149,4/24/04,(804) 747-0422,1082764800,user149@domain..com,Bank of Montreal,0.5
+user_account150,user150,7/27/16,(571) 419-4355,1469577600,user150@domain..com,Bank of Montreal,0.5
+user_account151,user151,2/9/12,2029972736,1328745600,user151@domain..com,Bank of Montreal,0.5
+user_account152,user152,4/13/13,(860) 277-0111,1365811200,user152@domain..com,Bank of Montreal,0.5
+user_account153,user153,7/7/02,(804) 432-8850,1026000000,user153@domain..com,Bank of Montreal,0.5
+user_account154,user154,7/14/11,alec.shuldiner@autodesk.com,1310601600,user154@domain..com,Bank of Montreal,0.5
+user_account155,user155,3/13/06,(805) 447-1000,1142208000,user155@domain..com,Bank of Montreal,0.5
+user_account156,user156,7/24/15,(817) 928-1500,1437696000,user156@domain..com,Bank of Montreal,0.5
+user_account157,user157,4/3/16,(213) 427-4233,1459641600,user157@domain..com,Bank of Montreal,0.5
+user_account158,user158,6/25/14,(415) 507-5000,1403654400,user158@domain..com,Bank of Montreal,0.5
+user_account159,user159,12/3/04,(212) 761-4000,1102032000,user159@domain..com,American Express 95,"0,0"
+user_account160,user160,1/27/11,(425) 256-8000,1296086400,user160@domain..com,American Express 95,0.5
