@@ -1,4 +1,5 @@
-CREATE QUERY nested_expression(set<vertex<customer>> p, set<vertex<context>> c) FOR GRAPH recommendation API("v2") SYNTAX v2 {
+CREATE QUERY nested_expression(set<vertex<customer>> p, set<vertex<context>> c) 
+  FOR GRAPH recommendation API("v2") SYNTAX v2 {
 /**
 Recommend the highest rated product for a customer while taking into account the weather and the time of the day.
 

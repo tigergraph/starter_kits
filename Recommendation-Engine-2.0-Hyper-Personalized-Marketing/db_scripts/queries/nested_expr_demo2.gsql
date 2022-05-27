@@ -2,62 +2,62 @@ CREATE QUERY nested_expr_demo2() FOR GRAPH recommendation API("v2") SYNTAX v2 {
   TYPEDEF TUPLE<vertex<demographic> v, double f0> OrderTuple_1;
 
   AvgAccum @Agg_1_avg_of_cf_affinity_times_df_affinity;
-  HeapAccum<OrderTuple_1>(1, f0 DESC) @@OrderHeap_1;
-  SetAccum<vertex<demographic>> @@OrderVertexSet_1;
-  SetAccum<edge> @@FinalEdgeSet_4;
-  SetAccum<edge> @@FinalEdgeSet_6;
-  SetAccum<edge> @@FinalEdgeSet_5;
-  SetAccum<vertex<demographic>> @@FinalVertexSet_1;
-  SetAccum<vertex<customer>> @@FinalVertexSet_2;
-  SetAccum<vertex<feature>> @@FinalVertexSet_3;
+  HeapAccum<OrderTuple_1>(1, f0 DESC) @@order_heap_1;
+  SetAccum<vertex<demographic>> @@order_vertex_set_1;
+  SetAccum<edge> @@final_edge_set_4;
+  SetAccum<edge> @@final_edge_set_6;
+  SetAccum<edge> @@final_edge_set_5;
+  SetAccum<vertex<demographic>> @@final_vertex_set_1;
+  SetAccum<vertex<customer>> @@final_vertex_set_2;
+  SetAccum<vertex<feature>> @@final_vertex_set_3;
 
-  VertexSet_1 = 
+  vertex_set_1 = 
         SELECT alias_schema_1
         FROM demographic:alias_schema_1 -(demo_customer:alias_schema_4)- customer:alias_schema_2,
              demographic:alias_schema_1 -(demo_feature:df)- feature:alias_schema_3,
              customer:alias_schema_2 -(customer_feature:cf)- feature:alias_schema_3
         ACCUM alias_schema_1.@Agg_1_avg_of_cf_affinity_times_df_affinity += (cf.affinity * df.affinity)
-        POST-ACCUM @@OrderHeap_1 += OrderTuple_1(alias_schema_1, alias_schema_1.@Agg_1_avg_of_cf_affinity_times_df_affinity)
+        POST-ACCUM @@order_heap_1 += OrderTuple_1(alias_schema_1, alias_schema_1.@Agg_1_avg_of_cf_affinity_times_df_affinity)
         ;
 
-  WHILE (@@OrderHeap_1.size() > 0) DO
-    @@OrderVertexSet_1 += @@OrderHeap_1.pop().v;
+  WHILE (@@order_heap_1.size() > 0) DO
+    @@order_vertex_set_1 += @@order_heap_1.pop().v;
   END;
-  VertexSet_1 = { @@OrderVertexSet_1 };
+  vertex_set_1 = { @@order_vertex_set_1 };
 
-  VertexSet_1 = 
+  vertex_set_1 = 
         SELECT alias_schema_1
-        FROM VertexSet_1:alias_schema_1 -(demo_customer:alias_schema_4)- customer:alias_schema_2,
-             VertexSet_1:alias_schema_1 -(demo_feature:df)- feature:alias_schema_3,
+        FROM vertex_set_1:alias_schema_1 -(demo_customer:alias_schema_4)- customer:alias_schema_2,
+             vertex_set_1:alias_schema_1 -(demo_feature:df)- feature:alias_schema_3,
              customer:alias_schema_2 -(customer_feature:cf)- feature:alias_schema_3
-        ACCUM @@FinalEdgeSet_4 += alias_schema_4,
-              @@FinalEdgeSet_6 += df,
-              @@FinalEdgeSet_5 += cf
-        POST-ACCUM @@FinalVertexSet_1 += alias_schema_1
-        POST-ACCUM @@FinalVertexSet_2 += alias_schema_2
-        POST-ACCUM @@FinalVertexSet_3 += alias_schema_3
+        ACCUM @@final_edge_set_4 += alias_schema_4,
+              @@final_edge_set_6 += df,
+              @@final_edge_set_5 += cf
+        POST-ACCUM @@final_vertex_set_1 += alias_schema_1
+        POST-ACCUM @@final_vertex_set_2 += alias_schema_2
+        POST-ACCUM @@final_vertex_set_3 += alias_schema_3
         ;
 
-  PRINT @@FinalEdgeSet_4;
+  PRINT @@final_edge_set_4;
 
-  PRINT @@FinalEdgeSet_6;
+  PRINT @@final_edge_set_6;
 
-  PRINT @@FinalEdgeSet_5;
+  PRINT @@final_edge_set_5;
 
-  VertexSet_1 = { @@FinalVertexSet_1 };
-  PRINT VertexSet_1[
-    VertexSet_1.name AS name,
-    VertexSet_1.@Agg_1_avg_of_cf_affinity_times_df_affinity AS avg_of_cf_affinity_times_df_affinity
+  vertex_set_1 = { @@final_vertex_set_1 };
+  PRINT vertex_set_1[
+    vertex_set_1.name AS name,
+    vertex_set_1.@Agg_1_avg_of_cf_affinity_times_df_affinity AS avg_of_cf_affinity_times_df_affinity
   ];
 
-  VertexSet_2 = { @@FinalVertexSet_2 };
-  PRINT VertexSet_2[
-    VertexSet_2.name AS name
+  vertex_set_2 = { @@final_vertex_set_2 };
+  PRINT vertex_set_2[
+    vertex_set_2.name AS name
   ];
 
-  VertexSet_3 = { @@FinalVertexSet_3 };
-  PRINT VertexSet_3[
-    VertexSet_3.name AS name
+  vertex_set_3 = { @@final_vertex_set_3 };
+  PRINT vertex_set_3[
+    vertex_set_3.name AS name
   ];
 
 }
