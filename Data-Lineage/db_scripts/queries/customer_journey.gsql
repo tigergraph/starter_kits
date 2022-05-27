@@ -1,0 +1,27 @@
+CREATE QUERY customer_journey(vertex<Contact> customer, set<string> campaign_types, 
+	datetime start_time, datetime end_time) FOR GRAPH MyGraph {
+/*
+  Sample input:
+	customer: Sam-Eisenberg
+	start_time: 2018-06-01
+	end_time: 2018-10-01
+*/
+	
+	SumAccum<string> @cam_type, @cam_name, @cam_desc;
+	start = { customer };
+
+  	print start;
+
+	Company = select t from start -(belongs_to)-> Account:t;
+	print Company;
+	campaign = select c
+	           from start-(is_connected_to)-> CampaignMember:c
+	           where c.CreatedDate >= start_time and c.CreatedDate <= end_time
+	           ;
+	campaign = select c from campaign:c -(is_part_of)-> Campaign:t
+	           where campaign_types.size() == 0 or t.Campaign_Type in campaign_types
+	           accum c.@cam_type = t.Campaign_Type,
+	                 c.@cam_name = t.Name,
+	                 c.@cam_desc = t.Description;
+	print campaign as Campaign;
+}

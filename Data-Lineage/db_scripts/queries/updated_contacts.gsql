@@ -1,0 +1,11 @@
+CREATE QUERY updated_contacts() FOR GRAPH MyGraph { 
+	/*
+	 * Finds all the Contacts that have been updated since creation.
+	 */
+  	start = {Contact.*};
+	
+	updated = SELECT s from start:s
+	          where s.Updated == true;
+	
+	print updated;
+}
