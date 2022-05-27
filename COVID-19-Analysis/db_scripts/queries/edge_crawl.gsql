@@ -1,4 +1,4 @@
-CREATE QUERY edgeCrawl()FOR GRAPH MyGraph SYNTAX V2 { 
+CREATE QUERY edge_crawl()FOR GRAPH MyGraph SYNTAX V2 { 
   /**************************************
 	* S1 = Grabbing all Patients that a Patient Infected
 	* S2 = Grabbing all Patients belonging to a well known Case
@@ -6,22 +6,22 @@ CREATE QUERY edgeCrawl()FOR GRAPH MyGraph SYNTAX V2 {
 	* 
 	* Return all EDGEs
 	***************************************/
-	ListAccum<EDGE> @@edgeList;
+	ListAccum<EDGE> @@edge_list;
 	seed = {Patient.*};
 	
 	S1 = SELECT s
 	       FROM seed:s -(INFECTED_BY>:e)- :t
-	       ACCUM @@edgeList += e;
+	       ACCUM @@edge_list += e;
 	
 	S2 = SELECT s
 	         FROM seed:s -(BELONGS_TO_CASE:e)- :t
 	         WHERE t.id NOT IN ("etc", "contact with patient", "overseas inflow")
-	         ACCUM @@edgeList += e;
+	         ACCUM @@edge_list += e;
 	
 	S3 = SELECT s
 	         FROM seed:s -(PATIENT_TRAVELED:e)- :t
 	         WHERE t.outdegree("PATIENT_TRAVELED") > 1
-	         ACCUM @@edgeList += e;
+	         ACCUM @@edge_list += e;
 	
-  PRINT  @@edgeList; 
+  PRINT  @@edge_list; 
 }

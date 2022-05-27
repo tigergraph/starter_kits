@@ -1,44 +1,45 @@
-CREATE QUERY infectionSubgraph(vertex<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
+CREATE QUERY infection_subgraph(vertex<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
 	/**********************************************************
 	 * This query takes a single patient and finds all all infections and potential infections. 
 	 * Potential infections are determined by who came into contact with this person 
 	 * (directly or indirectly) within the symptom onset to release date time frame.
 	 * 
-	 * Sample Parameter: patient 4100000006
+	 * Sample Input: 
+   * p: 4100000006
    *********************************************************/
 	
   DATETIME STARTTIME, ENDTIME;
 	OrAccum @visited;
-	SetAccum<EDGE> @@edgeSet;
+	SetAccum<EDGE> @@edge_set;
   STARTTIME = p.symptom_onset_date;
 	ENDTIME = p.released_date;
 	
-	Infected (ANY) = {p};
-	Infected = select s from Infected:s
+	infected (ANY) = {p};
+	infected = select s from infected:s
 	           accum s.@visited = true;
 	
-	while Infected.size() > 0 limit 100 do
-	  Places = select t from Infected:s-(PATIENT_TRAVELED:e)-TravelEvent:t
+	while infected.size() > 0 limit 100 do
+	  places = select t from infected:s-(PATIENT_TRAVELED:e)-TravelEvent:t
 	           where (t.visited_date >= STARTTIME and 
 							      t.visited_date <= ENDTIME and 
 							      t.outdegree("PATIENT_TRAVELED") > 1)
 	             and t.@visited == false
 	           accum t.@visited = true,
-	                 @@edgeSet += e; 
+	                 @@edge_set += e; 
 	
-	  SamePlace = select t from Places:s-(PATIENT_TRAVELED:e)-Patient:t
+	  same_place = select t from places:s-(PATIENT_TRAVELED:e)-Patient:t
 	              where t.@visited == false 
 	              accum t.@visited = true,
-	                    @@edgeSet += e; 
+	                    @@edge_set += e; 
 	
-	  People = select t from Infected:s-(reverse_INFECTED_BY>:e)-:t
+	  people = select t from infected:s-(reverse_INFECTED_BY>:e)-:t
 	           where (STARTTIME <= t.symptom_onset_date and ENDTIME >= t.symptom_onset_date)
 	             and t.@visited == false
 	           accum t.@visited = true,
-	                 @@edgeSet += e;
+	                 @@edge_set += e;
 	
-	  Infected = SamePlace UNION People;
+	  infected = same_place UNION people;
 	end;
 	
-	print @@edgeSet;
+	print @@edge_set;
 }

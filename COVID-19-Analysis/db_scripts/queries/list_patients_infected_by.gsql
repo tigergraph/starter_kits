@@ -1,7 +1,8 @@
-CREATE QUERY listPatients_Infected_By(VERTEX<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
+CREATE QUERY list_patients_infected_by(VERTEX<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
   /*****************************************************
 	* Who are patient patients infected by _____ patient?
-	* Sample: 2000000205
+	* Sample Input: 
+  	* p: 2000000205
 	******************************************************/
   
 	ListAccum<STRING> @@ids;
