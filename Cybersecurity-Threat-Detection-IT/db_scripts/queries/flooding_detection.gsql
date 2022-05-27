@@ -1,4 +1,4 @@
-CREATE QUERY FloodingDetection(/* Parameters here */) FOR GRAPH MyGraph { 
+CREATE QUERY flooding_detection(/* Parameters here */) FOR GRAPH MyGraph { 
   
   // this query detects the addresses that flooded one service with large number of requests.
   // and possibly the ip addresses have logged in to many accounts 
@@ -7,38 +7,38 @@ CREATE QUERY FloodingDetection(/* Parameters here */) FOR GRAPH MyGraph {
   TypeDef tuple<vertex entity, vertex service, int cnt, float mean, float std> result_tuple;
   AvgAccum @mean;
   SumAccum<float> @std;
-  MapAccum<vertex, SumAccum<int>> @countMap;
+  MapAccum<vertex, SumAccum<int>> @count_map;
   ListAccum<result_tuple> @@result_list;
   
   IPs = {IP.*};
   
   login_events = select event from IPs-(Has_IP)-:event
                  where event.Event_Type == "login"
-                 accum event.@countMap += (IPs->1);
+                 accum event.@count_map += (IPs->1);
   
   users = select user from login_events-(User_Event)-:user
-          accum user.@countMap += login_events.@countMap;
+          accum user.@count_map += login_events.@count_map;
   
   events = select event from users-(User_Event:e)-:event
            where event.Event_Type == "request"
-           accum event.@countMap += users.@countMap;
+           accum event.@count_map += users.@count_map;
   
   services = select s from events-(To_Service)-:s
-             accum s.@countMap += events.@countMap
+             accum s.@count_map += events.@count_map
              post-accum
-               case when s.@countMap.size() > 1 then
+               case when s.@count_map.size() > 1 then
                  // calculate the mean
-                 foreach (user,cnt) in s.@countMap do
+                 foreach (user,cnt) in s.@count_map do
                    s.@mean += cnt
                  end,
                  // calculate the standard deviation
-                 foreach (user,cnt) in s.@countMap do
+                 foreach (user,cnt) in s.@count_map do
                    s.@std += pow(cnt - s.@mean, 2)
                  end,
-                 s.@std = sqrt(s.@std/(s.@countMap.size()-1)),
+                 s.@std = sqrt(s.@std/(s.@count_map.size()-1)),
                  case when s.@std != 0 then
                    // calculate the out lier
-                   foreach (user,cnt) in s.@countMap do
+                   foreach (user,cnt) in s.@count_map do
                      case when cnt-s.@mean > 3*s.@std then
                        @@result_list += result_tuple(user,s,cnt,s.@mean,s.@std)
                      end
