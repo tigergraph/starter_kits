@@ -1,0 +1,65 @@
+CREATE QUERY similar_contacts(VERTEX<Contact> source_customer,
+                              SET<STRING> campaign_types, 
+                              INT top_k = 5) SYNTAX v2 {
+/*
+  Calculates the Jaccard similarities between a given customer (of type Contact)
+  and every other customers (or Contacts) who share similar Campaigns.
+  Outputs the top_k Contacts with the highest jaccard_similarity scores.
+  
+  SAMPLE INPUT:
+      Contact: Sam-Eisenberg
+      campaignTypes: Webinar, Demo Signup / Trial
+      topK: 5
+
+  This query is more complex than a standard Jaccard jaccard_similarity algorithm because
+  there are 2 hops from a Contact to a Campaign (with CampaignMember in between)
+  and because we only count the given types of Campaigns.
+  
+  Jaccard jaccard_similarity = size_intersect / (size_A + size_B - size_intersect)
+*/
+    SumAccum<INT> @size_intersect, @@size_set_A, @size_set_B;
+    SumAccum<FLOAT> @jaccard_similarity;
+
+    A = {source_customer};
+
+    A = SELECT s
+        FROM A:s
+        ACCUM @@size_set_A += s.outdegree("is_connected_to");
+
+    // From set A (Contact), traverse 'is_connected_to' edges to CampaignMembers
+    campaign_members_set =
+        SELECT t
+        FROM A:s -(is_connected_to>:e)- CampaignMember:t;
+    PRINT campaign_members_set.size();
+
+    // From campaign_members_set, traverse 'is_part_of' edges to Campaigns, for all 
+    // desired campaign_types (e.g. Webinar, Website Direct, Demo Signup/Trial)
+    campaign_set =
+        SELECT t
+        FROM campaign_members_set:s -(is_part_of>:e)- Campaign:t
+        WHERE campaign_types.size() == 0 OR (t.Campaign_Type IN campaign_types);
+    PRINT campaign_set.size();
+
+    // From campaign_set, traverse reverse_is_part_of edges back to all
+    // CampaignMembers
+    rev_campaign_members_set =
+        SELECT t
+        FROM campaign_set:s -(reverse_is_part_of>:e)- CampaignMember:t;
+    PRINT rev_campaign_members_set.size();
+
+    // From CampaignMemberSet, traverse 'reverse_is_connected_to' edges back to
+    // Contacts, (set B). For each Contact in set B, accumulate the intersection
+    // size of the shared Campaigns, and ompute its Jaccard Similarity score as
+    // intersection_size / (size_A + size_B - intersection_size)
+    B = SELECT t
+        FROM rev_campaign_members_set:s -(reverse_is_connected_to>:e)- Contact:t
+        WHERE t != source_customer
+        ACCUM t.@size_intersect += 1,
+            t.@size_set_B = t.outdegree("is_connected_to")
+        POST-ACCUM t.@jaccard_similarity = t.@size_intersect*1.0/
+                            (@@size_set_A + t.@size_set_B - t.@size_intersect)
+        ORDER BY t.@jaccard_similarity DESC
+        LIMIT top_k;
+
+    PRINT B[B.FirstName, B.LastName, B.@jaccard_similarity];
+}
