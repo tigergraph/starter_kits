@@ -7,9 +7,9 @@ CREATE QUERY similar_contacts(VERTEX<Contact> source_customer,
   Outputs the top_k Contacts with the highest jaccard_similarity scores.
   
   SAMPLE INPUT:
-      Contact: Sam-Eisenberg
-      campaignTypes: Webinar, Demo Signup / Trial
-      topK: 5
+      source_customer: Sam-Eisenberg
+      campaign_types: Webinar, Demo Signup / Trial
+      top_k: 5
 
   This query is more complex than a standard Jaccard jaccard_similarity algorithm because
   there are 2 hops from a Contact to a Campaign (with CampaignMember in between)
