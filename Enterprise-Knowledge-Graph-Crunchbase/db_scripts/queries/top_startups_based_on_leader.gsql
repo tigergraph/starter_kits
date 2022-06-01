@@ -70,10 +70,10 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
     END;
     
     // Declare starting vertex sets
-    Companies = {company.*};
+    companies = {company.*};
 
     // 1. find companies that have IPOed, been Acquired, or are early startups 
-    // 1-1. Companies that have IPOed
+    // 1-1. companies that have IPOed
     IPO_companies = SELECT c
         FROM IPO :i - (company_ipo :e) - company :c
         //Filter out companies with null acquisition time (not yet acquired)
@@ -84,9 +84,9 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
             c.@min_public_date = i.public_at,
             c.@is_still_startup += FALSE;
     
-    // 1-2. Companies that have been Acquired
-    Acquired_companies = SELECT c
-        FROM Companies :s - (acquire> :e) - company :c
+    // 1-2. companies that have been Acquired
+    acquired_companies = SELECT c
+        FROM companies :s - (acquire> :e) - company :c
         //Filter out compaies with null acquisition time (not yet acquired)
         WHERE datetime_diff(e.acquired_at, TNULL) != 0
         ACCUM
@@ -96,19 +96,19 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
             c.@is_still_startup += FALSE;
 
     // Join the sets of Acquired and IPOed companies together
-    IPO_acquired_companies = IPO_companies UNION Acquired_companies;  
+    IPO_acquired_companies = IPO_companies UNION acquired_companies;  
 
     // 1-3. Mark companies whose funding hasn't exceeded max_funding_round 
-    Startups = Companies MINUS IPO_acquired_companies;
-    Early_startups = SELECT c
-        FROM Startups :c - (company_funding_rounds :e) - funding_rounds :f
+    startups = companies MINUS IPO_acquired_companies;
+    early_startups = SELECT c
+        FROM startups :c - (company_funding_rounds :e) - funding_rounds :f
         ACCUM c.@early_startup += 
             @@allowed_funding_rounds.contains(f.funding_round_code); 
       
     /* 2. Get people who worked for a successful-exit company (1) early enough
       to satisfy the max_funding_round limit. Store their data in global maps.
     */
-    Startup_employees = SELECT p
+    startup_employees = SELECT p
         FROM IPO_acquired_companies :c - (work_for_company :e) - person :p
         WHERE datetime_diff(e.start_at, TNULL) != 0
             AND datetime_diff(e.end_at, TNULL) != 0
@@ -120,8 +120,8 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
     /* 3. Find startups where successful-exit employees (2) are now a founder
      Filter by industry and funding round. Tally the founder:successes.
     */
-    New_startups = SELECT c
-        FROM Startup_employees :p - (work_for_company :e) - company :c
+    new_startups = SELECT c
+        FROM startup_employees :p - (work_for_company :e) - company :c
         WHERE c.@is_still_startup 
             AND c.@early_startup
             AND c.status != "acquired"
@@ -146,8 +146,8 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
         HAVING c.@num_good_exits > 0;
    
     // 4. Find companies where founders had the most successful past endeavors
-    Top_companies = SELECT c
-        FROM New_startups :c
+    top_companies = SELECT c
+        FROM new_startups :c
         ACCUM @@top_companies_heap += Company_Score(c, c.@num_good_exits);
     PRINT @@top_companies_heap;
 
@@ -157,57 +157,57 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
 
   // OUTPUT: Build sets of vertices and edges to output and display
     // The top `return_size` companies
-    Result = {@@output_vertex_set};
+    result = {@@output_vertex_set};
 
     // Add top company's funding_rounds to the output
-    Funding_rounds = SELECT f
-        FROM Result :c - (company_funding_rounds :e) - funding_rounds :f
+    funding_rounds_set = SELECT f
+        FROM result :c - (company_funding_rounds :e) - funding_rounds :f
         ACCUM @@output_vertex_set += f, @@output_edge_set += e;
 
     // Add founders with past successes to the output
-    Top_companies = SELECT c
-        FROM Result :c
+    top_companies = SELECT c
+        FROM result :c
         ACCUM
             @@temp_vertex_set += c.@parent_vertex_set,
             @@output_vertex_set += c.@parent_vertex_set,
             @@output_edge_set += c.@parent_edge_set;
 
-    Result = {@@temp_vertex_set};
+    result = {@@temp_vertex_set};
     @@temp_vertex_set.clear();
 
     // Add past successful startups of founders to the output
-    Top_employees = SELECT p
-        FROM Result :p
+    top_employees = SELECT p
+        FROM result :p
         ACCUM @@output_edge_set += p.@parent_edge_set,
             FOREACH item IN p.@company_list DO
                 @@temp_vertex_set += item, @@output_vertex_set += item
             END;
 
-    Result = {@@temp_vertex_set};
+    result = {@@temp_vertex_set};
     @@temp_vertex_set.clear();
 
     // Gather set of companies that employees have worked at
-    Top_companies = SELECT c
-        FROM Result :c
+    top_companies = SELECT c
+        FROM result :c
         ACCUM @@temp_vertex_set += c.@parent_vertex_set;
 
-    Vertices_to_clear = {@@temp_vertex_set};
+    vertices_to_clear = {@@temp_vertex_set};
     @@temp_vertex_set.clear();
 
     // Remove past employee companies from set of top companies
-    Cleared_vertices = SELECT c
-        FROM Vertices_to_clear :c
+    cleared_vertices = SELECT c
+        FROM vertices_to_clear :c
         WHERE c.@parent_vertex_set.size() != 0
         POST-ACCUM c.@parent_vertex_set.clear(), c.@parent_edge_set.clear();
 
     // Add together remaining top companies and their funding information
-    Top_companies = SELECT c
-        FROM Result :c
+    top_companies = SELECT c
+        FROM result :c
         ACCUM
             @@output_vertex_set += c.@parent_vertex_set,
             @@output_edge_set += c.@parent_edge_set;
 
-    Result = {@@output_vertex_set};
-    PRINT Result;
+    result = {@@output_vertex_set};
+    PRINT result;
     PRINT @@output_edge_set;
 }

@@ -1,6 +1,7 @@
-CREATE QUERY KeyRelationship(vertex<Company> company, int step) FOR GRAPH EnterpriseGraph syntax v2 {
+CREATE QUERY key_relationship(vertex<Company> company, int step) 
+	FOR GRAPH EnterpriseGraph syntax v2 {
 	/**
-   * KeyRelationship query finds all key investors or leaders (CEO, VP, Director) of a company within several steps.
+   * key_relationship query finds all key investors or leaders (CEO, VP, Director) of a company within several steps.
 	 * --- Dataset has been shrunk on Nov.20th,2020 ---
    * Some interesting input parameters you can try:
    * 1. company: Hospice Mocha Frame, step: 5
@@ -13,29 +14,29 @@ CREATE QUERY KeyRelationship(vertex<Company> company, int step) FOR GRAPH Enterp
    */
 
   OrAccum @visited = false;
-	SetAccum<edge> @@edges;
+  SetAccum<edge> @@edge_set;
 
-  int loopStep;
+  int loop_step;
 
   // limit the maximum traverse steps
   IF (step > 8) THEN
-    loopStep = 8;
+    loop_step = 8;
   ELSE
-    loopStep = step;
+    loop_step = step;
   END;
 
 
-	StartSet (any) = { company };
+	start (any) = { company };
 
-	VertexResult = StartSet;
+	vertex_result = start;
 
-	StartSet = 	SELECT s
-						 	FROM StartSet:s
+	start = 	SELECT s
+						 	FROM start:s
 							ACCUM s.@visited = true;
 
-	WHILE (true) LIMIT loopStep DO
-		StartSet =	SELECT tgt
-								FROM StartSet
+	WHILE (true) LIMIT loop_step DO
+		start =	SELECT tgt
+								FROM start
 										 -((WorkFor | PersonInvestCompany | reverse_CompanyInvestCompany>) : e)-
 										 (Person | Company): tgt
 								WHERE (
@@ -49,12 +50,12 @@ CREATE QUERY KeyRelationship(vertex<Company> company, int step) FOR GRAPH Enterp
 											)
 											AND
 											tgt.@visited == FALSE
-								ACCUM @@edges += e
+								ACCUM @@edge_set += e
 								POST-ACCUM tgt.@visited = TRUE
 								;
-		VertexResult = VertexResult union StartSet;
+		vertex_result = vertex_result union start;
 	END;
 
-	PRINT VertexResult;
-	PRINT @@edges;
+	PRINT vertex_result;
+	PRINT @@edge_set;
 }

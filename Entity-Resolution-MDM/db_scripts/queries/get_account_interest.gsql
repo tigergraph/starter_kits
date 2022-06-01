@@ -1,17 +1,17 @@
-CREATE QUERY get_account_interest(vertex<Account> inputAcc, int k) FOR GRAPH Entity_Resolution { 
+CREATE QUERY get_account_interest(vertex<Account> input_acc, int k) FOR GRAPH Entity_Resolution { 
 	/**********************************************************
 	 * Example parameters:
 	 *   Acount : 407
 	 *   k : 5
 	 **********************************************************/
 	
-  SetAccum<VERTEX<Account>> @@connected_accounts;
+  	SetAccum<VERTEX<Account>> @@connected_accounts;
 	MapAccum<VERTEX, int> @map;
 	OrAccum @visited;
 	SumAccum<uint> @cnt;
 	ListAccum<EDGE> @@list;
 	
-	start = {inputAcc};
+	start = {input_acc};
 	
 	WHILE start.size() > 0 DO
 	  start = SELECT t FROM start:s-(Same_Owner:e)-:t
@@ -25,11 +25,11 @@ CREATE QUERY get_account_interest(vertex<Account> inputAcc, int k) FOR GRAPH Ent
 	
 	videos = SELECT t FROM paly_event:s-(Play_Video:e)-:t ACCUM t.@cnt += 1, @@list += e;
 	
-	genreKeyw = SELECT t FROM videos:s-((Has_Genre|Has_Keyword):e)-:t 
-	            ACCUM t.@cnt += s.@cnt, @@list += e;
+	genre_key_w = 	SELECT t FROM videos:s-((Has_Genre|Has_Keyword):e)-:t 
+	            	ACCUM t.@cnt += s.@cnt, @@list += e;
 	
-	videos = SELECT t from genreKeyw:s-((Has_Genre|Has_Keyword):e)-:t 
-	         WHERE t.@cnt == 0
+	videos = SELECT t from genre_key_w:s-((Has_Genre|Has_Keyword):e)-:t 
+	         WHERE t.@cnt == 0	
 	         ACCUM t.@cnt += s.@cnt, t.@map += (s->s.@cnt)
 	         ORDER BY t.@cnt DESC LIMIT k;
 	

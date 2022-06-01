@@ -72,7 +72,7 @@ CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
     END;
 
     // 1. Tag each company with its IPO date or acquisition date
-    Comp = SELECT c
+    comp = SELECT c
         FROM (company) :c - ((company_ipo|acquired_by>): e) - (IPO|company): x
         ACCUM
             CASE WHEN
@@ -87,7 +87,7 @@ CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
             END;
     
     // 2. Rank financial organizations who raised the most money in past N years
-    Top_orgs = SELECT org
+    top_orgs = SELECT org
         FROM (financialORG): org - (financial_funds: e) - funds: f
         WHERE datetime_diff(TIME_END, f.funded_at) <= past_n_years*SECS_PER_YR
         ACCUM org.@amount +=
@@ -97,19 +97,19 @@ CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
         LIMIT k_orgs;
 
     // 2B. Mark the top organizations as visited
-    Top_orgs = SELECT org
-        FROM Top_orgs: org
+    top_orgs = SELECT org
+        FROM top_orgs: org
         POST-ACCUM org.@visited = TRUE;
 
   // 3. Find people who work for a top k financial organization (2)
-  Persons_at_top_orgs = SELECT p
-      FROM Top_orgs: o - (work_for_fOrg: e) - person: p;
+  persons_at_top_orgs = SELECT p
+      FROM top_orgs: o - (work_for_fOrg: e) - person: p;
  
     /* 4. Rank top persons (3) by the number of times they were on the board
     of a startup before its success exit.
     */
-    Top_board_members = SELECT p
-        FROM Persons_at_top_orgs: p - (work_for_company :w) - company: c
+    top_board_members = SELECT p
+        FROM persons_at_top_orgs: p - (work_for_company :w) - company: c
         WHERE (w.title LIKE "%Board%" OR w.title LIKE "%board%")
             AND c.@t_exit.size() != 0 AND datetime_diff(w.start_at, T0) != 0
             AND datetime_diff(c.@t_exit.get(0), w.start_at) > 0
@@ -121,15 +121,15 @@ CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
         LIMIT num_persons;
 
     // 5. Find pre-exit companies that have a top board member (4)
-    Top_startups = SELECT c
-        FROM Top_board_members: s - (work_for_company: w) - company: c
+    top_startups = SELECT c
+        FROM top_board_members: s - (work_for_company: w) - company: c
         WHERE (w.title LIKE "%Board%" OR w.title LIKE "%board%")
             AND w.start_at != T0
             AND c.status == "operating" AND c NOT IN @@comp_set;
 
     // 6. Filter top startups (5) by the funding round cutoff
-    Top_early_startups = SELECT r
-        FROM Top_startups: s - (company_funding_rounds: e) - funding_rounds: r
+    top_early_startups = SELECT r
+        FROM top_startups: s - (company_funding_rounds: e) - funding_rounds: r
         ACCUM 
             s.@visited += TRUE,
             IF @@allowed_funding_rounds.contains(r.funding_round_code) THEN
@@ -139,11 +139,11 @@ CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
             END;
 
     // Trace back to find paths to display
-    Paths (ANY) = Top_board_members;
+    paths (ANY) = top_board_members;
     WHILE TRUE LIMIT 2 DO
-      Paths =
+      paths =
       SELECT tgt
-      FROM Paths :s - ((company_funding_rounds | acquired_by> | company_ipo |
+      FROM paths :s - ((company_funding_rounds | acquired_by> | company_ipo |
         work_for_company | work_for_fOrg | financial_funds): e) - :tgt
       WHERE (
         e.type == "work_for_company"
@@ -160,7 +160,7 @@ CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
           @@display_edge_set += e;
     END;
 
-    PRINT Top_board_members;
+    PRINT top_board_members;
     PRINT @@display_vertex_set;
     PRINT @@display_edge_set;
 }

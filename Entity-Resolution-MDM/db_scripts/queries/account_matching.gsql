@@ -1,4 +1,4 @@
-CREATE QUERY account_matching(vertex<Account> inputAcc, float threshold) FOR GRAPH Entity_Resolution { 
+CREATE QUERY account_matching(vertex<Account> input_acc, float threshold) FOR GRAPH Entity_Resolution { 
 	/*******************************************************
 	 * This query only detects and links for one account
 	 * To link the entire graph, run main_query instead
@@ -10,12 +10,12 @@ CREATE QUERY account_matching(vertex<Account> inputAcc, float threshold) FOR GRA
 	
 	SumAccum<float> @score;
 	
-	start = {inputAcc};
+	start = {input_acc};
 	
-	attribtues = SELECT t FROM start-((Has_IP|Has_Email|Has_Last_Name|Has_Phone|Has_Address|Has_Device):e)-:t;
+	attributes = SELECT t FROM start-((Has_IP|Has_Email|Has_Last_Name|Has_Phone|Has_Address|Has_Device):e)-:t;
 	
-	related_accs = SELECT t FROM attribtues-((Has_IP|Has_Email|Has_Last_Name|Has_Phone|Has_Address|Has_Device):e)-:t
-	               WHERE t != inputAcc
+	related_accs = SELECT t FROM attributes-((Has_IP|Has_Email|Has_Last_Name|Has_Phone|Has_Address|Has_Device):e)-:t
+	               WHERE t != input_acc
 	               ACCUM CASE e.type
 	                       WHEN "Has_IP" THEN t.@score += 0.2
 	                       WHEN "Has_Email" THEN t.@score += 0.3
@@ -26,7 +26,7 @@ CREATE QUERY account_matching(vertex<Account> inputAcc, float threshold) FOR GRA
 	                     END
 	               POST-ACCUM 
 	                 CASE WHEN t.@score > threshold THEN
-	                   INSERT INTO Same_Owner VALUES (inputAcc, t, t.@score) 
+	                   INSERT INTO Same_Owner VALUES (input_acc, t, t.@score) 
 	                 END;
   PRINT related_accs;
 }
