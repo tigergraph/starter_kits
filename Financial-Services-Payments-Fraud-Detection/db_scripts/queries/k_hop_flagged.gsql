@@ -1,4 +1,4 @@
-CREATE QUERY kHop_Flagged(Vertex input, int k) FOR GRAPH MyGraph { 
+CREATE QUERY k_hop_flagged(Vertex input, int k) FOR GRAPH MyGraph { 
 	/***********************************************************
 	 *  This is a query using v1 syntax. 
 	 *  We start with a single vertex of one of these types:

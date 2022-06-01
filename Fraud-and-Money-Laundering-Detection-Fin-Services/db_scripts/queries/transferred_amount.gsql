@@ -19,12 +19,12 @@ CREATE QUERY transferred_amount (vertex<User> sender, dateTime start_date = to_d
   SetAccum<EDGE> @@edge_set;
   INT ITER_NUM = 0;
 
-  Start (ANY) = {sender};
+  start (ANY) = {sender};
 
   // 1. From the input user, go 4 steps with a while loop to find her connected users.
-  WHILE (Start.size() > 0) LIMIT 4 DO
-      Start = SELECT t 
-          FROM Start:s-((User_to_Device|User_to_Payment):e)-:t
+  WHILE (start.size() > 0) LIMIT 4 DO
+      start = SELECT t 
+          FROM start:s-((User_to_Device|User_to_Payment):e)-:t
           WHERE t.@visited == false 
               AND (t.type != "User" OR t != sender)
           ACCUM @@edge_set += e
@@ -36,7 +36,7 @@ CREATE QUERY transferred_amount (vertex<User> sender, dateTime start_date = to_d
                 ITER_NUM % 2 == 1 
               THEN
                 tmp = SELECT s 
-                    FROM Start:s-(User_Transfer_Transaction>:e)-:t
+                    FROM start:s-(User_Transfer_Transaction>:e)-:t
                     WHERE epoch_to_datetime(t.ts) BETWEEN start_date AND end_date
                     ACCUM 
                         @@sum_transaction_amount += t.amount,

@@ -8,9 +8,9 @@ CREATE QUERY multi_transaction (VERTEX<Transaction> transaction) FOR GRAPH AntiF
    since it can visualize the transactions between the sender and receiver groups, and the 
    transaction patterns within each network.
 
-    1) Start from an input transaction, find its sender and receiver
-    2) Start from the sender, via Device_Token and Payment_Instrument edges find users within 4 steps. 
-    3) Start from the receiver, via Device_Token and Payment_Instrument edges find users within 4 steps.
+    1) start from an input transaction, find its sender and receiver
+    2) start from the sender, via Device_Token and Payment_Instrument edges find users within 4 steps. 
+    3) start from the receiver, via Device_Token and Payment_Instrument edges find users within 4 steps.
     4) Record transactions cross the sender and receiver groups.
 
     Sample input:
@@ -24,13 +24,13 @@ CREATE QUERY multi_transaction (VERTEX<Transaction> transaction) FOR GRAPH AntiF
   SetAccum<VERTEX> @@receiver_set, @@sender_set;
   SetAccum<EDGE> @@edge_set;
 
-  // Assign the input transaction to the "Start" variable, which is a SET.
-  Start (ANY) = {transaction};
+  // Assign the input transaction to the "start" variable, which is a SET.
+  start (ANY) = {transaction};
 
   /* 1. Find the sender and receiver of the input transaction, mark them. And
    now start becomes {sender, receiver} set. */
-  Start = SELECT t 
-      FROM Start:s-((<User_Receive_Transaction_Rev|<User_Transfer_Transaction_Rev):e)-:t
+  start = SELECT t 
+      FROM start:s-((<User_Receive_Transaction_Rev|<User_Transfer_Transaction_Rev):e)-:t
       ACCUM
           // mark different groups according to edge type
           CASE WHEN 
@@ -47,9 +47,9 @@ CREATE QUERY multi_transaction (VERTEX<Transaction> transaction) FOR GRAPH AntiF
   /* 2. Via the User_to_Device, User_to_Payment edge types, traverse 4 steps and 
   put sender reachable users to the sender set, and receiver reachable 
   users to the receiver set */
-  WHILE Start.size() > 0 LIMIT 4 DO
-      Start = SELECT t 
-          FROM Start:s-((User_to_Device|User_to_Payment):e)-:t
+  WHILE start.size() > 0 LIMIT 4 DO
+      start = SELECT t 
+          FROM start:s-((User_to_Device|User_to_Payment):e)-:t
           WHERE t.@from_receiver == FALSE 
               AND t.@from_sender == FALSE
           ACCUM 
@@ -70,9 +70,9 @@ CREATE QUERY multi_transaction (VERTEX<Transaction> transaction) FOR GRAPH AntiF
   END;
 
   // 3. From the receiver set, mark the transactions 1-step related to its group member
-  Start = {@@receiver_set};
-  Start = SELECT t 
-      FROM Start:s-((User_Receive_Transaction>|User_Transfer_Transaction>):e)-:t
+  start = {@@receiver_set};
+  start = SELECT t 
+      FROM start:s-((User_Receive_Transaction>|User_Transfer_Transaction>):e)-:t
       WHERE t != transaction
       ACCUM 
           t.@from_receiver += s.@from_receiver,
@@ -80,9 +80,9 @@ CREATE QUERY multi_transaction (VERTEX<Transaction> transaction) FOR GRAPH AntiF
 
   /* 4. From the sender set, find transactions 1-step related to its group member,
   then ecord those transactions 1-step related to both a sender member and a receiver member */
-  Start = {@@sender_set};
-  Start = SELECT t 
-      FROM Start:s-((User_Receive_Transaction>|User_Transfer_Transaction>):e)-:t
+  start = {@@sender_set};
+  start = SELECT t 
+      FROM start:s-((User_Receive_Transaction>|User_Transfer_Transaction>):e)-:t
       WHERE t != transaction
       ACCUM
           t.@from_sender += s.@from_sender,
@@ -90,7 +90,7 @@ CREATE QUERY multi_transaction (VERTEX<Transaction> transaction) FOR GRAPH AntiF
       HAVING t.@from_receiver AND t.@from_sender;
  
   // Print cross sender and receiver group transactions.
-  PRINT Start;
+  PRINT start;
   
   // Print within sender and receiver subgraph
   PRINT @@edge_set;

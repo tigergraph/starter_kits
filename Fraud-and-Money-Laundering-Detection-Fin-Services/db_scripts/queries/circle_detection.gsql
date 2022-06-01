@@ -35,13 +35,13 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
   INT STEP;
   
   // Starting from the input vertex user.
-  Seed = {source_id};
+  seed = {source_id};
 
   /* Prep: Find all trasactions related to the input user with edge User_Transfer_Transaction 
   or User_Receive_Transaction, and use one step to find out src's min_send_time and max_receive_time, 
   then initialize the distance info for source_id*/
-  Seed = SELECT src
-      FROM Seed:src - ((User_Transfer_Transaction>|User_Receive_Transaction>):e) - Transaction:tgt
+  seed = SELECT src
+      FROM seed:src - ((User_Transfer_Transaction>|User_Receive_Transaction>):e) - Transaction:tgt
       ACCUM
           CASE WHEN 
             e.type == "User_Transfer_Transaction" 
@@ -65,9 +65,9 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
   2) Then one directional search to valid each path inside the subgraph using path filters, 
      i.e. time increase along the path*/
 
-  // Set X and Y as Seed
-  X (_) = Seed;//X is used to do positive direction traversal
-  Y (_) = Seed;//Y is used to do negative direction traversal
+  // Set X and Y as seed
+  X (_) = seed;//X is used to do positive direction traversal
+  Y (_) = seed;//Y is used to do negative direction traversal
 
   /* In order to do bidirectional search, we separate search into two steps,
    i) Search for first half of total steps, only touch unmarked vertices, 
@@ -234,8 +234,8 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
 
   // 3. Start valid path traversal and circle detection
   STEP = 0;
-  // Reset X as Seed
-  X = Seed;
+  // Reset X as seed
+  X = seed;
   WHILE STEP <= STEP_HIGH_LIMIT DO
       // From User to Transaction
       X = SELECT tgt
@@ -244,7 +244,7 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
           ACCUM
               INT ts = tgt.ts,
               CASE WHEN 
-                src.@edge_tuple_list.size() == 0// If X is Seed, then only send edge over
+                src.@edge_tuple_list.size() == 0// If X is seed, then only send edge over
               THEN 
                 tgt.@new_edge_tuple_list += [Edge_Tuple(e, src, tgt.amount, ts)]
               ELSE

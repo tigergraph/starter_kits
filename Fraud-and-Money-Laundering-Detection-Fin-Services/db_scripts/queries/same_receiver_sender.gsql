@@ -14,11 +14,11 @@ CREATE QUERY same_receiver_sender(vertex<Transaction> transaction) FOR GRAPH Ant
   OrAccum<BOOL> @@is_same;
   SetAccum<EDGE> @@edge_set;
 
-  Start (ANY) = {transaction};
+  start (ANY) = {transaction};
 
   // Prep: Get the sender and receiver
-  Start = SELECT t 
-      FROM Start:s-((<User_Receive_Transaction_Rev|<User_Transfer_Transaction_Rev):e)-:t
+  start = SELECT t 
+      FROM start:s-((<User_Receive_Transaction_Rev|<User_Transfer_Transaction_Rev):e)-:t
       ACCUM
           // Mark the sender and receiver according to the edge type
           CASE WHEN 
@@ -31,9 +31,9 @@ CREATE QUERY same_receiver_sender(vertex<Transaction> transaction) FOR GRAPH Ant
           @@edge_set += e;
 
   // Traverse for 4 steps, or the paths of sender and receiver meets each other
-  WHILE Start.size() > 0 AND @@is_same == false LIMIT 4 DO
-      Start = SELECT t 
-          FROM Start:s-((User_to_Device|User_to_Payment):e)-:t
+  WHILE start.size() > 0 AND @@is_same == false LIMIT 4 DO
+      start = SELECT t 
+          FROM start:s-((User_to_Device|User_to_Payment):e)-:t
           // Do not traverse the vertexes that were visited
           WHERE t.@from_receiver == false 
               AND t.@from_sender == false
