@@ -1,17 +1,17 @@
 CREATE QUERY hello2(vertex<person> p) FOR GRAPH social SYNTAX V2{ 
   OrAccum  @visited = false;
-  AvgAccum @@avgAge;
-  Start = {p};
+  AvgAccum @@avg_age;
+  start = {p};
 
-  FirstNeighbors = SELECT tgt
-                   FROM Start:s-(friendship:e)-person:tgt
+  first_neighbors = SELECT tgt
+                   FROM start:s-(friendship:e)-person:tgt
                    ACCUM tgt.@visited += true, s.@visited += true;
 
-  SecondNeighbors = SELECT tgt
-                    FROM FirstNeighbors-(:e)-:tgt
+  second_neighbors = SELECT tgt
+                    FROM first_neighbors-(:e)-:tgt
                     WHERE tgt.@visited == false
-                    POST_ACCUM @@avgAge += tgt.age;
+                    POST_ACCUM @@avg_age += tgt.age;
 
-  PRINT SecondNeighbors;
-  PRINT @@avgAge;
+  PRINT second_neighbors;
+  PRINT @@avg_age;
 }
