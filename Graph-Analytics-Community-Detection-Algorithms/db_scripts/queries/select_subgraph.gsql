@@ -1,9 +1,9 @@
-CREATE QUERY select_subgraph(STRING vertexType, STRING edgeType) FOR GRAPH MyGraph SYNTAX V2 { 
+CREATE QUERY select_subgraph(STRING vertex_type, STRING edge_type) FOR GRAPH MyGraph SYNTAX V2 { 
   
-	ListAccum<EDGE> @@edgeList;
+	ListAccum<EDGE> @@edge_list;
 	
-	SourceSet = {vertexType};
-	TargetSet = SELECT t FROM SourceSet:s -(edgeType:e)- :t
-	            ACCUM @@edgeList += e;
-  PRINT SourceSet, TargetSet, @@edgeList;
+	source_set = {vertex_type};
+	target_set = SELECT t FROM source_set:s -(edge_type:e)- :t
+	            ACCUM @@edge_list += e;
+  PRINT source_set, target_set, @@edge_list;
 }

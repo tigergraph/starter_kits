@@ -1,35 +1,35 @@
-CREATE QUERY cc_by_country (BOOL display, INT outputLimit, INT maxHops, STRING country) FOR GRAPH MyGraph SYNTAX V2 {
+CREATE QUERY cc_by_country (BOOL display, INT output_limit, INT maxHops, STRING country) FOR GRAPH MyGraph SYNTAX V2 {
 # Closeness Centrality main query
 
-        TYPEDEF TUPLE<VERTEX Vertex_ID, STRING name, FLOAT score> vertexScore;
-        HeapAccum<vertexScore>(outputLimit, score DESC) @@topScores;
+        TYPEDEF TUPLE<VERTEX Vertex_ID, STRING name, FLOAT score> Vertex_Score;
+        HeapAccum<Vertex_Score>(output_limit, score DESC) @@top_scores;
         SumAccum<float> @score;
-        SetAccum<EDGE> @@edgeSet;                   # list of all edges, if display is needed
+        SetAccum<EDGE> @@edge_set;                   # list of all edges, if display is needed
   
-        INT numVert;
+        INT num_vert;
         #INT maxHops = 10;      # measure distance for vertices up to 10 hops away
   
-        Start = {Airport.*};
+        start = {Airport.*};
         IF country != "" THEN
-	        Start = SELECT v
-	          FROM Start:v
+	        start = SELECT v
+	          FROM start:v
 	          WHERE v.country == country;
 	      END;
 
         #Total number of vertices considered in graph
-        numVert = Start.size();
+        num_vert = start.size();
 
         # get closeness centrality for each vertex
-        Start = SELECT s FROM Start:s
-                POST-ACCUM s.@score = cc_subquery(s,numVert,maxHops),
-                           @@topScores += vertexScore(s, s.name, cc_subquery(s,numVert,maxHops));
+        start = SELECT s FROM start:s
+                POST-ACCUM s.@score = cc_subquery(s,num_vert,maxHops),
+                           @@top_scores += Vertex_Score(s, s.name, cc_subquery(s,num_vert,maxHops));
 
-        PRINT @@topScores;
+        PRINT @@top_scores;
         IF display THEN
-                PRINT Start[Start.@score];
-                Start = SELECT s
-                        FROM Start:s -(flight_to>:e)- :t
-                        ACCUM @@edgeSet += e;
-                PRINT @@edgeSet;
+                PRINT start[start.@score];
+                start = SELECT s
+                        FROM start:s -(flight_to>:e)- :t
+                        ACCUM @@edge_set += e;
+                PRINT @@edge_set;
         END;
 }

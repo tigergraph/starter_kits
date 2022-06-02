@@ -1,29 +1,30 @@
-CREATE QUERY insert_referrals(VERTEX<Prescriber> inputPrescriber) FOR GRAPH MyGraph RETURNS (INT) SYNTAX V2 {
+CREATE QUERY insert_referrals(VERTEX<Prescriber> input_prescriber) 
+	FOR GRAPH MyGraph RETURNS (INT) SYNTAX V2 {
 	
-	OrAccum<BOOL> @visited, @isReferredClaim;
-	ListAccum<DATETIME> @dateList;
-	SumAccum<INT> @@numInsertions;
+	OrAccum<BOOL> @visited, @is_referred_claim;
+	ListAccum<DATETIME> @date_list;
+	SumAccum<INT> @@num_insertions;
 	
-	start_set = {inputPrescriber};
+	start_set = {input_prescriber};
 	
 	claims = SELECT t FROM start_set:s-(reverse_submitted_by>:e)-:t
 	         POST-ACCUM t.@visited = true;
 	
 	patients = SELECT t FROM claims:s-(associated>:e)-:t
-	           ACCUM t.@dateList += s.rx_fill_date;
+	           ACCUM t.@date_list += s.rx_fill_date;
 	
 	claims = SELECT t FROM patients:s-(reverse_associated>:e)-:t
 	         WHERE t.@visited == false
-	         ACCUM FOREACH dt in s.@dateList do
+	         ACCUM FOREACH dt in s.@date_list do
 	                 CASE WHEN datetime_diff(dt, t.rx_fill_date) BETWEEN 0 AND 2592000 THEN
-	                   t.@isReferredClaim = true
+	                   t.@is_referred_claim = true
 	                 END
 	               END
-	         HAVING t.@isReferredClaim == true;
+	         HAVING t.@is_referred_claim == true;
 	
 	prescribers = SELECT t FROM claims-(submitted_by>:e)-:t
-	              POST-ACCUM INSERT INTO referral VALUES(inputPrescriber, t, 1),
-	                        @@numInsertions += 1;
+	              POST-ACCUM INSERT INTO referral VALUES(input_prescriber, t, 1),
+	                        @@num_insertions += 1;
 	print start_set;
-	RETURN @@numInsertions;
+	RETURN @@num_insertions;
 }

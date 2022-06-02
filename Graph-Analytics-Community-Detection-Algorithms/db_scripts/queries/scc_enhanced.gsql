@@ -1,4 +1,5 @@
-CREATE QUERY scc_enhanced (INT iter = 500, INT iter_wcc = 5, INT top_k_dist = 10) FOR GRAPH MyGraph SYNTAX V2 {
+CREATE QUERY scc_enhanced (INT iter = 500, INT iter_wcc = 5, INT top_k_dist = 10) 
+        FOR GRAPH MyGraph SYNTAX V2 {
 /* This query detects strongly connected components based on the following papers:
  * https://www.sandia.gov/~apinar/papers/irreg00.pdf
  * https://www.sciencedirect.com/science/article/pii/S0743731505000535
@@ -10,15 +11,15 @@ CREATE QUERY scc_enhanced (INT iter = 500, INT iter_wcc = 5, INT top_k_dist = 10
 
  * DISTRIBUTED QUERY mode for this query is supported from TG 2.4.
  */
-        TYPEDEF TUPLE <INT csize, INT num> cluster_num;
+        TYPEDEF TUPLE <INT csize, INT num> Cluster_Num;
         MapAccum<INT, INT> @@cluster_size_map, @@cluster_dist_map;
-        HeapAccum<cluster_num>(top_k_dist, csize DESC) @@cluster_dist_heap;
+        HeapAccum<Cluster_Num>(top_k_dist, csize DESC) @@cluster_dist_heap;
         OrAccum @is_forward, @is_backward, @detached, @has_pos_indegree, @has_pos_outdegree, @wcc_active;
         SumAccum<INT> @cid, @vid;
         MinAccum<INT> @@min_vid, @wcc_id_curr, @wcc_id_prev;
         SumAccum<STRING> @flag;
         MapAccum<INT, MinAccum<INT>> @@f_cid_map, @@b_cid_map, @@n_cid_map, @@s_cid_map;
-	      MapAccum<INT, ListAccum<VERTEX>> @@componentLists;
+	      MapAccum<INT, ListAccum<VERTEX>> @@component_lists;
         INT i = 1;
         v_all = {Prescriber.*};
   	    tmp(ANY) ={};
@@ -155,18 +156,18 @@ CREATE QUERY scc_enhanced (INT iter = 500, INT iter_wcc = 5, INT top_k_dist = 10
         FROM v_all:s 
         POST-ACCUM @@cluster_size_map += (s.@cid -> 1), 
 	      s.communityId = s.@cid, // added
-	      @@componentLists += (s.@cid -> s) // added
+	      @@component_lists += (s.@cid -> s) // added
 	;
   
 	FOREACH (cid, csize) IN @@cluster_size_map DO
 		@@cluster_dist_map += (csize -> 1);
 	END;
 	FOREACH (csize, number) IN @@cluster_dist_map DO
-		@@cluster_dist_heap += cluster_num(csize, number);
+		@@cluster_dist_heap += Cluster_Num(csize, number);
 	END;
 	
   PRINT @@cluster_dist_heap;
-  PRINT @@componentLists;
+  PRINT @@component_lists;
   PRINT v_all [v_all.@cid];
 
 

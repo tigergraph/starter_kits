@@ -1,22 +1,22 @@
-CREATE QUERY betweenness_cent (INT maxHops, INT maxItems, STRING country) FOR GRAPH MyGraph SYNTAX V2 {
+CREATE QUERY betweenness_cent (INT max_hops, INT maxItems, STRING country) FOR GRAPH MyGraph SYNTAX V2 {
 # Betweenness Centrality main query
 
 	MapAccum<VERTEX,SumAccum<float>> @@BC;
 	SumAccum<float> @cent;
   
-        Start = {ANY};
+        start = {ANY};
 	      IF country != "" THEN
-	        Start = SELECT v FROM Start:v
+	        start = SELECT v FROM start:v
 	          WHERE v.country == country;
 	      END;
 	
-        Start = SELECT s FROM Start:s
-                ACCUM @@BC += bc_subquery(s, maxHops);
+        start = SELECT s FROM start:s
+                ACCUM @@BC += bc_subquery(s, max_hops);
 	
         # Write scores to local accumulators of vertices.
-	      Start = SELECT s FROM Start:s
+	      start = SELECT s FROM start:s
 	            POST-ACCUM s.@cent += @@BC.get(s)
 	            ORDER BY s.@cent DESC
 	            LIMIT maxItems;
-        PRINT Start[Start.name, Start.@cent];
+        PRINT start[start.name, start.@cent];
 }
