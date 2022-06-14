@@ -1,0 +1,18 @@
+CREATE QUERY warning_impact(vertex<Warning> inputWarn) FOR GRAPH Storage SYNTAX V2 { 
+  
+  ListAccum<EDGE>
+  @@edge_List;
+  
+  Start = {inputWarn};
+  
+  App = SELECT t FROM Start:s-(Alert_App>:e)-:t ACCUM @@edge_List += e;
+  PRINT App;
+  
+  Ser = SELECT t FROM App:s-(App_Service>:e)-:t ACCUM @@edge_List += e;
+  PRINT Ser;
+  
+  Man = select t from Ser:s-(Service_Manager>:e)-:t accum @@edge_List += e;
+  PRINT Man;
+  
+  PRINT @@edge_List;
+}
