@@ -1,10 +1,10 @@
-CREATE QUERY addWeights(BOOL overwrite) FOR GRAPH MyGraph SYNTAX V2 {
+CREATE QUERY add_weights(BOOL overwrite) FOR GRAPH MyGraph SYNTAX V2 {
 /* This query uses the haversine formula to calculate the distances 
 between airports by using their latitude and longitude coordinates.
 The calculated distances are measured in miles and are added as edge weights.
 */
 	
-	ListAccum<edge> @@dontChangeList;
+	ListAccum<edge> @@dont_Change_List;
 	double pi = 3.14159265359; // pi
 	double R = 3958.8; // earth's radius in miles
 	
@@ -12,10 +12,14 @@ The calculated distances are measured in miles and are added as edge weights.
 	
 	Start = {Airport.*};
 	
+  /* This query won't run again after your first run because your
+    miles variable will be updated and it's not zero anymore.
+  */
+  
 	Heavy = SELECT t FROM Start:s-(flight_route:e)-Airport:t
-	    ACCUM 
+	    ACCUM
 	      IF overwrite == False AND e.miles != 0 THEN
-	        @@dontChangeList += e
+	        @@dont_Change_List += e
 	      ELSE
 	          double lat1 = s.latitude * pi / 180, // lat1 to radians
 	          double lat2 = t.latitude * pi / 180, // lat2 to radians
@@ -29,5 +33,5 @@ The calculated distances are measured in miles and are added as edge weights.
 	          double c = 2 * atan2(sqrt(a), sqrt(1-a)),
 	          e.miles = ceil(R * c)
 	      END;
-	      PRINT @@dontChangeList;
+	      PRINT @@dont_Change_List;
 }
