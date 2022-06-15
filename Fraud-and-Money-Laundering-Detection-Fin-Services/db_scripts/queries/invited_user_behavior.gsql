@@ -1,55 +1,63 @@
-CREATE QUERY invited_user_behavior (VERTEX<User> input_user) FOR GRAPH AntiFraud syntax v2 {
-  /* 
-    This query is motivated to detect those fraudulent users who conduct activities to earn 
-    referral bonus. How do we do that? 
+CREATE QUERY invited_user_behavior (VERTEX<User> input_user)
+FOR GRAPH AntiFraud SYNTAX v2 {
+/* 
+  Detect users who conduct fraudulent referrals in
+  order to receive high amounts of referral bonuses.
 
-    Given an input user "input_user", this query traverses the graph, finds out 
-    how many two-hop users that are indirectly invited by the input user. 
-    That is, the users invited by the input user's invitees. It also calculates the transferred 
-    total money from the one-hop invitees. 
+  Sample inputs:
+  input_user: 5354357 | 30746939 | 23189347
     
-    Finally, the traversed subgraph is returned. Intuitively, if it's a fraudulent user, we
-    can tell from the money transferred from their direct invitees; and their indirect invitees
-    should be small or zero. 
- 
-    Sample input
-    input_user: 5354357 | 30746939 | 23189347
-  */
-  
+  Starting from an "input_user",
+  (1) Find all the Users referred by input_user, and then all the Users
+  referred by them.
+    input_user -(refer)-> User -(refer)-> User
+
+  (2) Calculate the total transactions by the 1-hop Users.
+  (3) Display the two-hop referral graph.
+
+  Intuitively, if input_user is engaging in referral fraud, there will be
+  1. a large number of 1st-hop invitees,
+  2. a small amount of total transactions by the 1st-hop invitees, and
+  3. a small number of 2nd-hop invitees.
+*/
+
   // Declare global accumulators to store aggregates.
-  SumAccum<INT> @@sum_invited_person_num;
-  SumAccum<FLOAT> @@sum_total_amount_sent;
-  SetAccum<EDGE> @@visualization_result_set;
+  SumAccum<INT> @@num_invited_persons;
+  SumAccum<FLOAT> @@total_amount_sent;
+  SetAccum<EDGE> @@edges_to_display;
 
   // Assign the input user to the "start" variable, which is a SET.
-  start = {input_user};  
+  Start = {input_user};  
 
-  /* 1. One-step traversal. From the start set, via the User_Refer_User edge,
-  find all the invitees of the input user, and tore them into the "users" variable
-  then put all touched edges into a variable for visualization purpose.*/
-  users = SELECT t
-      FROM start:s-(User_Refer_User>:e)-:t
-      ACCUM @@visualization_result_set += e;
+  // 1. Find all the users who were invited (referred) by "input_user" 
+  First_invitees = SELECT t
+    FROM Start:s - (User_Refer_User>:e) - :t
+    ACCUM @@edges_to_display += e;
 
   /* 2. Aggregate the amounts of all transactions conducted by the one-hop 
-  invitees (1) into variable @@sum_total_amount_sent. Also, store the traversed 
-  edges into @@visualization_result_set.*/
-  trans = SELECT t
-      FROM users:s-((User_Transfer_Transaction>):e)-:t
-      ACCUM
-          @@sum_total_amount_sent += t.amount,
-          @@visualization_result_set += e;
+    invitees (1) into variable @@total_amount_sent. Also, store the
+    traversed edges into @@edges_to_display.
+  */
+  Trans = SELECT t
+    FROM First_invitees:s - ((User_Transfer_Transaction>):e) - :t
+    ACCUM
+      @@total_amount_sent += t.amount,
+      @@edges_to_display += e;
 
-  /* 3. Second-hop traversal. Find users invited by the one-hop invitees (1) and
-  store their count in @@sum_invited_person_num. 
-  And record the traversed edges into @@visualization_result_set. */
-  users = SELECT t
-      FROM users:s-(User_Refer_User>:e)-:t
-      WHERE t != input_user
-      ACCUM @@visualization_result_set += e
-      POST-ACCUM (t) 
-          @@sum_invited_person_num += 1;
-  
-  // Return 2-hop invitees count, total transferred money by 1-hop and 2-hop invitees,and the subgraph.
-  PRINT @@sum_invited_person_num, @@sum_total_amount_sent, @@visualization_result_set;
+  /* 3. Second-hop traversal. Find users invited by the one-hop invitees (1)
+    and store their count in @@num_invited_persons. 
+    And record the traversed edges into @@edges_to_display.
+   */
+  Second_invitees = SELECT t
+    FROM First_invitees:s - (User_Refer_User>:e) - :t
+    WHERE t != input_user
+    ACCUM @@edges_to_display += e
+    POST-ACCUM (t) 
+        @@num_invited_persons += 1;
+
+  /* Return the number of 2-hop invitees, total transferred money by 1-hop 
+    and 2-hop invitees, and the display graph.
+  */
+  PRINT @@num_invited_persons, @@total_amount_sent;
+  PRINT @@edges_to_display AS displayed_edges;
 }

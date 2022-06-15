@@ -1,20 +1,25 @@
-CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNTAX v2 {
+CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud
+SYNTAX v2 {
   /*
-    This is an anti-money laundering query. It detects money flow circle from a starting user. 
+    This is an anti-money laundering query which detects money 
+    flow circle from a starting user. 
  
-    Given a user id "source_id", find all the transaction paths originated from the input user 
-    and eventually come back to the user. The path length is limited from 3 to 6. 
+    Given a user id, find all the transaction paths 
+    originated from the input user and eventually come back to the user. 
+    The path length is limited from 3 to 6. 
 
     Sample input:
-    source_id : any integer between 1 and 500.
+    source_id = 222 (some circles), 333 (more), 111 (even more)
   */
   
   TYPEDEF TUPLE<EDGE e, VERTEX v, DOUBLE amount, INT ts> Edge_Tuple;
-  MinAccum<INT> @min_left_dist = GSQL_INT_MAX;
-  MinAccum<INT> @min_right_dist = GSQL_INT_MAX;
+  MinAccum<INT> @min_fwd_dist = GSQL_INT_MAX;
+  MinAccum<INT> @min_rev_dist = GSQL_INT_MAX;
   MinAccum<INT> @@min_src_send_time = GSQL_INT_MAX;
   MaxAccum<INT> @@max_src_receive_time = 0;
-  OrAccum @is_valid = FALSE;// Flag used to record valid vertices in the subgraph
+  
+  // Flag used to record valid vertices in the subgraph
+  OrAccum @is_valid = FALSE;
   
   // The following accumulators are used for aggregation on src
   SumAccum<INT> @sum_valid_trans_num = 0;
@@ -24,24 +29,23 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
   ListAccum<ListAccum<Edge_Tuple>> @new_edge_tuple_list;
   ListAccum<ListAccum<Edge_Tuple>> @@circle_edge_tuples_list;
   OrAccum @receive_new_path = FALSE;
-
-  // The following accumulators are used for printing edges and vertices
-  SetAccum<vertex> @@vertex_set;
-  ListAccum<ListAccum<Edge>> @@circle_paths_list;
   
   INT STEP_LOW_LIMIT = 3;
   INT STEP_HIGH_LIMIT = 6;
-  INT HALF_STEP;
-  INT STEP;
+  INT half_step;
+  INT step;
   
   // Starting from the input vertex user.
-  seed = {source_id};
+  Seed = {source_id};
 
-  /* Prep: Find all trasactions related to the input user with edge User_Transfer_Transaction 
-  or User_Receive_Transaction, and use one step to find out src's min_send_time and max_receive_time, 
-  then initialize the distance info for source_id*/
-  seed = SELECT src
-      FROM seed:src - ((User_Transfer_Transaction>|User_Receive_Transaction>):e) - Transaction:tgt
+  /* Prep: Find all trasactions related to the input user with edge 
+   User_Transfer_Transaction or User_Receive_Transaction, and use one 
+  step to find out src's min_send_time and max_receive_time, then initialize 
+  the distance info for source_id
+  */
+  Seed = SELECT src
+      FROM Seed:src - ((User_Transfer_Transaction>|User_Receive_Transaction>):e)
+                    - Transaction:tgt
       ACCUM
           CASE WHEN 
             e.type == "User_Transfer_Transaction" 
@@ -51,205 +55,216 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
             @@max_src_receive_time += tgt.ts
           END
       POST-ACCUM
-          src.@min_left_dist = 0,
-          src.@min_right_dist = 0,
+          src.@min_fwd_dist = 0,
+          src.@min_rev_dist = 0,
           src.@is_valid = TRUE
-      /* Make sure that it has a loop, if @@max_src_receive_time < @@min_src_send_time, 
-      then there is no loop because, if @@max_src_receive_time < @@min_src_send_time, 
-      all the valid money it receives are before it sends out money.*/
-      HAVING @@max_src_receive_time >= @@min_src_send_time;
+      HAVING @@max_src_receive_time >= @@min_src_send_time; // check time seq
 
-  /* PRINT epoch_to_datetime(@@max_src_receive_time), epoch_to_datetime(@@min_src_send_time), startTime, endTime;
-  Now start the bidirectional search of loops for source_id
-  1) First bidirectional search for the potential subgraph for all loops of source_id
-  2) Then one directional search to valid each path inside the subgraph using path filters, 
-     i.e. time increase along the path*/
-
-  // Set X and Y as seed
-  X (_) = seed;//X is used to do positive direction traversal
-  Y (_) = seed;//Y is used to do negative direction traversal
-
-  /* In order to do bidirectional search, we separate search into two steps,
-   i) Search for first half of total steps, only touch unmarked vertices, 
-     i.e. positive directional search only touch positive unmarked vertices,
-         negative search only touch negative unmarked vertices
-         
-   ii) After the first half search, the following search only happens for marked vertices,
-    i.e. positive directional search only touch negative marked and positive unmarked vertices,
-         negative search only touch negative positive marked and negative unmarked vertices,
-         if one of touched vertex fulfill the condition that positive distance + negative 
-         distance < STEP_HIGH_LIMIT, it is a valid vertex*/
+  /* 
+  PRINT epoch_to_datetime(@@max_src_receive_time),
+          epoch_to_datetime(@@min_src_send_time), startTime, endTime;
+  */
   
-  // 1. First search for half of total steps 
-  HALF_STEP = (STEP_HIGH_LIMIT + 1) / 2;
-  STEP = 0;
-  WHILE STEP <= HALF_STEP AND X.size() + Y.size() > 0 DO
-      IF X.size() > 0 THEN
+  /* Start search
+  1) Do bidirectional search for the subgraph of all loops from source_id
+    2) Then validate each path inside the subgraph using path filters, 
+     i.e. time must increase along the path
+  */
+
+  // Set Fwd_set and Rev_set as Seed
+  Fwd_set (_) = Seed; //Fwd_set is used to do positive direction traversal
+  Rev_set (_) = Seed; //Rev_set is used to do negative direction traversal
+
+  /* In order to do bidirectional search, we separate search into two step s,
+  i) Search for first half of total step s, only touch unmarked vertices, 
+    i.e. forward directional search only touches forward unmarked vertices,
+    reverse search only touches reverse unmarked vertices
+  ii) Match forward and reverse paths to complete a circle
+         If a touched vertex satisfies forward distance + reverse distance
+           < STEP_HIGH_LIMIT, then it is a valid
+  */
+  
+  // 1. First search for half of total step s 
+  half_step = (STEP_HIGH_LIMIT + 1) / 2;
+  step = 0;
+  WHILE step <= half_step AND Fwd_set.size() + Rev_set.size() > 0 DO
+      IF Fwd_set.size() > 0 THEN
           // From User to Transaction
-          X = SELECT tgt
-              FROM X:src - (User_Transfer_Transaction>:e) - Transaction:tgt
-              // tgt.ts must be bigger than min_src_send_time so that all paths has increasing time
+          Fwd_set = SELECT tgt
+              FROM Fwd_set:src - (User_Transfer_Transaction>:e) - Transaction:tgt
               WHERE tgt.ts >= @@min_src_send_time 
-                  AND src.@min_left_dist < GSQL_INT_MAX 
-                  AND tgt.@min_left_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_left_dist += src.@min_left_dist + 1               
+                  AND src.@min_fwd_dist < GSQL_INT_MAX 
+                  AND tgt.@min_fwd_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_fwd_dist += src.@min_fwd_dist + 1               
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX 
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX 
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <= 
+                      2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END;
           // From Transaction to User
-          X = SELECT tgt
-              FROM X:src - (<User_Receive_Transaction:e) - User:tgt
-              WHERE src.@min_left_dist < GSQL_INT_MAX 
-                  // Only when tgt is not left visited, update the distance info
-                  AND tgt.@min_left_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_left_dist += src.@min_left_dist + 1               
+          Fwd_set = SELECT tgt
+              FROM Fwd_set:src - (<User_Receive_Transaction:e) - User:tgt
+              WHERE src.@min_fwd_dist < GSQL_INT_MAX 
+                  AND tgt.@min_fwd_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_fwd_dist += src.@min_fwd_dist + 1               
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX 
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX 
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <=
+                       2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END
               HAVING tgt != source_id;
         END;
 
-      IF Y.size() > 0 THEN
+      IF Rev_set.size() > 0 THEN
           // From User to Transaction
-          Y = SELECT tgt
-              FROM Y:src - (User_Receive_Transaction>:e) - Transaction:tgt
+          Rev_set = SELECT tgt
+              FROM Rev_set:src - (User_Receive_Transaction>:e) - Transaction:tgt
               WHERE tgt.ts <= @@max_src_receive_time 
-                  AND src.@min_right_dist < GSQL_INT_MAX 
-                  AND tgt.@min_right_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_right_dist += src.@min_right_dist + 1
+                  AND src.@min_rev_dist < GSQL_INT_MAX 
+                  AND tgt.@min_rev_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_rev_dist += src.@min_rev_dist + 1
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <=
+                      2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END;
           // From Transaction to User
-          Y = SELECT tgt
-              FROM Y:src - (<User_Transfer_Transaction:e) - User:tgt
-              WHERE src.@min_right_dist < GSQL_INT_MAX 
-                  // Only when tgt is not left visited, update the distance info
-                  AND tgt.@min_right_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_right_dist += src.@min_right_dist + 1               
+          Rev_set = SELECT tgt
+              FROM Rev_set:src - (<User_Transfer_Transaction:e) - User:tgt
+              WHERE src.@min_rev_dist < GSQL_INT_MAX 
+                  // Only when tgt is not fwd-visited, update the distance info
+                  AND tgt.@min_rev_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_rev_dist += src.@min_rev_dist + 1               
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX 
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX 
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <=
+                      2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END
              HAVING tgt != source_id;
       END;
-      STEP = STEP + 1;
+      step = step + 1;
   END;
   
-  // 2. Start the last half of search, only touch marked vertices
-  WHILE STEP <= STEP_HIGH_LIMIT AND X.size() + Y.size() > 0 DO
-      IF X.size() > 0 THEN
+  // 2. Do the last half of search, only touching marked vertices
+  WHILE step <= STEP_HIGH_LIMIT AND Fwd_set.size() + Rev_set.size() > 0 DO
+      IF Fwd_set.size() > 0 THEN
           // From User to Transaction
-          X = SELECT tgt
-              FROM X:src - (User_Transfer_Transaction>:e) - Transaction:tgt
-              WHERE tgt.@min_right_dist < GSQL_INT_MAX//tgt must be touched in the above the negative search
+          Fwd_set = SELECT tgt
+              FROM Fwd_set:src - (User_Transfer_Transaction>:e) - Transaction:tgt
+              // tgt must have been touched in the reverse search above
+              WHERE tgt.@min_rev_dist < GSQL_INT_MAX
                   AND tgt.ts >= @@min_src_send_time 
-                  AND src.@min_left_dist < GSQL_INT_MAX 
-                  AND tgt.@min_left_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_left_dist += src.@min_left_dist + 1               
+                  AND src.@min_fwd_dist < GSQL_INT_MAX 
+                  AND tgt.@min_fwd_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_fwd_dist += src.@min_fwd_dist + 1               
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX 
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX 
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <=
+                      2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END;
   
           // From Transaction to User
-          X = SELECT tgt
-              FROM X:src - (<User_Receive_Transaction:e) - User:tgt
-              WHERE tgt.@min_right_dist < GSQL_INT_MAX//tgt must be touched in the above the negative search
-                  AND src.@min_left_dist < GSQL_INT_MAX 
-                  // Only when tgt is not left visited, update the distance info
-                  AND tgt.@min_left_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_left_dist += src.@min_left_dist + 1               
+          Fwd_set = SELECT tgt
+              FROM Fwd_set:src - (<User_Receive_Transaction:e) - User:tgt
+              // tgt must have been touched in the reverse search above
+              WHERE tgt.@min_rev_dist < GSQL_INT_MAX
+                  AND src.@min_fwd_dist < GSQL_INT_MAX 
+                  // Only when tgt is not fwd-visited, update the distance info
+                  AND tgt.@min_fwd_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_fwd_dist += src.@min_fwd_dist + 1               
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX 
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX 
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <=
+                      2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END
               HAVING tgt != source_id;
       END;
 
-      IF Y.size() > 0 THEN
+      IF Rev_set.size() > 0 THEN
           // From User to Transaction
-          Y = SELECT tgt
-              FROM Y:src - (User_Receive_Transaction>:e) - Transaction:tgt
-              WHERE tgt.@min_left_dist < GSQL_INT_MAX//tgt must be touched in the above positive search
+          Rev_set = SELECT tgt
+              FROM Rev_set:src - (User_Receive_Transaction>:e) - Transaction:tgt
+              // tgt must be touched in the above positive search
+              WHERE tgt.@min_fwd_dist < GSQL_INT_MAX
                   AND tgt.ts <= @@max_src_receive_time 
-                  AND src.@min_right_dist < GSQL_INT_MAX
-                  AND tgt.@min_right_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_right_dist += src.@min_right_dist + 1
+                  AND src.@min_rev_dist < GSQL_INT_MAX
+                  AND tgt.@min_rev_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_rev_dist += src.@min_rev_dist + 1
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <=
+                      2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END;
           // From Transaction to User
-          Y = SELECT tgt
-              FROM Y:src - (<User_Transfer_Transaction:e) - User:tgt
-              WHERE tgt.@min_left_dist < GSQL_INT_MAX//tgt must be touched in the above positive search
-                  AND src.@min_right_dist < GSQL_INT_MAX 
-                  // Only when tgt is not left visited, update the distance info
-                  AND tgt.@min_right_dist == GSQL_INT_MAX
-              ACCUM tgt.@min_right_dist += src.@min_right_dist + 1               
+          Rev_set = SELECT tgt
+              FROM Rev_set:src - (<User_Transfer_Transaction:e) - User:tgt
+              // tgt must be touched in the above positive search
+              WHERE tgt.@min_fwd_dist < GSQL_INT_MAX
+                  AND src.@min_rev_dist < GSQL_INT_MAX 
+                  // Only when tgt is not fwd-visited, update the distance info
+                  AND tgt.@min_rev_dist == GSQL_INT_MAX
+              ACCUM tgt.@min_rev_dist += src.@min_rev_dist + 1               
               POST-ACCUM
                   CASE WHEN 
-                    tgt.@min_left_dist < GSQL_INT_MAX 
-                    AND tgt.@min_right_dist < GSQL_INT_MAX
-                    AND tgt.@min_left_dist + tgt.@min_right_dist <= 2 * STEP_HIGH_LIMIT
+                    tgt.@min_fwd_dist < GSQL_INT_MAX 
+                    AND tgt.@min_rev_dist < GSQL_INT_MAX
+                    AND tgt.@min_fwd_dist + tgt.@min_rev_dist <=
+                      2 * STEP_HIGH_LIMIT
                   THEN
                     tgt.@is_valid = TRUE
                   END
               HAVING tgt != source_id;
       END;
-      STEP = STEP + 1;
+      step = step + 1;
   END;
 
-  // 3. Start valid path traversal and circle detection
-  STEP = 0;
-  // Reset X as seed
-  X = seed;
-  WHILE STEP <= STEP_HIGH_LIMIT DO
+  // 3. Do valid path traversal and circle detection
+  step = 0;
+  // Reset Fwd_set as Seed
+  Fwd_set = Seed;
+  WHILE step <= STEP_HIGH_LIMIT DO
       // From User to Transaction
-      X = SELECT tgt
-          FROM X:src - (User_Transfer_Transaction>:e) - Transaction:tgt
+      Fwd_set = SELECT tgt
+          FROM Fwd_set:src - (User_Transfer_Transaction>:e) - Transaction:tgt
           WHERE tgt.@is_valid == TRUE
           ACCUM
               INT ts = tgt.ts,
               CASE WHEN 
-                src.@edge_tuple_list.size() == 0// If X is seed, then only send edge over
+                src.@edge_tuple_list.size() == 0 // Fwd_set == Seed
               THEN 
                 tgt.@new_edge_tuple_list += [Edge_Tuple(e, src, tgt.amount, ts)]
               ELSE
                 FOREACH path IN src.@edge_tuple_list DO
-                    tgt.@new_edge_tuple_list += path + [Edge_Tuple(e, src, tgt.amount, ts)]
+                    tgt.@new_edge_tuple_list +=
+                      path + [Edge_Tuple(e, src, tgt.amount, ts)]
                 END
               END,
               // Reset receive_new_path as false
@@ -265,15 +280,16 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
           HAVING tgt.@receive_new_path == TRUE;
 
       // From Transaction to User
-      X = SELECT tgt
-          FROM X:src - (<User_Receive_Transaction:e) - User:tgt
+      Fwd_set = SELECT tgt
+          FROM Fwd_set:src - (<User_Receive_Transaction:e) - User:tgt
           WHERE tgt.@is_valid == TRUE
           ACCUM
               FOREACH path IN src.@edge_tuple_list DO
                   CASE WHEN 
                     tgt == source_id OR (NOT PathContainsV(path, tgt))
                   THEN
-                    tgt.@new_edge_tuple_list += path + [Edge_Tuple(e, src, src.amount, src.ts)]
+                    tgt.@new_edge_tuple_list +=
+                      path + [Edge_Tuple(e, src, src.amount, src.ts)]
                   END
               END,
               // Reset receive_new_path as false
@@ -283,30 +299,24 @@ CREATE QUERY circle_detection (VERTEX<User> source_id)  FOR GRAPH AntiFraud SYNT
                 tgt.@new_edge_tuple_list.size() > 0
               THEN
                 CASE WHEN 
-                  tgt == source_id// If it backs to start point, there is a valid circle
+                  tgt == source_id  // back to the starting point
                 THEN
-                  /* STEP + 1 gives the current updated step
-                  it is the number of User -> User steps for current paths 
-                  (there maybe multiple paths but all of them should have the same length)*/
+                  // may be multiple paths but each with the same length)
                   CASE WHEN 
-                    STEP + 1 >= STEP_LOW_LIMIT
+                    step + 1 >= STEP_LOW_LIMIT
                   THEN 
                     @@circle_edge_tuples_list += tgt.@new_edge_tuple_list
                   END
-                  // Else, overwrite the old @edge_tuple_list, since the old one is already used
-                ELSE 
+                ELSE
+                //else overwrite old edge_tuple_list since it is used already
                   tgt.@edge_tuple_list = tgt.@new_edge_tuple_list
                 END,
                 tgt.@receive_new_path = TRUE,
                 tgt.@new_edge_tuple_list.clear()
               END
           HAVING tgt.@receive_new_path == TRUE AND tgt != source_id;
-          STEP = STEP + 1;
+          step = step + 1;
   END;
-  
-  /* Print JSON only if it is directly called or else return @@circle_edge_tuples_list directly
-  use the drainRatio to filter out invalid paths
-  store all valid vertices into @@vertex_set and all paths into @@circle_paths_list*/
   
   PRINT @@circle_edge_tuples_list;
 }

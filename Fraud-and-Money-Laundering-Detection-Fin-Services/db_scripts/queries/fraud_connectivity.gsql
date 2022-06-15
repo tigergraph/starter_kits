@@ -1,39 +1,41 @@
-CREATE QUERY fraud_connectivity (VERTEX<User> input_user, FLOAT trust_score) FOR GRAPH AntiFraud syntax v1 {
-  /* 
-    This query finds all connect users/payment cards/device that has low credit score.  
+CREATE QUERY fraud_connectivity (VERTEX<User> input_user, FLOAT trust_score=0.5)
+FOR GRAPH AntiFraud SYNTAX v1 {
+    /* 
+        Starting from "input_user", find its neighborhood of Device_Tokens,
+        Transactions, Payment_Instruments, and Users connected within 3 hops.
+        Count the number of neighbors whose trust score is below "trust_score".
 
-    Starting with an input user "input_user", find all other users connected to  
-    "input_user" through device token, payment instrument connected via transactions in 3 steps
+        Sample input:
+        input_user: 33, or any integer between 1 and 500
+        trust_score: minimum valid credit score. Any float number (e.g. 0.1)
+    */
 
-    Sample input:
-    input_user: any integer between 1 and 500
-    trust_score: minimum valid credit score. Any float number (e.g. 0.1)
-  */
+    OrAccum<BOOL> @visited;
+    SumAccum<INT> @@sum_result;
+    SetAccum<EDGE> @@edges_to_display;
 
-  OrAccum<BOOL> @visited;
-  SumAccum<INT> @@sum_result;
-  SetAccum<EDGE> @@edge_set;
-  
-  /* Starting with "input_user", find all other users connected through device token, 
-  payment instrument connected via transactions in 3 steps*/
-  start (_) = {input_user};  
-  WHILE start.size()>0 LIMIT 3 DO
-      start = SELECT t
-          FROM start:s-(:e)-:t
-          SAMPLE 15 EDGE WHEN s.outdegree() >= 20
-          WHERE t.@visited == FALSE 
-              AND t != input_user 
-          ACCUM @@edge_set += e
-          POST-ACCUM
-              CASE WHEN 
-                t.trust_score < trust_score 
-              THEN
-                @@sum_result += 1
-              END,
-              t.@visited += TRUE;
-  END;
-  
-  // Output the result
-  print @@sum_result;
-  print @@edge_set;
+    INT SAMPLE_SIZE = 15;
+    INT MAX_OUTDEGREE = 20;
+    INT MAX_HOPS = 3;
+
+    Start (_) = {input_user};  
+    WHILE Start.size() > 0 LIMIT MAX_HOPS DO
+        Start = SELECT t
+            FROM Start:s - (:e) - :t
+            SAMPLE SAMPLE_SIZE EDGE WHEN s.outdegree() >= MAX_OUTDEGREE
+            WHERE t.@visited == FALSE 
+                AND t != input_user 
+            ACCUM @@edges_to_display += e
+            POST-ACCUM
+                // Count the entities below trust_score
+                CASE WHEN 
+                    t.trust_score < trust_score
+                THEN
+                    @@sum_result += 1
+                END,
+                t.@visited += TRUE;
+    END;
+
+    // Output the result
+    print @@sum_result;
 }
