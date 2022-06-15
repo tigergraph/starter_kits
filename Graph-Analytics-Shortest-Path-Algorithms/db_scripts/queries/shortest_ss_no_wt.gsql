@@ -7,7 +7,7 @@ The attribute version only store the distance into attribute, not the path.
         MinAccum<int> @dis;
         OrAccum @visited;
         ListAccum<vertex> @path;
-        SetAccum<edge> @@edgeSet;
+        SetAccum<edge> @@edge_Set;
 
   ##### Initialization  #####
         Source = {source};
@@ -35,7 +35,7 @@ The attribute version only store the distance into attribute, not the path.
         IF display THEN
                 ResultSet = SELECT s
                             FROM ResultSet:s -(:e)- :t
-                            ACCUM @@edgeSet += e;
-                PRINT @@edgeSet;
+                            ACCUM @@edge_Set += e;
+                PRINT @@edge_Set;
         END;
 }

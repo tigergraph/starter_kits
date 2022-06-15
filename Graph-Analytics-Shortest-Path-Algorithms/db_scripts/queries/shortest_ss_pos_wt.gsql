@@ -1,4 +1,8 @@
 CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph SYNTAX V2 {
+/* In case your query gets broken due to the timeout, click the option right next to the run query button,
+   and increase the time outdegree
+*/
+
 /* The Bellman-Ford algorithm for single-Source Shortest Path 
    on directed/undirected graph with positive weight.
    It will not detect negative cycle in this algorithm. 
@@ -6,7 +10,7 @@ CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph 
         TYPEDEF TUPLE<FLOAT dist, VERTEX pred> pathTuple;    
         HeapAccum<pathTuple>(1, dist ASC) @minPath;
         ListAccum<VERTEX> @path;                 # shortest path FROM source
-        SetAccum<EDGE> @@edgeSet;               # list of all edges, if display is needed
+        SetAccum<EDGE> @@edge_Set;               # list of all edges, if display is needed
         OrAccum @visited;
         STRING sourceName;
         INT iter;
@@ -62,7 +66,7 @@ CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph 
         IF display THEN
                 tmp = SELECT s
                       FROM total:s -(flight_route:e)- :t
-                      ACCUM @@edgeSet += e;
-                PRINT @@edgeSet;
+                      ACCUM @@edge_Set += e;
+                PRINT @@edge_Set;
         END;
 }
