@@ -1,56 +1,58 @@
-CREATE QUERY same_receiver_sender(vertex<Transaction> transaction) FOR GRAPH AntiFraud syntax v2 {
-  /* 
-    This query is used to find out whether a user conduct fraudulent transaction for themselves 
-    via fake accounts.
- 
-    Given an input transaction "transaction", return true when its receiver and sender are connected via 
-    Device_Token and Payment_Instrument within 4 steps.    
+CREATE QUERY same_receiver_sender (vertex<Transaction> input_transaction)
+FOR GRAPH AntiFraud syntax v2 {
+/*
+    Given an input transaction, detect any instances in which sender is
+    connected to receiver via Device_Token or Payment_Instrument within 4 steps.
+    
+    This type of self-transaction is more likely to be fraudulent.   
 
     Sample input:
     transaction: any integer between 1 and 1000.
-  */
+*/
   
-  OrAccum<BOOL> @from_receiver, @from_sender;
-  OrAccum<BOOL> @@is_same;
-  SetAccum<EDGE> @@edge_set;
+    OrAccum<BOOL> @from_receiver, @from_sender;
+    OrAccum<BOOL> @@is_same;
+    SetAccum<EDGE> @@edges_to_display;
+    INT MAX_HOPS = 4;
 
-  start (ANY) = {transaction};
+  Start (ANY) = {input_transaction};
 
-  // Prep: Get the sender and receiver
-  start = SELECT t 
-      FROM start:s-((<User_Receive_Transaction_Rev|<User_Transfer_Transaction_Rev):e)-:t
+    // Prep: Get the sender and receiver
+    Start = SELECT t
+      FROM Start:s 
+          - ((<User_Receive_Transaction|<User_Transfer_Transaction):e) - :t
       ACCUM
-          // Mark the sender and receiver according to the edge type
-          CASE WHEN 
-            e.type == "User_Receive_Transaction_Rev" 
-          THEN
-            t.@from_receiver += true
-          ELSE
-            t.@from_sender += true
-          END,
-          @@edge_set += e;
+            // Mark the sender and receiver according to the edge type
+            CASE WHEN
+                e.type == "User_Receive_Transaction_Rev"
+            THEN
+                t.@from_receiver += TRUE
+            ELSE
+                t.@from_sender += TRUE
+            END,
+                @@edges_to_display += e;
 
-  // Traverse for 4 steps, or the paths of sender and receiver meets each other
-  WHILE start.size() > 0 AND @@is_same == false LIMIT 4 DO
-      start = SELECT t 
-          FROM start:s-((User_to_Device|User_to_Payment):e)-:t
-          // Do not traverse the vertexes that were visited
-          WHERE t.@from_receiver == false 
-              AND t.@from_sender == false
-          ACCUM 
-              t.@from_receiver += s.@from_receiver,
-              t.@from_sender += s.@from_sender,
-              @@edge_set += e
-          POST-ACCUM
-              // When two paths meets in the middle
-              CASE WHEN  
-                t.@from_receiver == true AND t.@from_sender 
-              THEN
-                @@is_same += true
-              END;
-  END;
+    // Traverse for 4 steps, or until paths from sender and receiver meet
+    WHILE Start.size() > 0 AND @@is_same == FALSE LIMIT MAX_HOPS DO
+        Start = SELECT t
+            FROM Start:s - ((User_to_Device|User_to_Payment):e) - :t
+            // Do not traverse the vertexes that were already visited
+            WHERE t.@from_receiver == FALSE
+                AND t.@from_sender == FALSE
+            ACCUM 
+                t.@from_receiver += s.@from_receiver,
+                t.@from_sender += s.@from_sender,
+                @@edges_to_display += e
+            POST-ACCUM
+                // When two paths meets in the middle
+                CASE WHEN
+                    t.@from_receiver == TRUE AND t.@from_sender == TRUE 
+                THEN
+                    @@is_same += TRUE
+                END;
+     END;
 
-  // Output the result
-  PRINT @@is_same;
-  PRINT @@edge_set;
+    // Output the result
+    PRINT @@is_same;
+    PRINT @@edges_to_display;
 }
