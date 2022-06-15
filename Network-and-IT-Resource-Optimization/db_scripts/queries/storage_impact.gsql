@@ -1,0 +1,19 @@
+CREATE QUERY storage_impact(string vertexType, vertex input) FOR GRAPH Storage SYNTAX V2 { 
+  
+  OrAccum<BOOL>
+  @@stop;
+  ListAccum<EDGE>
+  @@edgeList;
+  
+  Start = {input};
+  
+  WHILE Start.size() > 0 AND @@stop == FALSE DO
+  
+    Start = SELECT t FROM Start:s-((_|_>):e)-:t
+    WHERE e.goUpper == TRUE
+    ACCUM @@edgeList += e
+    HAVING t.type != vertexType;
+  end;
+  
+  PRINT @@edgeList;
+}
