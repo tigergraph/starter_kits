@@ -1,16 +1,16 @@
-CREATE OR REPLACE QUERY get_k_hop_neighbors(int k, vertex input) FOR GRAPH MyGraph { 
+CREATE OR REPLACE QUERY get_k_hop_neighbor(int k, vertex input) FOR GRAPH MyGraph { 
 	
 	OrAccum<BOOL> @visited;
-	ListAccum<EDGE> @@edge_list;
+	ListAccum<EDGE> @@edgeList;
 	
-  	start = {input};
+  start = {input};
 	
 	WHILE start.size() > 0 limit k DO
-	  	start = SELECT t from start-(:e)-:t
-	         	WHERE t.@visited == false
-	          	ACCUM @@edge_list += e
-	          	POST-ACCUM t.@visited = true;
+	  start = SELECT t from start-(:e)-:t
+	          WHERE t.@visited == false
+	          ACCUM @@edgeList += e
+	          POST-ACCUM t.@visited = true;
 	END;
 	
-	print @@edge_list;
+	print @@edgeList;
 }

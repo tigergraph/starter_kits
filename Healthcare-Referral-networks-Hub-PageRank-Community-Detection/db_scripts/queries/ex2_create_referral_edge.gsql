@@ -1,28 +1,27 @@
-CREATE OR REPLACE QUERY ex2_create_referral_edge(VERTEX<Prescriber> input_prescriber) 
-	FOR GRAPH MyGraph { 
-	OrAccum<BOOL> @visited, @is_referred_claim;
+CREATE OR REPLACE QUERY ex2_create_referral_edge(VERTEX<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
+	OrAccum<BOOL> @visited, @is_Referred_Claim;
 	
-	ListAccum<DATETIME> @date_list;
+	ListAccum<DATETIME> @date_List;
 	
-	start_set = {input_prescriber};
+	start_set = {inputPrescriber};
 	
 	claims = SELECT t FROM start_set:s-(<submitted_by:e)-:t
 	         POST-ACCUM t.@visited = true;
 	
 	patients = SELECT t FROM claims:s-(associated>:e)-:t
-	           ACCUM t.@date_list += s.rx_fill_date;
+	           ACCUM t.@date_List += s.rx_fill_date;
 	
 	claims = SELECT t FROM patients:s-(<associated:e)-:t
 	         WHERE t.@visited == false
-	         ACCUM FOREACH dt in s.@date_list do
+	         ACCUM FOREACH dt in s.@date_List do
 	                 CASE WHEN datetime_diff(dt, t.rx_fill_date) BETWEEN 0 AND 2592000 THEN
-	                   t.@is_referred_claim = true
+	                   t.@is_Referred_Claim = true
 	                 END
 	               END
-	         HAVING t.@is_referred_claim == true;
+	         HAVING t.@is_Referred_Claim == true;
 	
 	prescribers = SELECT t FROM claims-(submitted_by>:e)-:t
-	              POST-ACCUM INSERT INTO referral VALUES(input_prescriber, t, 1);
+	              POST-ACCUM INSERT INTO referral VALUES(inputPrescriber, t, 1);
 	print start_set;
 	
 }

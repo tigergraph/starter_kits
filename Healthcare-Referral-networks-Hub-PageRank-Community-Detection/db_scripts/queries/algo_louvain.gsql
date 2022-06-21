@@ -16,32 +16,32 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
 
     TYPEDEF TUPLE <INT csize, INT number> cluster_num;
     TYPEDEF TUPLE <VERTEX node, INT cid, FLOAT delta_Q> v_delta_Q;
-    HeapAccum<v_delta_Q>(1, delta_Q DESC, cid ASC) @largest_delta_Q;   # if delta_Q is the same, select the one with mininal vid 
-    MapAccum<INT, FLOAT> @@tot_incident_cluster;   # sun of weight incident to clusters
-    MapAccum<INT, INT> @@cluster_sizes;                # size of a cluster
-    MapAccum<INT, FLOAT> @weight_to_cluster;  # weight from one vertex incident to that cluster
+    HeapAccum<v_delta_Q>(1, delta_Q DESC, cid ASC) @largest_delta_Q;   // if delta_Q is the same, select the one with mininal vid 
+    MapAccum<INT, FLOAT> @@tot_incident_cluster;   // sun of weight incident to clusters
+    MapAccum<INT, INT> @@cluster_sizes;                // size of a cluster
+    MapAccum<INT, FLOAT> @weight_to_cluster;  // weight from one vertex incident to that cluster
 
-    SumAccum<FLOAT> @@total_weight;   # total weight of all edges
+    SumAccum<FLOAT> @@total_weight;   // total weight of all edges
 
-    SumAccum<FLOAT> @weight;          # total weight incident to this vertex
+    SumAccum<FLOAT> @weight;          // total weight incident to this vertex
 
-    SumAccum<FLOAT> @cweight;       # total weight incident to this aggregate vertex
+    SumAccum<FLOAT> @cweight;       // total weight incident to this aggregate vertex
 
-    SumAccum<INT> @uid;        # which vertex it belongs to
+    SumAccum<INT> @uid;        // which vertex it belongs to
 
-    SumAccum<INT> @cid;        # which cluster it belongs to
+    SumAccum<INT> @cid;        // which cluster it belongs to
 
-    SumAccum<INT> @vid;        # internal id
+    SumAccum<INT> @vid;        // internal id
 
-    SumAccum<FLOAT> @delta_Q;         # contribution to the modularity
+    SumAccum<FLOAT> @delta_Q;         // contribution to the modularity
 
     SumAccum<FLOAT> @@modularity;
 
     SumAccum<FLOAT> @@modularity2;
 
-    MapAccum<INT, MapAccum<INT, FLOAT>> @@weight_to_cluster_map;   # calculate edges between communities 
+    MapAccum<INT, MapAccum<INT, FLOAT>> @@weight_to_cluster_map;   // calculate edges between communities 
 
-    MapAccum<INT, SetAccum<INT>> @@move_comm; # map of communities that changed its community id
+    MapAccum<INT, SetAccum<INT>> @@move_comm; // map of communities that changed its community id
 
     MapAccum<INT, MinAccum<VERTEX>> @@represent_map;
 
@@ -73,7 +73,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
 
     INT loop;
 
-    INT debug = 0;  # debug: 0, no modularity info; 1, show debug log; 2, modularity for each iteration
+    INT debug = 0;  // debug: 0, no modularity info; 1, show debug log; 2, modularity for each iteration
 
 
 
@@ -85,17 +85,17 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
 
         
 
-# Initialize: count edges and set a unique cluster ID for each vertex
+// Initialize: count edges and set a unique cluster ID for each vertex
     Start (ANY) = {Prescriber.*};
 
     S (ANY) = SELECT s 
-			  FROM Start:s -((referral>|<referral):e)- :t
-			  ACCUM @@total_weight += e.num_patient,
-					s.@weight += e.num_patient
-			POST-ACCUM s.@vid = getvid(s),
+        FROM Start:s -((referral>|<referral):e)- :t
+        ACCUM @@total_weight += e.num_patient,
+          s.@weight += e.num_patient
+      POST-ACCUM s.@vid = getvid(s),
                        s.@uid = s.@vid,
-                       s.@cid = s.@vid;  # Label each vertex with its own internal ID
-# Special first iteration of Phase 1
+                       s.@cid = s.@vid;  // Label each vertex with its own internal ID
+// Special first iteration of Phase 1
 
     iteration = 1;
 
@@ -103,11 +103,11 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         FROM Start:s -((referral>|<referral):e)- :t
         WHERE s.@cid > t.@cid
         ACCUM s.@largest_delta_Q += v_delta_Q(t, t.@cid, e.num_patient - 2 * s.@weight * s.@weight/ @@total_weight) 
-            # weight_to_cluster is just e.num_patient
+            // weight_to_cluster is just e.num_patient
             POST-ACCUM INT best_cluster = s.@largest_delta_Q.top().cid,
                 IF s.@largest_delta_Q.size() > 0 and s.@largest_delta_Q.top().delta_Q > 0 and s.@cid != best_cluster THEN 
                    s.@cid = best_cluster
-            	END,
+              END,
                 s.@largest_delta_Q.clear();
 
     S = SELECT s
@@ -117,17 +117,17 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
 
     @@modularity = @@modularity / @@total_weight;                      
     PRINT iteration AS Phase1Iter, @@modularity;
-    log(debug > 0, "[redrain]#move", iteration, @@modularity);
+    log(debug > 0, "[redrain]//move", iteration, @@modularity);
 
         
 
-# Phase 1 -- Move
+// Phase 1 -- Move
 
-# For each vertex, calculate the change in modularity FROM adding it to each of the nearby clusters
+// For each vertex, calculate the change in modularity FROM adding it to each of the nearby clusters
 
-# Add vertex to cluster with highest positive change in modularity
+// Add vertex to cluster with highest positive change in modularity
 
-# Repeat the above until no vertices change cluster anymore
+// Repeat the above until no vertices change cluster anymore
 
     S = SELECT s 
         FROM Start:s
@@ -142,26 +142,26 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         WHILE (loop < partitions) DO 
             S = SELECT s 
                 FROM Start:s -((referral>|<referral):e)- :t
-                WHERE s.@uid % partitions == loop    # for different split
-                    # At least one cluster not singlet(a cluster on its own). If both clusters are singlets, consider only when the label of target is smaller to avoid swap
-                    AND (( abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) > epsilon   # s is not a singlet 
-                          OR abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) > epsilon )     # or t is not a singlet
-                          OR (abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) < epsilon      # s is a singlet 
-                          AND abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) < epsilon      # t is also a singlet
-                         AND s.@cid > t.@cid) )                                               # consider only when target label is smaller
+                WHERE s.@uid % partitions == loop    // for different split
+                    // At least one cluster not singlet(a cluster on its own). If both clusters are singlets, consider only when the label of target is smaller to avoid swap
+                    AND (( abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) > epsilon   // s is not a singlet 
+                          OR abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) > epsilon )     // or t is not a singlet
+                          OR (abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) < epsilon      // s is a singlet 
+                          AND abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) < epsilon      // t is also a singlet
+                         AND s.@cid > t.@cid) )                                               // consider only when target label is smaller
                     ACCUM s.@weight_to_cluster += (t.@cid -> e.num_patient)
                     POST-ACCUM INT best_cluster = s.@cid,
                                FLOAT max_delta_Q = 0.0,
                                FLOAT delta_Q_new = 0.0,
-                               FOREACH (cluster, weightToC) IN s.@weight_to_cluster DO   #would be better if this can be distributed
+                               FOREACH (cluster, weightToC) IN s.@weight_to_cluster DO   //would be better if this can be distributed
                                    FLOAT incident = @@tot_incident_cluster.get(cluster),
                                    delta_Q_new = weightToC - 2 * incident * s.@weight/ @@total_weight,
-                                   IF delta_Q_new > max_delta_Q OR (abs(delta_Q_new - max_delta_Q) < epsilon AND cluster < best_cluster) THEN   # when delta_Q_new is equal to max_delta_Q, and the cluster label is smaller, also change 
+                                   IF delta_Q_new > max_delta_Q OR (abs(delta_Q_new - max_delta_Q) < epsilon AND cluster < best_cluster) THEN   // when delta_Q_new is equal to max_delta_Q, and the cluster label is smaller, also change 
                                        max_delta_Q = delta_Q_new,
                                        best_cluster = cluster
                                    END
                                END,
-                        	   IF s.@cid != best_cluster THEN 
+                             IF s.@cid != best_cluster THEN 
                                    @@tot_incident_cluster += (s.@cid -> (-1 * s.@weight)),
                                    @@tot_incident_cluster += (best_cluster -> s.@weight),
                                    s.@cid = best_cluster
@@ -177,10 +177,10 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
                  ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@total_weight);
             @@modularity = @@modularity / @@total_weight;                      
             PRINT iteration AS Phase1Iter, @@modularity;
-            log(debug > 0, "[redrain]#move", iteration, @@modularity);
+            log(debug > 0, "[redrain]//move", iteration, @@modularity);
         END;
 
-# Phase 2 --  Merge     
+// Phase 2 --  Merge     
     iteration2 = 0;
 
     WHILE (iteration2 < 2 OR @@modularity2 - last_modularity2 > epsilon) LIMIT iter2 DO
@@ -188,7 +188,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         Start = SELECT s
                 FROM Start:s
                 ACCUM s.@uid = s.@cid;      
-        # Select the vertices with minimal internal id to represent the coarsened graph
+        // Select the vertices with minimal internal id to represent the coarsened graph
         Start = SELECT s
                 FROM Start:s 
                 ACCUM @@represent_map += (s.@cid -> s);
@@ -199,15 +199,15 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         represent = {@@represent_set};
         @@represent_map.clear();
         @@represent_set.clear();
-        log(debug > 0, "[redrain]#2_merge", represent.size()); #@@cluster_sizes.size());
+        log(debug > 0, "[redrain]//2_merge", represent.size()); //@@cluster_sizes.size());
 
-    # Get @cweight from totalIncident
+    // Get @cweight from totalIncident
         represent = SELECT s
                     FROM represent:s
                     ACCUM s.@cweight = @@tot_incident_cluster.get(s.@uid),
                           @@cluster_sizes += (s.@cid -> 1);
 
-        log(debug > 1, "[redrain]#2_merge", @@weight_to_cluster_map.size());
+        log(debug > 1, "[redrain]//2_merge", @@weight_to_cluster_map.size());
         iteration = 0;
         last_modularity = 0;
         @@modularity = 0;
@@ -215,13 +215,13 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         WHILE (iteration < 2 OR @@modularity - last_modularity > epsilon) limit iter1 DO
                 iteration = iteration + 1;
         
-            # Calculate.num_patient incident from vertex to cluster in coarsened graph; change every interation
+            // Calculate.num_patient incident from vertex to cluster in coarsened graph; change every interation
             S = SELECT s
                 FROM Start:s -((referral>|<referral):e)-:t
-                WHERE s.@cid != t.@cid AND @@tot_incident_cluster.get(s.@uid) > 0 AND @@tot_incident_cluster.get(t.@cid) > 0   #@@tot_incident_cluster keeps changing, can be 0
-                ACCUM @@weight_to_cluster_map += (s.@uid -> (t.@cid -> e.num_patient));  # from s, incident to some clusters. Not consider the same cluster
+                WHERE s.@cid != t.@cid AND @@tot_incident_cluster.get(s.@uid) > 0 AND @@tot_incident_cluster.get(t.@cid) > 0   //@@tot_incident_cluster keeps changing, can be 0
+                ACCUM @@weight_to_cluster_map += (s.@uid -> (t.@cid -> e.num_patient));  // from s, incident to some clusters. Not consider the same cluster
             represent = SELECT s 
-                    	FROM represent:s
+                      FROM represent:s
                         POST-ACCUM INT best_cluster = s.@cid,
                                    FLOAT max_delta_Q = 0.0,
                                    FLOAT delta_Q_new = 0.0,
@@ -230,25 +230,25 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
                                        IF @@cluster_sizes.get(s.@cid) == 1 AND @@cluster_sizes.get(cluster) == 1 AND s.@cid < cluster THEN
                                            CONTINUE
                                        END,
-                                   		delta_Q_new = weightToC - 2 * incident * s.@cweight/ @@total_weight, #total weight should be the same
-                                   		IF delta_Q_new > max_delta_Q OR abs(delta_Q_new - max_delta_Q) < epsilon AND cluster < best_cluster THEN      # new cluster is smaller then the current best cluster
-                                       		max_delta_Q = delta_Q_new,
-                                       		best_cluster = cluster
-                                   		END
-                               		END,
+                                       delta_Q_new = weightToC - 2 * incident * s.@cweight/ @@total_weight, //total weight should be the same
+                                       IF delta_Q_new > max_delta_Q OR abs(delta_Q_new - max_delta_Q) < epsilon AND cluster < best_cluster THEN      // new cluster is smaller then the current best cluster
+                                           max_delta_Q = delta_Q_new,
+                                           best_cluster = cluster
+                                       END
+                                   END,
                                     IF s.@cid != best_cluster THEN
-                                      	@@tot_incident_cluster += (s.@cid -> (-1 * s.@cweight)),
+                                        @@tot_incident_cluster += (s.@cid -> (-1 * s.@cweight)),
                                         @@tot_incident_cluster += (best_cluster -> s.@cweight),
                                         @@move_comm += (s.@uid -> best_cluster),
                                         @@cluster_sizes += (s.@cid -> -1),
                                         @@cluster_sizes += (best_cluster -> 1),
                                         s.@cid = best_cluster
                                     END;
-                log(debug > 1, "[redrain]#2_merge", @@weight_to_cluster_map.size()); 
+                log(debug > 1, "[redrain]//2_merge", @@weight_to_cluster_map.size()); 
                 @@weight_to_cluster_map.clear();
                    
-                log(debug > 1, "[redrain]#2_move:", @@move_comm.size());
-                # move nodes
+                log(debug > 1, "[redrain]//2_move:", @@move_comm.size());
+                // move nodes
                 S = SELECT s
                     FROM Start:s
                     WHERE @@move_comm.containsKey(s.@uid)
@@ -266,7 +266,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
                 ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@total_weight);
                 @@modularity = @@modularity / @@total_weight;
                 PRINT iteration AS Phase1Iter, @@modularity;
-            log(debug > 0, "[redrain]#2_move", iteration, @@modularity);
+            log(debug > 0, "[redrain]//2_move", iteration, @@modularity);
         END;
         
         S = SELECT s
@@ -277,28 +277,28 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         last_modularity2 = @@modularity2;
         @@modularity2 = @@modularity;
         PRINT iteration2 AS Phase2Iter, @@modularity2;
-        log(debug > 0, "[redrain]#2_merge", iteration2, @@modularity2);
+        log(debug > 0, "[redrain]//2_merge", iteration2, @@modularity2);
                                       
     END;
         
         
-# Phase 3 -- Refinement
+// Phase 3 -- Refinement
     iteration = 0;
     @@modularity = 0;
     WHILE (iteration < 2 OR @@modularity - last_modularity > epsilon) LIMIT iter3 DO
         iteration = iteration + 1;
         S = SELECT s 
             FROM Start:s -((referral>|<referral):e)- :t
-            WHERE abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) > epsilon OR abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) > epsilon OR (abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) < epsilon AND abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) < epsilon AND s.@cid > t.@cid)   # at least one cluster not only itself, or use smaller label
+            WHERE abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) > epsilon OR abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) > epsilon OR (abs(s.@weight - @@tot_incident_cluster.get(s.@cid)) < epsilon AND abs(t.@weight - @@tot_incident_cluster.get(t.@cid)) < epsilon AND s.@cid > t.@cid)   // at least one cluster not only itself, or use smaller label
             ACCUM s.@weight_to_cluster += (t.@cid -> e.num_patient)
             POST-ACCUM
                 INT best_cluster = s.@cid,
                 FLOAT max_delta_Q = 0.0,
                 FLOAT delta_Q_new = 0.0,
-                FOREACH (cluster, weightToC) IN s.@weight_to_cluster DO   #would be better if this can be distributed
+                FOREACH (cluster, weightToC) IN s.@weight_to_cluster DO   //would be better if this can be distributed
                     FLOAT incident = @@tot_incident_cluster.get(cluster),
                     delta_Q_new = weightToC - 2 * incident * s.@weight/ @@total_weight,
-                    IF delta_Q_new > max_delta_Q OR (abs(delta_Q_new - max_delta_Q) < epsilon AND cluster < best_cluster) THEN   # when delta_Q_new is equal to max_delta_Q, and the cluster label is smaller, also change 
+                    IF delta_Q_new > max_delta_Q OR (abs(delta_Q_new - max_delta_Q) < epsilon AND cluster < best_cluster) THEN   // when delta_Q_new is equal to max_delta_Q, and the cluster label is smaller, also change 
                         max_delta_Q = delta_Q_new,
                         best_cluster = cluster
                     END
@@ -317,7 +317,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
              ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@total_weight);
         @@modularity = @@modularity / @@total_weight;                      
         PRINT iteration AS Phase3Iter, @@modularity;
-        log(debug > 0, "[redrain]#refine", iteration, @@modularity);
+        log(debug > 0, "[redrain]//refine", iteration, @@modularity);
     END;
     
             
@@ -340,6 +340,6 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
             @@cluster_members += (csize -> cluster);
         END;
         PRINT @@cluster_members;
-	PRINT "Community Detection Done";
+  PRINT "Community Detection Done";
         END;
 }

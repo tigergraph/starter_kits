@@ -1,8 +1,8 @@
-CREATE OR REPLACE QUERY get_prescribers(vertex<Prescriber> input_prescriber) FOR GRAPH MyGraph { 
+CREATE OR REPLACE QUERY get_prescribers(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
   ListAccum<EDGE> @@list;
 	OrAccum<BOOL> @visited;
 	
-	start_set = {input_prescriber};
+	start_set = {inputPrescriber};
 	
 	claims = SELECT t FROM start_set:s-(<submitted_by:e)-:t
 	         ACCUM @@list += e
