@@ -1,30 +1,30 @@
-CREATE QUERY mostReportedDrugsForCompany_v2(STRING company_name="PFIZER",
+CREATE QUERY most_reported_drugs_for_company_v2(STRING company_name="PFIZER",
   INT k=5, STRING role="PS") FOR GRAPH faers SYNTAX v2 { 
     // Possible values for role: PS, SS, I, C
     // PS = primary suspect drug, SS = secondary suspect drug
     // C = concomitant, I = interacting
   
-    # Keep count of how many times each drug is mentioned.
-    SumAccum<INT> @numCases;
+    // Keep count of how many times each drug is mentioned.
+    SumAccum<INT> @num_Cases;
 
-    # 1. Find all cases where the given pharma company is the 'mfr_sndr'
+    // 1. Find all cases where the given pharma company is the 'mfr_sndr'
     Company = {PharmaCompany.*};
     Cases = SELECT c
         FROM Company:s -(relatedTo:e)- ReportedCase:c
         WHERE s.mfr_sndr == company_name
     ;
     
-    #. 2. Find all drug sequences for the selected cases.
+    // 2. Find all drug sequences for the selected cases.
     DrugSeqs = SELECT ds
         FROM Cases:c -(hasSequences:e)- DrugSequence:ds
         WHERE (role == "" OR ds.role_cod == role)
     ;
     
-    # 3. Count occurences of each drug mentioned in each drug sequence.
+    // 3. Count occurences of each drug mentioned in each drug sequence.
     TopDrugs = SELECT d
         FROM DrugSeqs:ds -(hasDrugs:e)- Drug:d
-        ACCUM d.@numCases += 1
-        ORDER BY d.@numCases DESC
+        ACCUM d.@num_Cases += 1
+        ORDER BY d.@num_Cases DESC
         LIMIT k
     ;
     

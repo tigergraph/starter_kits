@@ -1,0 +1,56 @@
+CREATE QUERY top_side_effects_for_top_drugs(STRING company_name="PFIZER",
+  INT k=5, STRING role="PS") FOR GRAPH faers SYNTAX v2 { 
+    // Possible values for role: PS, SS, I, C
+    // PS = primary suspect drug, SS = secondary suspect drug
+    // C = concomitant, I = interacting
+
+    // Define a heap which sorts the reaction map (below) by count.
+    TYPEDEF TUPLE<STRING name, INT cnt> tally;
+    HeapAccum<tally>(k, cnt DESC) @top_Reactions;
+         
+    // Keep count of how many times each reaction or drug is mentioned.
+    ListAccum<STRING> @reaction_List;
+    SumAccum<INT> @num_Cases;
+    MapAccum<STRING, INT> @reaction_Tally;
+
+    // 1. Find all cases where the given pharma company is the 'mfr_sndr'
+    Company = {PharmaCompany.*};
+    Cases = SELECT c
+        FROM Company:s -(relatedTo:e)- ReportedCase:c
+        WHERE s.mfr_sndr == company_name;
+
+    // 2. For each case, attach a list of its reactions.
+    Tally = SELECT r
+        FROM Cases:c -(hasReactions:e)- Reaction:r
+        ACCUM c.@reaction_List += r.pt;
+         
+    // 3. Find all drug sequences for the selected cases, and transfer
+    //    the reaction list to the drug sequence.
+    DrugSeqs = SELECT ds
+        FROM Cases:c -(hasSequences:e)- DrugSequence:ds
+        WHERE (role == "" OR ds.role_cod == role)
+        ACCUM ds.@reaction_List = c.@reaction_List;
+    
+    // 4. Count occurences of each drug mentioned in each drug sequence.
+    //    Also count the occurences of each reaction.
+    TopDrugs = SELECT d
+        FROM DrugSeqs:ds -(hasDrugs:e)- Drug:d
+        ACCUM d.@num_Cases += 1,
+            FOREACH reaction in ds.@reaction_List DO
+                d.@reaction_Tally += (reaction -> 1)
+           END
+        ORDER BY d.@num_Cases DESC
+        LIMIT k;
+         
+    // 5. Find only the Top K side effects for each selected Drug.
+    TopDrugs = SELECT d
+         FROM TopDrugs:d 
+         ACCUM
+             FOREACH (reaction, cnt) IN d.@reaction_Tally DO
+                 d.@top_Reactions += tally(reaction,cnt)
+             END
+         ORDER BY d.@num_Cases DESC;
+    
+    PRINT TopDrugs[TopDrugs.prod_ai, TopDrugs.@num_Cases,
+                   TopDrugs.@top_Reactions];
+}
