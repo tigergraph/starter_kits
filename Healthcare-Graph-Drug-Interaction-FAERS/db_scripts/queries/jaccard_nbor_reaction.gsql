@@ -11,9 +11,10 @@ https://github.com/tigergraph/gsql-graph-algorithms
 Note: In versions 3.5 and earlier, the SAMPLE clause was only supported in Syntax V1, 
 so this query uses Syntax V1. The default Syntax V2 may be used in future versions that support SAMPLE.
 */
-    SumAccum<INT> @intersection_size, @@set_size_A, @set_size_B;
+
+    SumAccum<INT> @intersection_Size, @@set_size_A, @set_size_B;
     SumAccum<FLOAT> @similarity;
-    SumAccum<INT> @@tSize;
+    SumAccum<INT> @@t_Size;
         
     Start (ANY) = {source};
     Start = SELECT s
@@ -27,14 +28,14 @@ so this query uses Syntax V1. The default Syntax V2 may be used in future versio
         FROM Neighbors:s -(:e)- :t
         SAMPLE sampSize EDGE when s.outdegree(etype) > sampSize
         WHERE t != source
-        ACCUM t.@intersection_size += 1,
+        ACCUM t.@intersection_Size += 1,
             t.@set_size_B = t.outdegree(etype)
-        POST-ACCUM t.@similarity = t.@intersection_size*1.0/
-                  (@@set_size_A + t.@set_size_B - t.@intersection_size),
-            @@tSize += 1
+        POST-ACCUM t.@similarity = t.@intersection_Size*1.0/
+                  (@@set_size_A + t.@set_size_B - t.@intersection_Size),
+            @@t_Size += 1
         ORDER BY t.@similarity DESC
         LIMIT top_k;
 
     PRINT Others;
-    PRINT @@tSize, Others.size();
+    PRINT @@t_Size, Others.size();
 }
