@@ -1,4 +1,4 @@
-CREATE QUERY calAvgRating(/* Parameters here */) FOR GRAPH Recommender SYNTAX V2 { 
+CREATE QUERY cal_avg_rating(/* Parameters here */) FOR GRAPH Recommender SYNTAX V2 { 
   /* Write query logic here */ 
   AvgAccum @avg_rating;
   Start = {MOVIE.*};

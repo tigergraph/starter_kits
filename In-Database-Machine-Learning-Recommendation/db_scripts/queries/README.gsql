@@ -8,8 +8,8 @@ To train the latent factor model, run the queries below in sequence
 4. training
 
 To test the model and use it for recommendation, run the queries below
-test
-recommend
+1. test
+2. recommend
 
 To re-train model using different training data split, the data need to be reloaded before repeat the steps above.
 The order of the queries need to be followed to ensure the correctness of the result.
