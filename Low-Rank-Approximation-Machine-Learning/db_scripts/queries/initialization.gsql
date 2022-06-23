@@ -4,14 +4,14 @@ CREATE QUERY initialization(float sdv = 0.1, float mean = 0.1) FOR GRAPH LowRank
 	// The query inputs are the standard deviation and the mean of the normal distribution 
 	
 	ListAccum<DOUBLE> @init;
-	//The length of the row vectors is set as 19. This number has to be the same as the len_of_rowVector in the training query
+	// The length of the row vectors is set as 19. This number has to be the same as the len_of_rowVector in the training query
 	INT len_of_rowVector = 19; 
 	
   MATRIX_U = {MATRIX_ROW.*};
 	MATRIX_U = SELECT s FROM MATRIX_U:s
 	         ACCUM
 	           FOREACH i IN RANGE[1,len_of_rowVector] DO
-	             s.@init += sdv*randn()+mean                // assign the random number to the row vectors of the matrix U
+	             s.@init += sdv*randn()+mean                // Assign the random number to the row vectors of the matrix U
 	           END
 	         POST-ACCUM
 	           s.u = s.@init;
@@ -20,7 +20,7 @@ CREATE QUERY initialization(float sdv = 0.1, float mean = 0.1) FOR GRAPH LowRank
 	MATRIX_V = SELECT s FROM MATRIX_V:s
 	        ACCUM
 	           FOREACH i IN RANGE[1,len_of_rowVector] DO
-	             s.@init += sdv*randn()+mean                // assign the random number to the row vectors of the matrix V
+	             s.@init += sdv*randn()+mean                // Assign the random number to the row vectors of the matrix V
 	           END
 	        POST-ACCUM
 	          s.v = s.@init;
