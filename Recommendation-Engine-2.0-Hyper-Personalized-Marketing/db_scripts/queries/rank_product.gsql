@@ -1,53 +1,52 @@
-CREATE QUERY rank_product(VERTEX <customer> source_customer, STRING weather, 
-	STRING time_of_day, INT top_k) FOR GRAPH recommendation SYNTAX V2 { 
+CREATE QUERY rank_product(VERTEX <customer> sourceCustomer, STRING weather, STRING timeOfDay, INT topK) FOR GRAPH recommendation SYNTAX V2 { 
 	/***********************************************************
 	 * This query returns the top K highest rated product for a customer 
 	 * while taking into account the weather and TimeOfDay.
 	 *
 	 * Sample Parameters:
-	 * source_customer = "C001" 
+	 * sourceCustomer = "C001" 
 	 * weather = <blank> | "GW" | "BW" 
-	 * time_of_day = "T1"|"T2"|"T3"|"T4"
-	 * top_k = any number > 0
+	 * timeOfDay = "T1"|"T2"|"T3"|"T4"
+	 * topK = any number > 0
 	 ***********************************************************/
 	
 	
-  	SumAccum <FLOAT> @cfAffinity;
+  SumAccum <FLOAT> @cf_Affinity;
 	MaxAccum <FLOAT> @score; 
-	SumAccum <UINT>  @filters=0;
-	SumAccum <UINT>  @candidateFlag=0;
+	SumAccum <UINT> @filters=0;
+	SumAccum <UINT> @candidate_Flag=0;
 	UINT minFilters=0;
 	
-	start = {source_customer};
+	start = {sourceCustomer};
 	
-	if time_of_day!="" then minFilters = minFilters + 1; end;
+	if timeOfDay!="" then minFilters = minFilters + 1; end;
 	if weather!="" then minFilters = minFilters + 1; end;
 	
-	candidate_products = product.* ; // start with all products
+	candidateProducts = product.* ; // start with all products
 	
 	if minFilters!=0 THEN
-	  candidate_products = 
-	    SELECT p from candidate_products:p -(product_context:pc)- context:c
-	    WHERE c.id==weather OR c.id==time_of_day
+	  candidateProducts = 
+	    SELECT p from candidateProducts:p -(product_context:pc)- context:c
+	    WHERE c.id==weather OR c.id==timeOfDay
 	    ACCUM p.@filters += 1
 	    HAVING p.@filters >= minFilters;
 	
-	  candidate_products = 
-	    SELECT p from candidate_products:p
-	    POST-ACCUM p.@candidateFlag = 1; // The secret!
+	  candidateProducts = 
+	    SELECT p from candidateProducts:p
+	    POST-ACCUM p.@candidate_Flag = 1; // The secret!
 	END;
 	
 	
   features = 
 	  SELECT f FROM start:s -(customer_feature:cf)- feature:f
-    ACCUM f.@cfAffinity = cf.affinity; //flow affinity along edge to feature
+    ACCUM f.@cf_Affinity = cf.affinity; //flow affinity along edge to feature
 	
 	products =
 	  SELECT p FROM features:f -(product_feature:pf)- product:p
-	  WHERE p.@candidateFlag == 1 OR minFilters==0
-    ACCUM p.@score += pf.weight*f.@cfAffinity
+	  WHERE p.@candidate_Flag == 1 OR minFilters==0
+    ACCUM p.@score += pf.weight*f.@cf_Affinity
 	  ORDER BY p.@score DESC
-	  LIMIT top_k;
+	  LIMIT topK;
 	
   PRINT products;
 }

@@ -2,62 +2,62 @@ CREATE QUERY nested_expr_demo2() FOR GRAPH recommendation API("v2") SYNTAX v2 {
   TYPEDEF TUPLE<vertex<demographic> v, double f0> OrderTuple_1;
 
   AvgAccum @Agg_1_avg_of_cf_affinity_times_df_affinity;
-  HeapAccum<OrderTuple_1>(1, f0 DESC) @@order_heap_1;
-  SetAccum<vertex<demographic>> @@order_vertex_set_1;
-  SetAccum<edge> @@final_edge_set_4;
-  SetAccum<edge> @@final_edge_set_6;
-  SetAccum<edge> @@final_edge_set_5;
-  SetAccum<vertex<demographic>> @@final_vertex_set_1;
-  SetAccum<vertex<customer>> @@final_vertex_set_2;
-  SetAccum<vertex<feature>> @@final_vertex_set_3;
+  HeapAccum<OrderTuple_1>(1, f0 DESC) @@Order_Heap_1;
+  SetAccum<vertex<demographic>> @@Order_Vertex_Set_1;
+  SetAccum<edge> @@Final_Edge_Set_4;
+  SetAccum<edge> @@Final_Edge_Set_6;
+  SetAccum<edge> @@Final_Edge_Set_5;
+  SetAccum<vertex<demographic>> @@Final_Vertex_Set_1;
+  SetAccum<vertex<customer>> @@Final_Vertex_Set_2;
+  SetAccum<vertex<feature>> @@Final_Vertex_Set_3;
 
-  vertex_set_1 = 
+  VertexSet_1 = 
         SELECT alias_schema_1
         FROM demographic:alias_schema_1 -(demo_customer:alias_schema_4)- customer:alias_schema_2,
              demographic:alias_schema_1 -(demo_feature:df)- feature:alias_schema_3,
              customer:alias_schema_2 -(customer_feature:cf)- feature:alias_schema_3
         ACCUM alias_schema_1.@Agg_1_avg_of_cf_affinity_times_df_affinity += (cf.affinity * df.affinity)
-        POST-ACCUM @@order_heap_1 += OrderTuple_1(alias_schema_1, alias_schema_1.@Agg_1_avg_of_cf_affinity_times_df_affinity)
+        POST-ACCUM @@Order_Heap_1 += OrderTuple_1(alias_schema_1, alias_schema_1.@Agg_1_avg_of_cf_affinity_times_df_affinity)
         ;
 
-  WHILE (@@order_heap_1.size() > 0) DO
-    @@order_vertex_set_1 += @@order_heap_1.pop().v;
+  WHILE (@@Order_Heap_1.size() > 0) DO
+    @@Order_Vertex_Set_1 += @@Order_Heap_1.pop().v;
   END;
-  vertex_set_1 = { @@order_vertex_set_1 };
+  VertexSet_1 = { @@Order_Vertex_Set_1 };
 
-  vertex_set_1 = 
+  VertexSet_1 = 
         SELECT alias_schema_1
-        FROM vertex_set_1:alias_schema_1 -(demo_customer:alias_schema_4)- customer:alias_schema_2,
-             vertex_set_1:alias_schema_1 -(demo_feature:df)- feature:alias_schema_3,
+        FROM VertexSet_1:alias_schema_1 -(demo_customer:alias_schema_4)- customer:alias_schema_2,
+             VertexSet_1:alias_schema_1 -(demo_feature:df)- feature:alias_schema_3,
              customer:alias_schema_2 -(customer_feature:cf)- feature:alias_schema_3
-        ACCUM @@final_edge_set_4 += alias_schema_4,
-              @@final_edge_set_6 += df,
-              @@final_edge_set_5 += cf
-        POST-ACCUM @@final_vertex_set_1 += alias_schema_1
-        POST-ACCUM @@final_vertex_set_2 += alias_schema_2
-        POST-ACCUM @@final_vertex_set_3 += alias_schema_3
+        ACCUM @@Final_Edge_Set_4 += alias_schema_4,
+              @@Final_Edge_Set_6 += df,
+              @@Final_Edge_Set_5 += cf
+        POST-ACCUM @@Final_Vertex_Set_1 += alias_schema_1
+        POST-ACCUM @@Final_Vertex_Set_2 += alias_schema_2
+        POST-ACCUM @@Final_Vertex_Set_3 += alias_schema_3
         ;
 
-  PRINT @@final_edge_set_4;
+  PRINT @@Final_Edge_Set_4;
 
-  PRINT @@final_edge_set_6;
+  PRINT @@Final_Edge_Set_6;
 
-  PRINT @@final_edge_set_5;
+  PRINT @@Final_Edge_Set_5;
 
-  vertex_set_1 = { @@final_vertex_set_1 };
-  PRINT vertex_set_1[
-    vertex_set_1.name AS name,
-    vertex_set_1.@Agg_1_avg_of_cf_affinity_times_df_affinity AS avg_of_cf_affinity_times_df_affinity
+  VertexSet_1 = { @@Final_Vertex_Set_1 };
+  PRINT VertexSet_1[
+    VertexSet_1.name AS name,
+    VertexSet_1.@Agg_1_avg_of_cf_affinity_times_df_affinity AS avg_of_cf_affinity_times_df_affinity
   ];
 
-  vertex_set_2 = { @@final_vertex_set_2 };
-  PRINT vertex_set_2[
-    vertex_set_2.name AS name
+  VertexSet_2 = { @@Final_Vertex_Set_2 };
+  PRINT VertexSet_2[
+    VertexSet_2.name AS name
   ];
 
-  vertex_set_3 = { @@final_vertex_set_3 };
-  PRINT vertex_set_3[
-    vertex_set_3.name AS name
+  VertexSet_3 = { @@Final_Vertex_Set_3 };
+  PRINT VertexSet_3[
+    VertexSet_3.name AS name
   ];
 
 }
