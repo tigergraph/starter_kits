@@ -1,4 +1,4 @@
-create query pricePrediction(set<string> input, int maxIteration, bool doUpdate) for graph demo_graph syntax v2
+create query price_prediction(set<string> input, int maxIteration, bool doUpdate) for graph demo_graph syntax v2
 {
   /* 
    With a set of string as input, in the format of PRODUCT_NAME,NEW_PRICE, recalculate the new price for the connected BOM subgraph.
@@ -14,22 +14,22 @@ create query pricePrediction(set<string> input, int maxIteration, bool doUpdate)
   */
 
   SumAccum<int> @@depth = 0;
-  MaxAccum<int> @maxDepth = 0;
+  MaxAccum<int> @max_Depth = 0;
   OrAccum @visited_1 = false;
 
-  OrAccum @isStart = false;
+  OrAccum @is_Start = false;
 
   MapAccum<string,float> @@result;
   MapAccum<string,float> @mapping;
-  MapAccum<string,int>   @amountMap;
+  MapAccum<string,int>   @amount_Map;
   OrAccum @visited = false;
   SumAccum<float> @new_price;
 
-  MapAccum<vertex,double> @@inputMap;
-  SetAccum<vertex> @@startSet;
+  MapAccum<vertex,double> @@input_Map;
+  SetAccum<vertex> @@start_Set;
 
-  SetAccum<edge> @@displaySet;
-  SetAccum<vertex> @@displayV;
+  SetAccum<edge> @@display_Set;
+  SetAccum<vertex> @@display_V;
 
   String input_key = "";
   String input_val = "";
@@ -37,19 +37,19 @@ create query pricePrediction(set<string> input, int maxIteration, bool doUpdate)
   // parse the input strings and put them in to a vertex set
   foreach str in input do
     GetKeyVal(str, input_key, input_val);
-    @@inputMap += (to_vertex(input_key, "product") -> str_to_double(input_val));
-    @@startSet += to_vertex(input_key, "product");
+    @@input_Map += (to_vertex(input_key, "product") -> str_to_double(input_val));
+    @@start_Set += to_vertex(input_key, "product");
   end;
 
   // traverse from the input vertexe set 
-  Start = {@@startSet};
+  Start = {@@start_Set};
 
   Start1 = select s from Start:s
-          accum s.@isStart = true,
+          accum s.@is_Start = true,
                 s.@visited_1 = true,
                 s.@visited = true,
-                s.@new_price = @@inputMap.get(s)
-          post-accum s.price = @@inputMap.get(s)
+                s.@new_price = @@input_Map.get(s)
+          post-accum s.price = @@input_Map.get(s)
   ;
 
   @@depth = 1;
@@ -62,23 +62,23 @@ create query pricePrediction(set<string> input, int maxIteration, bool doUpdate)
         from Start1:o-(usedBy>)- product:u
         post-accum 
             // when start product is on the path of other start product
-            case when u.@isStart == true then
-                u.@maxDepth += @@depth
+            case when u.@is_Start == true then
+                u.@max_Depth += @@depth
             end,
             // if first time visit just pass the depth along
             case when u.@visited_1 == false then
                 u.@visited_1 = true
             // keep the largest depth
             else 
-                u.@maxDepth += @@depth
+                u.@max_Depth += @@depth
             end
-        having u.@maxDepth == 0;
+        having u.@max_Depth == 0;
         @@depth += 1;
   end;
 
   // start from the input vertex set again
   Start2 = select s from Start:s
-          where s.@maxDepth == 0;
+          where s.@max_Depth == 0;
 
   // reset the depth
   @@depth = 1;
@@ -93,7 +93,7 @@ create query pricePrediction(set<string> input, int maxIteration, bool doUpdate)
     // search first
     Start2 = select u
       from Start2:o -(usedBy>)- product:u
-      where (u.@maxDepth == 0 or u.@maxDepth <= @@depth) and u.@visited == false ;
+      where (u.@max_Depth == 0 or u.@max_Depth <= @@depth) and u.@visited == false ;
 
     // then do the calculation
     Start2 = select o
@@ -104,15 +104,15 @@ create query pricePrediction(set<string> input, int maxIteration, bool doUpdate)
           else 
               o.@mapping += (e.formula_order->u.price)
           end
-          ,o.@amountMap += (e.formula_order->e.useAmount)
-          ,@@displaySet += e
-          ,@@displayV += u
+          ,o.@amount_Map += (e.formula_order->e.useAmount)
+          ,@@display_Set += e
+          ,@@display_V += u
       post-accum
             // dynamically evaluate the formula string stored as an attribute
             string formula = o.formula,
             foreach (key,val) in o.@mapping do
               // replace the $1 string with the runtime value
-              formula = replaceStr(formula,"$"+key,to_string(val*o.@amountMap.get(key)))
+              formula = replaceStr(formula,"$"+key,to_string(val*o.@amount_Map.get(key)))
             end,
             o.@new_price = evaluate(formula,"double"),
 
@@ -127,9 +127,9 @@ create query pricePrediction(set<string> input, int maxIteration, bool doUpdate)
     @@depth += 1;
   end;
 
-  print @@displaySet;
+  print @@display_Set;
 
-  final = {@@displayV};
+  final = {@@display_V};
 
   print final;
 }

@@ -1,4 +1,4 @@
-create query impactAnalysis(set<vertex<site>> affectedSites, uint maxDepth) for graph demo_graph syntax v2
+create query impact_analysis(set<vertex<site>> affectedSites, uint maxDepth) for graph demo_graph syntax v2
 {
   /*
     Start from multiple input affected sites, return the impacted site-product pairs. The impacted site-product pairs will be indentified from two paths, one is site-(delivery)-site relationship. Another one is site-(produce)-product-(use)-product relationship. Since not nessesarily all product belongs to a site is getting impacted. To calculte the subset we need infomation from both paths. That is the impacted product needs to use another impacted product delivered from a impacted site. This will require both delivery relationship and dependency relationship between products. Because a delivered product may not be used, a impacted product being used may not delivered from the very impacted site.
@@ -10,19 +10,19 @@ create query impactAnalysis(set<vertex<site>> affectedSites, uint maxDepth) for 
   
    typedef tuple<string siteName, string  prodName> spPair;
 
-   SetAccum<spPair> @pairSet;
+   SetAccum<spPair> @pair_Set;
 
    // products a site that has been affected
-   SetAccum<string> @affectedProd;
+   SetAccum<string> @affected_Prod;
 
    // number of iteration
    SumAccum<int> @@iteration = 0;
 
    // storing the result for unfinished goods
-   SetAccum<edge> @@resultSet;
+   SetAccum<edge> @@result_Set;
 
    // for pass along the edge info for visualization
-   SetAccum<edge> @edgeMsgSet;
+   SetAccum<edge> @edge_Msg_Set;
 
    effectedSite = {affectedSites};
 
@@ -31,29 +31,29 @@ create query impactAnalysis(set<vertex<site>> affectedSites, uint maxDepth) for 
      // get the impacted products from the impacted sites
      effectedProduct = select p
                        from effectedSite:s -(produce>:e)- product:p
-                       where @@iteration == 0 or s.@affectedProd.contains(p.name) == true
-                       accum p.@pairSet += spPair(s.name, p.name)
+                       where @@iteration == 0 or s.@affected_Prod.contains(p.name) == true
+                       accum p.@pair_Set += spPair(s.name, p.name)
                              // we assume all of the products got impacted from the input sites
                              ,case when @@iteration == 0 then
-                                 s.@affectedProd += p.name
-                                 ,@@resultSet += e
+                                 s.@affected_Prod += p.name
+                                 ,@@result_Set += e
                              end
      ;
 
      // from the impacted products get its downsteam products
      downStreamProd = select p
                       from effectedProduct:ep -(usedBy>:e) - product:p
-                      accum p.@pairSet += ep.@pairSet
-                            ,p.@edgeMsgSet += e
+                      accum p.@pair_Set += ep.@pair_Set
+                            ,p.@edge_Msg_Set += e
      ;
 
      // find the impacted sites from the previous effectedSite set 
      effectedSite = select st
                     from effectedSite:s -(deliver>:e) - site:st
                     accum 
-                      case when s.@affectedProd.contains(e.itemId) then
-                        st.@pairSet += spPair(s.name,e.itemId)
-                        ,st.@edgeMsgSet += e
+                      case when s.@affected_Prod.contains(e.itemId) then
+                        st.@pair_Set += spPair(s.name,e.itemId)
+                        ,st.@edge_Msg_Set += e
                       end
      ;
 
@@ -61,18 +61,18 @@ create query impactAnalysis(set<vertex<site>> affectedSites, uint maxDepth) for 
      // from a upstream site, and they also use this produt in producting their product
      effectedSite = select st
                         from effectedSite:st -(produce>:e) - product:p
-                        where COUNT(st.@pairSet INTERSECT p.@pairSet) > 0
+                        where COUNT(st.@pair_Set INTERSECT p.@pair_Set) > 0
                         accum 
-                            st.@affectedProd += p.name
-                            ,@@resultSet += e 
-                            ,@@resultSet += st.@edgeMsgSet
-                            ,@@resultSet += p.@edgeMsgSet
+                            st.@affected_Prod += p.name
+                            ,@@result_Set += e 
+                            ,@@result_Set += st.@edge_Msg_Set
+                            ,@@result_Set += p.@edge_Msg_Set
                         post-accum
-                            p.@pairSet.clear()
+                            p.@pair_Set.clear()
      ;
 
      @@iteration += 1;
   end;
 
-  print @@resultSet;
+  print @@result_Set;
 }
