@@ -1,0 +1,54 @@
+CREATE QUERY addresses_with_most_case_reports() FOR GRAPH connectivity API("v2") SYNTAX v2 {
+/**
+Find the top 10 addresses with the most number of case reports
+*/
+  TYPEDEF TUPLE<vertex<Address> v, double f0> OrderTuple_3;
+
+  SetAccum<vertex> @Agg_3_number_Of_People_With_Case_Reports_set;
+  SumAccum<int> @Agg_3_number_Of_People_With_Case_Reports;
+  HeapAccum<OrderTuple_3>(10, f0 DESC) @@Order_Heap_3;
+  SetAccum<vertex<Address>> @@Order_Vertex_Set_3;
+  SetAccum<edge> @@Final_Edge_Set_5;
+  SetAccum<vertex<Person>> @@Final_Vertex_Set_2;
+  SetAccum<vertex<Address>> @@Final_Vertex_Set_3;
+
+  VertexSet_3 = 
+        SELECT alias_schema_3
+        FROM Person:p -(hasCaseReport:alias_schema_4)- CaseReport:alias_schema_1,
+             Person:p -(hasHomeAddress:alias_schema_5)- Address:alias_schema_3
+        ACCUM alias_schema_3.@Agg_3_number_Of_People_With_Case_Reports_set += p
+        POST-ACCUM alias_schema_3.@Agg_3_number_Of_People_With_Case_Reports = alias_schema_3.@Agg_3_number_Of_People_With_Case_Reports_set.size(),
+                   @@Order_Heap_3 += OrderTuple_3(alias_schema_3, alias_schema_3.@Agg_3_number_Of_People_With_Case_Reports)
+        ;
+
+  WHILE (@@Order_Heap_3.size() > 0) DO
+    @@Order_Vertex_Set_3 += @@Order_Heap_3.pop().v;
+  END;
+  VertexSet_3 = { @@Order_Vertex_Set_3 };
+
+  VertexSet_3 = 
+        SELECT alias_schema_3
+        FROM Person:p -(hasCaseReport:alias_schema_4)- CaseReport:alias_schema_1,
+             Person:p -(hasHomeAddress:alias_schema_5)- VertexSet_3:alias_schema_3
+        ACCUM @@Final_Edge_Set_5 += alias_schema_5
+        POST-ACCUM @@Final_Vertex_Set_2 += p
+        POST-ACCUM @@Final_Vertex_Set_3 += alias_schema_3
+        ;
+
+  PRINT @@Final_Edge_Set_5;
+
+  VertexSet_2 = { @@Final_Vertex_Set_2 };
+  PRINT VertexSet_2[
+    VertexSet_2.fullName AS fullName,
+    VertexSet_2.dob AS dob,
+    VertexSet_2.email AS email,
+    VertexSet_2.gender AS gender,
+    VertexSet_2.ethic_group AS ethic_group
+  ];
+
+  VertexSet_3 = { @@Final_Vertex_Set_3 };
+  PRINT VertexSet_3[
+    VertexSet_3.@Agg_3_number_Of_People_With_Case_Reports AS numberOfPeopleWithCaseReports
+  ];
+
+}

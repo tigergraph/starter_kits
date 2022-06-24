@@ -1,4 +1,4 @@
-CREATE QUERY personKnowsWho(VERTEX <Person> source) FOR GRAPH connectivity SYNTAX v2 { 
+CREATE QUERY person_knows_who(VERTEX <Person> source) FOR GRAPH connectivity SYNTAX v2 { 
   /* 
   --- Dataset has been shrunk on Nov.20th,2020 ---
   
@@ -8,10 +8,10 @@ CREATE QUERY personKnowsWho(VERTEX <Person> source) FOR GRAPH connectivity SYNTA
   Source:276
 
 	DEMO - This query infers all of the people a particular person knows */ 
-  SumAccum<int> @knowsCount;
-	SetAccum <Vertex> @@personSet;
+  SumAccum<int> @knows_Count;
+	SetAccum <Vertex> @@person_Set;
 	
-	@@personSet+= source;
+	@@person_Set+= source;
 	startPerson = {source};
 	#startPerson = {Person.*};
   Events = SELECT event  FROM startPerson:p-(:e)-:event ;
@@ -19,7 +19,7 @@ CREATE QUERY personKnowsWho(VERTEX <Person> source) FOR GRAPH connectivity SYNTA
 	Acquaintences = SELECT acquaintence 
 	FROM Events:event-(:e)-Person:acquaintence 
 	WHERE acquaintence!=source
-	ACCUM acquaintence.@knowsCount += 1;
+	ACCUM acquaintence.@knows_Count += 1;
 	
 	PRINT startPerson, Acquaintences;
 	}

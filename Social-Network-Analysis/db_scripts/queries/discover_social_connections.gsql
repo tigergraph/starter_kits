@@ -1,4 +1,4 @@
-CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k) for graph connectivity SYNTAX v2
+CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int k) for graph connectivity SYNTAX v2
 {
   
 	/* 
@@ -15,9 +15,9 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
    * Variables for phase one
    ***********************************/
    SumAccum<int> @score = 0;
-   OrAccum @knowA = false, @knowB = false;
-   SetAccum<edge> @evidence, @@edgeSet;
-   SetAccum<vertex> @@verSet;
+   OrAccum @know_A = false, @know_B = false;
+   SetAccum<edge> @evidence, @@edge_Set;
+   SetAccum<vertex> @@ver_Set;
 
    bool isFirstIter = true;
 
@@ -39,10 +39,10 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
      FROM L0:v
      POST-ACCUM 
        CASE WHEN v == A THEN
-         v.@knowA += true
+         v.@know_A += true
        END
        ,CASE WHEN v == B THEN
-         v.@knowB += true
+         v.@know_B += true
        END
        ,v.@score = 1
      ;
@@ -56,8 +56,8 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
       L1 = SELECT t
            FROM L1:s-((hasHomeAddress|hasHotelStay|hasFlight|hasTrainRide|hasBusRide|hasCaseReport):e)-:t
            WHERE t.@score == 0 
-           ACCUM t.@knowA += s.@knowA
-                 ,t.@knowB += s.@knowB
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
                  ,t.@score += s.@score
                  ,t.@evidence += s.@evidence
                  ,t.@evidence += e
@@ -75,8 +75,8 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
     L1 = SELECT t 
            FROM L1:s-((hasPhone|hasBankAccount):e)-:t 
            WHERE t.@score == 0
-           ACCUM t.@knowA += s.@knowA
-                 ,t.@knowB += s.@knowB
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
                  ,t.@score += s.@score
                  ,t.@evidence += s.@evidence
                  ,t.@evidence += e
@@ -85,8 +85,8 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
       L1 = SELECT t 
            FROM L1:s-((hasFundsTransfer|hasPhoneCall):e)-:t 
            WHERE t.@score == 0
-           ACCUM t.@knowA += s.@knowA
-                 ,t.@knowB += s.@knowB
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
                  ,t.@score += s.@score
                  ,t.@evidence += s.@evidence
                  ,t.@evidence += e
@@ -95,8 +95,8 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
     L1 = SELECT t 
            FROM L1:s-((hasPhone|hasBankAccount):e)-:t  
            WHERE t.@score == 0
-           ACCUM t.@knowA += s.@knowA
-                 ,t.@knowB += s.@knowB
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
                  ,t.@score += s.@score
                  ,t.@evidence += s.@evidence
                  ,t.@evidence += e
@@ -111,13 +111,13 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
     // and keep the top k
     COMMON_AB = SELECT t
          FROM RELATED:t
-         WHERE t.@knowA == true AND t.@knowB == true
+         WHERE t.@know_A == true AND t.@know_B == true
          ORDER BY t.@score
          LIMIT k
     ;
 
     COMMON_AB = SELECT s from COMMON_AB:s
-                ACCUM @@edgeSet += s.@evidence
+                ACCUM @@edge_Set += s.@evidence
     ;
 
     IF isFirstIter == true THEN
@@ -128,9 +128,9 @@ CREATE QUERY discoverSocialConnections(vertex<Person> A, vertex<Person> B, int k
     isFirstIter = false;
   END;
 
-  PRINT @@edgeSet;
-  getVertexesFromEdge(@@edgeSet, @@verSet); 
-  Start = {@@verSet};
+  PRINT @@edge_Set;
+  getVertexesFromEdge(@@edge_Set, @@ver_Set); 
+  Start = {@@ver_Set};
   Start = SELECT s FROM Start:s
           POST-ACCUM s.@evidence.clear();
   PRINT Start;
