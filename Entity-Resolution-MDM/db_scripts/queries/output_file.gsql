@@ -1,0 +1,25 @@
+CREATE QUERY output_file(/* Parameters here */) FOR GRAPH Entity_Resolution { 
+  
+	FILE f1("/tmp/video_genre.csv");
+	FILE f2("/tmp/video_keyword.csv");
+	FILE f3("/tmp/video.csv");
+	
+	f1.println("genre,video");
+	
+	start (ANY) = {Genre.*};
+	
+	start = SELECT s FROM start:s-(Has_Genre)-:t ACCUM f1.println(s,t);
+	
+	f2.println("keyword,video");
+	
+	start = {Keyword.*};
+	
+	start = SELECT s FROM start:s-(Has_Keyword)-:t ACCUM f2.println(s,t);
+	
+	
+	start = {Video.*};
+	
+	f3.println("ID,runtime,title,release_date");
+	
+	start = SELECT s FROM start:s WHERE s.title != "" ACCUM f3.println(s,s.runtime,s.title,s.release_date);
+}

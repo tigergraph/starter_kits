@@ -1,0 +1,45 @@
+CREATE QUERY infection_subgraph(vertex<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
+	/**********************************************************
+	 * This query takes a single patient and finds all all infections and potential infections. 
+	 * Potential infections are determined by who came into contact with this person 
+	 * (directly or indirectly) within the symptom onset to release date time frame.
+	 * 
+	 * Sample Input: 
+   * p: 4100000006
+   *********************************************************/
+	
+  DATETIME STARTTIME, ENDTIME;
+	OrAccum @visited;
+	SetAccum<EDGE> @@edge_set;
+  STARTTIME = p.symptom_onset_date;
+	ENDTIME = p.released_date;
+	
+	infected (ANY) = {p};
+	infected = SELECT s FROM infected:s
+	           ACCUM s.@visited = TRUE;
+	
+	WHILE infected.size() > 0 LIMIT 100 DO
+	  places = SELECT t FROM infected:s-(PATIENT_TRAVELED:e)-TravelEvent:t
+	           WHERE (t.visited_date >= STARTTIME AND 
+							      t.visited_date <= ENDTIME AND 
+							      t.outdegree("PATIENT_TRAVELED") > 1)
+	             AND t.@visited == FALSE
+	           ACCUM t.@visited = TRUE,
+	                 @@edge_set += e; 
+	
+	  same_place = SELECT t FROM places:s-(PATIENT_TRAVELED:e)-Patient:t
+	              WHERE t.@visited == FALSE 
+	              ACCUM t.@visited = TRUE,
+	                    @@edge_set += e; 
+	
+	  people = SELECT t FROM infected:s-(reverse_INFECTED_BY>:e)-:t
+	           WHERE (STARTTIME <= t.symptom_onset_date AND ENDTIME >= t.symptom_onset_date)
+	             AND t.@visited == FALSE
+	           ACCUM t.@visited = TRUE,
+	                 @@edge_set += e;
+	
+	  infected = same_place UNION people;
+	END;
+	
+	PRINT @@edge_set;
+}

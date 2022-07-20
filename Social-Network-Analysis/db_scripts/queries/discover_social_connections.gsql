@@ -1,0 +1,137 @@
+CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int k) for graph connectivity SYNTAX v2
+{
+  
+	/* 
+	--- Dataset has been shrunk on Nov.20th,2020 ---
+  
+  Samples:
+  A:115062 ; B:198915 ; K:6
+  A:230336 ; B:364310 ; K:6
+  A:246667 ; B:238358 ; K:6
+	
+	DEMO - This query infers all of the people a particular person knows */
+	
+	/***********************************
+   * Variables for phase one
+   ***********************************/
+   SumAccum<int> @score = 0;
+   OrAccum @know_A = false, @know_B = false;
+   SetAccum<edge> @evidence, @@edge_Set;
+   SetAccum<vertex> @@ver_Set;
+
+   bool isFirstIter = true;
+
+   L0 (ANY) = {A,B};
+
+  /**************************
+   * Iteration one
+   * 1. find all person relates to A or B
+   * 2. output top k people relates both A and B
+   * Iteration two
+   * 1. Start from the person knows only A or B
+   * 2. Find those people who knows only A knows a person that knows only B
+   * 3. Find those people who knows only B knows a person that knows only A 
+   * 4. output top k people from 2 and 3
+   **************************/
+   WHILE true LIMIT 2 DO
+     // Data Initialize
+     L0 = SELECT v
+     FROM L0:v
+     POST-ACCUM 
+       CASE WHEN v == A THEN
+         v.@know_A += true
+       END
+       ,CASE WHEN v == B THEN
+         v.@know_B += true
+       END
+       ,v.@score = 1
+     ;
+	
+	  L1 (ANY) = L0;
+
+    // do it twice, go two steps to find the related citizens via 
+    // hotel, flight, train, bus, case
+    log(true, " hotel, flight, train, bus, case");
+    WHILE true LIMIT 2 DO
+      L1 = SELECT t
+           FROM L1:s-((hasHomeAddress|hasHotelStay|hasFlight|hasTrainRide|hasBusRide|hasCaseReport):e)-:t
+           WHERE t.@score == 0 
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
+                 ,t.@score += s.@score
+                 ,t.@evidence += s.@evidence
+                 ,t.@evidence += e
+      ;
+      //print A;
+    END;
+
+    RELATED = L1;
+    L1 = L0;
+
+    // go 4 steps, 
+    // A/B-->PHONE NUMBER-->PHONE CALL-->PHONE NUMBER-->RELATED PEOPLE
+    // A/B-->BANK ACCOUNT-->MONEY TRANS-->BANK ACCOUNT-->RELATED PEOPLE
+    log(true, "PHONE CALL, MONEY TRANS");
+    L1 = SELECT t 
+           FROM L1:s-((hasPhone|hasBankAccount):e)-:t 
+           WHERE t.@score == 0
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
+                 ,t.@score += s.@score
+                 ,t.@evidence += s.@evidence
+                 ,t.@evidence += e
+    ;
+    WHILE true LIMIT 2 DO 
+      L1 = SELECT t 
+           FROM L1:s-((hasFundsTransfer|hasPhoneCall):e)-:t 
+           WHERE t.@score == 0
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
+                 ,t.@score += s.@score
+                 ,t.@evidence += s.@evidence
+                 ,t.@evidence += e
+      ;
+    END;
+    L1 = SELECT t 
+           FROM L1:s-((hasPhone|hasBankAccount):e)-:t  
+           WHERE t.@score == 0
+           ACCUM t.@know_A += s.@know_A
+                 ,t.@know_B += s.@know_B
+                 ,t.@score += s.@score
+                 ,t.@evidence += s.@evidence
+                 ,t.@evidence += e
+    ;
+
+   
+    // add the newly found citizens to the related set
+    RELATED = RELATED UNION L1;
+
+    log(true, "get COMMON_AB");
+    // Extract the people having common relations 
+    // and keep the top k
+    COMMON_AB = SELECT t
+         FROM RELATED:t
+         WHERE t.@know_A == true AND t.@know_B == true
+         ORDER BY t.@score
+         LIMIT k
+    ;
+
+    COMMON_AB = SELECT s from COMMON_AB:s
+                ACCUM @@edge_Set += s.@evidence
+    ;
+
+    IF isFirstIter == true THEN
+      // find the person that knows only A or B
+      L0 = RELATED MINUS COMMON_AB;
+			log(true,L0.size());
+    END;
+    isFirstIter = false;
+  END;
+
+  PRINT @@edge_Set;
+  getVertexesFromEdge(@@edge_Set, @@ver_Set); 
+  Start = {@@ver_Set};
+  Start = SELECT s FROM Start:s
+          POST-ACCUM s.@evidence.clear();
+  PRINT Start;
+}

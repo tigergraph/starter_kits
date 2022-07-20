@@ -1,0 +1,36 @@
+CREATE QUERY customer_journey(VERTEX<Contact> customer,
+                              SET<string> campaign_type_set, 
+                              DATETIME start_time, 
+                              DATETIME end_time)
+  SYNTAX v2 {
+/*
+  Sample input:
+    customer: Sam-Eisenberg
+    campaign_type_set: Webinar, Demo Signup / Trial
+    start_time: 2018-06-01
+    end_time: 2018-10-01
+*/
+  
+    SumAccum<STRING> @cam_type, @cam_name, @cam_desc;
+    start = { customer };
+    PRINT start;
+
+    company = SELECT t FROM start -(belongs_to>)- Account:t;
+    PRINT company;
+
+    campaign_members =
+        SELECT c
+        FROM start-(is_connected_to>)- CampaignMember:c
+        WHERE c.CreatedDate >= start_time
+            AND c.CreatedDate <= end_time;
+  
+    campaigns =
+        SELECT c FROM campaign_members:c -(is_part_of>)- Campaign:t
+        WHERE campaign_type_set.size() == 0 
+            OR t.Campaign_Type IN campaign_type_set
+        ACCUM c.@cam_type = t.Campaign_Type,
+            c.@cam_name = t.Name,
+            c.@cam_desc = t.Description;
+  
+    PRINT campaigns;
+}

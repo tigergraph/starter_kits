@@ -11,7 +11,7 @@ CREATE QUERY kcore_sub (STRING vertexType, STRING edgeType, INT verbosity) FOR G
   SumAccum<INT> @deg;        // The number of edges v has to active vertices.
   SumAccum<INT> @core;       // The core level of vertex v
   OrAccum @flag;            // true if v does not exist in Gcum
-  MapAccum<INT, SetAccum<VERTEX>> @@coreListMap;  // List of vertices sorted by increasing core level
+  MapAccum<INT, SetAccum<VERTEX>> @@core_list_map;  // List of vertices sorted by increasing core level
    
   //OrAccum @color;            // true if v will be pruned this iteration
   INT k = 0;              // max degree value used to determine whether to prune
@@ -48,15 +48,15 @@ CREATE QUERY kcore_sub (STRING vertexType, STRING edgeType, INT verbosity) FOR G
               ACCUM u.@deg += -1, v.@deg += -1;  // Actually, reduce degree of vertices
       ELSE                     // Finished with this value of k
           IF verbosity > 0 THEN PRINT k, @@Q; END;
-          @@coreListMap += (k -> @@Q);
+          @@core_list_map += (k -> @@Q);
           k = k + 1;
           IF num_active > 0 THEN
               @@Q.clear();
           END;
       END;
   END;
-  IF @@coreListMap.size() <= k THEN  // haven't added the last batch to @@coreList yet
-      @@coreListMap += (k -> @@Q);
+  IF @@core_list_map.size() <= k THEN  // haven't added the last batch to @@coreList yet
+      @@core_list_map += (k -> @@Q);
   END;
-  RETURN @@coreListMap;
+  RETURN @@core_list_map;
 }

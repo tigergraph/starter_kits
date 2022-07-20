@@ -1,0 +1,35 @@
+CREATE QUERY cust_journey_subgraph(VERTEX<Contact> customer)
+  SYNTAX v2{ 
+/*
+  Sample input:
+    customer: Sam-Eisenberg
+*/
+    SetAccum<EDGE> @@display_set;
+    SetAccum<VERTEX> @@vertex_set;
+
+    cust = { customer };
+    
+    acct = SELECT t FROM cust:c -(belongs_to>:e)- Account:t
+        ACCUM @@display_set += e, @@vertex_set += t;
+  
+    opp = SELECT t FROM cust -(Has_Role>:e)- Opportunity:t 
+        ACCUM @@display_set += e, @@vertex_set += t;
+  
+    campaign_members =
+        SELECT t
+        FROM cust -(is_connected_to>:e)- CampaignMember:t
+        ACCUM @@vertex_set += cust, @@vertex_set += t,
+            @@display_set += e;
+  
+    campaigns =
+        SELECT t
+        FROM campaign_members -(is_part_of>:e)- Campaign:t
+        ACCUM @@vertex_set += t, @@display_set += e;
+  
+    vertices = @@vertex_set;
+  
+    PRINT vertices;
+    //print@@vertex_set;
+
+    PRINT @@display_set;
+}

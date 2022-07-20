@@ -1,0 +1,17 @@
+CREATE QUERY age_distribution() FOR GRAPH MyGraph SYNTAX V2 { 
+	/**********************************************************
+	 * This query returns the distribution of the number of 
+	 * recorded deceased patients per age year. 
+	 * 
+	 * There may be some discrepancies in the data which would
+	 * explain some weird occurrences.
+   *********************************************************/
+  MapAccum<int, int> @@age_map;
+	start = {Patient.*};
+	
+	start = SELECT s FROM start:s
+	        WHERE s.state != "deceased"
+	        ACCUM @@age_map += ((year(now()) - s.birth_year) -> 1);
+	
+	PRINT @@age_map;
+}

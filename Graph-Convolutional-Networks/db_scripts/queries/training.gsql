@@ -1,21 +1,22 @@
 CREATE QUERY training(
-	DOUBLE alpha0 = 0.4, #initial learning rate
-	BOOL Adam = True,    #enable Adam optimizer. If False, constant learning rate will be used
-	DOUBLE beta1 = 0.9,  #hyperparameter for Adam optimizer
-	DOUBLE beta2 = 0.999, #hyperparameter for Adam optimizer
-	DOUBLE keepProb = 1.0, #keep probability for the dropout regularization 
-	DOUBLE lambda = 0.00005, # L2 regularization factor
-	INT MaxIter = 10) # number of epochs
+	DOUBLE alpha0 = 0.4, // initial learning rate
+	BOOL Adam = True,    // enable Adam optimizer. If False, constant learning rate will be used
+	DOUBLE beta1 = 0.9,  // hyperparameter for Adam optimizer
+	DOUBLE beta2 = 0.999, // hyperparameter for Adam optimizer
+	DOUBLE keepProb = 1.0, // keep probability for the dropout regularization 
+	DOUBLE lambda = 0.00005, // L2 regularization factor
+	INT MaxIter = 10) // number of epochs
 FOR GRAPH CitationGraph SYNTAX V2 { 
-	/*This query trains the graph convolutional neural network on the training dataset and evaluates the loss on the validation data and the prediction accuracy on the testing data. */
-  ArrayAccum<SumAccum<DOUBLE>> @@W_0[1433][16]; #1433 by 16
-	ArrayAccum<SumAccum<DOUBLE>> @@W_1[16][7];   #16 by 7
-  ArrayAccum<SumAccum<DOUBLE>> @@dW_0[1433][16]; #1433 by 16
-	ArrayAccum<SumAccum<DOUBLE>> @@dW_1[16][7];   #16 by 7
-	ArrayAccum<SumAccum<DOUBLE>> @@VdW_0[1433][16]; #1433 by 16
-	ArrayAccum<SumAccum<DOUBLE>> @@VdW_1[16][7];   #16 by 7
-	ArrayAccum<SumAccum<DOUBLE>> @@SdW_0[1433][16]; #1433 by 16
-	ArrayAccum<SumAccum<DOUBLE>> @@SdW_1[16][7];   #16 by 7
+	/*This query trains the graph convolutional neural network on the training dataset
+  and evaluates the loss on the validation data and the prediction accuracy on the testing data. */
+  ArrayAccum<SumAccum<DOUBLE>> @@W_0[1433][16]; // 1433 by 16
+	ArrayAccum<SumAccum<DOUBLE>> @@W_1[16][7]; // 16 by 7
+  ArrayAccum<SumAccum<DOUBLE>> @@dW_0[1433][16]; // 1433 by 16
+	ArrayAccum<SumAccum<DOUBLE>> @@dW_1[16][7]; // 16 by 7
+	ArrayAccum<SumAccum<DOUBLE>> @@VdW_0[1433][16]; // 1433 by 16
+	ArrayAccum<SumAccum<DOUBLE>> @@VdW_1[16][7]; // 16 by 7
+	ArrayAccum<SumAccum<DOUBLE>> @@SdW_0[1433][16]; // 1433 by 16
+	ArrayAccum<SumAccum<DOUBLE>> @@SdW_1[16][7]; // 16 by 7
 	SumAccum<DOUBLE> @@Training_Loss;
 	SumAccum<DOUBLE> @@Validation_Loss;
 	SumAccum<DOUBLE> @@accurate_cnt;
@@ -35,7 +36,7 @@ FOR GRAPH CitationGraph SYNTAX V2 {
 	INT train_cnt = 140;
 	INT val_cnt = 500;
 	INT test_cnt = 1000;
-	## load weights into @@W_0 and @@W_1
+	// load weights into @@W_0 and @@W_1
 	WORDs = {WORD.*};
 	LAYER_0s = SELECT t FROM WORDs:s -(:e)- LAYER_0:t
 	           ACCUM 
@@ -46,12 +47,12 @@ FOR GRAPH CitationGraph SYNTAX V2 {
 	           ACCUM
 	             @@W_1[s.indx][t.indx] += e.weight;
 	
-	## forward propagation
+	// forward propagation
 	Start = {PAPER.*};
   alpha = alpha0;
 
 WHILE iter < MaxIter  DO
-	## input -> hidden layer0
+	// input -> hidden layer0
 	@@Training_Loss = 0;
 	@@Validation_Loss = 0;
 	@@accurate_cnt = 0;
@@ -71,17 +72,17 @@ WHILE iter < MaxIter  DO
 	          s.@zeta_0 += product_Matrix_SparseVector(@@W_0, s.@words)
 	          ;
 
-	## convolve
+	// convolve
 	Start = SELECT s FROM Start:s -(CITE:e)- PAPER:t
 	        ACCUM t.@z_0 += product_ArrayAccum_const(s.@zeta_0,e.weight)
 	        POST-ACCUM
 	          s.@z_0 = ReLU_ArrayAccum(s.@z_0),
 	          s.@z_0 = dropout_ArrayAccum(s.@z_0, keepProb),
-## hidden layer0 -> hidden layer1
+  	// hidden layer0 -> hidden layer1
 	          s.@zeta_1 += product_Matrix_Vector(@@W_1, s.@z_0)
 	          ;
 	          
-	## convolve
+	// convolve
 	Start = SELECT s FROM Start:s -(CITE:e)- PAPER:t
 	        ACCUM t.@z_1 += product_ArrayAccum_const(s.@zeta_1,e.weight)
 	        POST-ACCUM
@@ -101,7 +102,7 @@ WHILE iter < MaxIter  DO
 	            IF y_prediction == s.class_label THEN @@accurate_cnt += 1 END
 	          END;
 
-	## backpropagation
+	// backpropagation
 	
 	Training1 = SELECT t FROM Start:s -(CITE:e)- PAPER:t
 	        WHERE s.train
@@ -126,7 +127,7 @@ WHILE iter < MaxIter  DO
 	          ;
 	@@Training_Loss += lambda*L2Norm_Matrix(@@W_0);
 	@@dW_0 += product_Matrix_const(@@W_0, lambda);
-#	@@dW_1 += product_Matrix_const(@@W_1, lambda);  // only apply to the first layer
+	//  @@dW_1 += product_Matrix_const(@@W_1, lambda);  // only apply to the first layer
 	iter = iter + 1;
 	IF Adam THEN
 	@@VdW_0 = product_Matrix_const(@@VdW_0,beta1)+product_Matrix_const(@@dW_0,1-beta1);
@@ -144,7 +145,7 @@ WHILE iter < MaxIter  DO
 	PRINT iter,@@Training_Loss/train_cnt AS Training_Loss,@@Validation_Loss/val_cnt AS Validation_Loss,@@accurate_cnt/test_cnt AS accuracy;//,@@train_accurate_cnt,@@val_accurate_cnt;
 END;	
 	
-	## persist @@W_0 and @@W_1 in weights
+	// persist @@W_0 and @@W_1 in weights
 	WORDs = {WORD.*};
 	LAYER_0s = SELECT t FROM WORDs:s -(:e)- LAYER_0:t
 	           ACCUM 

@@ -1,0 +1,37 @@
+CREATE QUERY recommend_movies(vertex<person> p, int k1, int k2) FOR GRAPH MyGraph SYNTAX V2{
+ OrAccum @rated;
+ SumAccum<double> @rating_ByP;
+ SumAccum<double> @length_ASqr, @length_BSqr, @dot_ProductAB;
+ SumAccum<double> @cosine_Similarity;
+ AvgAccum @recommend_Score;
+
+ PSet = { p };
+	
+ PRatedMovies =
+    SELECT m
+    FROM PSet-(rate>:r)-movie:m
+    ACCUM m.@rated = true, m.@rating_ByP = r.rating;
+
+ PeopleRatedSameMovies =
+    SELECT tgt
+    FROM PRatedMovies:m-(<rate:r)-person:tgt
+    WHERE tgt != p
+    ACCUM tgt.@length_ASqr += m.@rating_ByP * m.@rating_ByP,
+          tgt.@length_BSqr += r.rating * r.rating,
+          tgt.@dot_ProductAB += m.@rating_ByP * r.rating
+    POST-ACCUM
+          tgt.@cosine_Similarity =
+            tgt.@dot_ProductAB / (sqrt(tgt.@length_ASqr) * sqrt(tgt.@length_BSqr))
+    ORDER BY tgt.@cosine_Similarity DESC
+    LIMIT k1;
+
+  RecommendedMovies =
+    SELECT m
+    FROM PeopleRatedSameMovies-(rate>:r)-movie:m
+    WHERE m.@rated == false
+    ACCUM m.@recommend_Score += r.rating
+    ORDER BY m.@recommend_Score DESC
+    LIMIT k2;
+
+  PRINT RecommendedMovies;
+}

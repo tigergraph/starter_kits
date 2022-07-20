@@ -1,0 +1,39 @@
+CREATE OR REPLACE QUERY ex1_common_patients(vertex<Prescriber> Prescriber1, vertex<Prescriber> Prescriber2) FOR GRAPH MyGraph { 
+  
+	  OrAccum @visited;
+    SetAccum<edge> @@edge_Set;
+    Pre1 =  {Prescriber1};
+    Pre2 =  {Prescriber2};
+    // Step 1 – Start graph Traversal from first prescriber to find all associated claims. Use visited flag to remember claims visited.
+    claims1 = SELECT t
+              FROM Pre1:s -(<submitted_by:e)- Claim:t
+              ACCUM t.@visited += TRUE;
+     // Step 2 – For those claims, find all the linked patients.
+    patients1 = SELECT t
+                FROM claims1:s -(associated>:e)- Patient:t
+                ACCUM t.@visited += TRUE;
+    // Step 3 Start graph traversal from second prescriber to find all claims
+    claims2 = SELECT t
+              FROM Pre2:s -(<submitted_by:e)- Claim:t
+              ACCUM t.@visited += TRUE;
+
+    // Step 4 – Find common patients  by starting from claims in Step 3
+    common_patients = SELECT t
+                      FROM claims2:s -(associated>:e)- Patient:t
+                      WHERE t.@visited == TRUE;
+    PRINT common_patients;
+ 
+	  // Step 5 – From common patients find all claims that have been visited in earlier steps. Collect the edges so they can be printed.
+    claims = SELECT t
+             FROM common_patients:s -(<associated:e)- Claim:t
+             WHERE t.@visited == TRUE
+             ACCUM @@edge_Set += e;
+    PRINT claims;
+
+	  // Step 6 – From claims find associated prescribers. Collect and print edges (claims – prescribers) and prescribers.
+    pres = SELECT t
+           FROM claims:s -(submitted_by>:e)- Prescriber:t
+           ACCUM @@edge_Set += e;
+    PRINT pres;
+    PRINT @@edge_Set;
+}

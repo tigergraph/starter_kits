@@ -1,0 +1,16 @@
+CREATE QUERY list_patients_infected_by(VERTEX<Patient> p) FOR GRAPH MyGraph SYNTAX V2 { 
+  /*****************************************************
+	* Who are patient patients infected by _____ patient?
+	* Sample Input: 
+  	* p: 2000000205
+	******************************************************/
+  
+	ListAccum<STRING> @@ids;
+
+	seed = {p};
+	
+	one_hop =  SELECT tgt FROM seed:v -(reverse_INFECTED_BY>:e)-:tgt
+	          ACCUM @@ids += tgt.patient_id;
+	
+  PRINT @@ids AS Infected_Patients;
+}

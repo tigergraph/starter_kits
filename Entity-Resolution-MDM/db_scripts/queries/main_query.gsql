@@ -8,5 +8,5 @@ CREATE QUERY main_query(float threshold) FOR GRAPH Entity_Resolution {
 	all_acc = {Account.*};
 	rm = SELECT s FROM all_acc:s-(Same_Owner:e)-:t ACCUM delete(e);
 	all_acc = SELECT s FROM all_acc:s ACCUM account_matching(s,threshold);
-  PRINT all_acc;
+  	PRINT all_acc;
 }

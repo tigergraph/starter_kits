@@ -1,4 +1,4 @@
-CREATE QUERY splitData() FOR GRAPH Recommender SYNTAX V2 {
+CREATE QUERY split_data() FOR GRAPH Recommender SYNTAX V2 {
   // This query split rating data into validation set and training set. 
 	// The fraction of testing data is set to be 30%. (i.e. 30% of the rating data will be used for model validation
 	// and the rest 70% will be used for model training).

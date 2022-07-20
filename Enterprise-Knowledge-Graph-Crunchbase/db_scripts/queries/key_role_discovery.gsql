@@ -23,7 +23,7 @@ CREATE QUERY key_role_discovery(STRING company_name="FriendFeed", INT k=5)
     DATETIME TNULL = to_datetime("1970-01-01 00:00:00");
 
     // Find the company whose name is the input string
-    Linked_companies (ANY) = SELECT tgt
+    linked_companies (ANY) = SELECT tgt
         FROM company:tgt
         WHERE lower(trim(tgt.name)) == lower(trim(company_name))
         ACCUM @@output_vertices += tgt
@@ -31,8 +31,8 @@ CREATE QUERY key_role_discovery(STRING company_name="FriendFeed", INT k=5)
 
     // Find all key roles & investor/acquirer company's key roles within k steps
     WHILE TRUE LIMIT k DO
-        Linked_companies = SELECT tgt
-            FROM Linked_companies:s
+        linked_companies = SELECT tgt
+            FROM linked_companies:s
                 - ((invested_by_company> | acquired_by> | work_for_company):e) 
                 - (company | person):tgt
             WHERE s.type == "company" AND tgt.@visited == FALSE AND
@@ -49,8 +49,8 @@ CREATE QUERY key_role_discovery(STRING company_name="FriendFeed", INT k=5)
     END;
     
     IF @@output_vertices.size() != 0 THEN
-        Results = {@@output_vertices}; // conversion to output more that just id
-        PRINT Results;
+        results = {@@output_vertices}; // conversion to output more that just id
+        PRINT results;
         PRINT @@output_edges;
     ELSE
         PRINT "No parties with key relations to the company found within ", k,

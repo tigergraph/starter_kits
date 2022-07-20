@@ -1,21 +1,25 @@
 CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph SYNTAX V2 {
+/* In case your query gets broken due to the timeout, click the option right next to the run query button,
+   and increase the time outdegree
+*/
+
 /* The Bellman-Ford algorithm for single-Source Shortest Path 
    on directed/undirected graph with positive weight.
    It will not detect negative cycle in this algorithm. 
 */
         TYPEDEF TUPLE<FLOAT dist, VERTEX pred> pathTuple;    
         HeapAccum<pathTuple>(1, dist ASC) @minPath;
-        ListAccum<VERTEX> @path;                 # shortest path FROM source
-        SetAccum<EDGE> @@edgeSet;               # list of all edges, if display is needed
+        ListAccum<VERTEX> @path;                 // shortest path FROM source
+        SetAccum<EDGE> @@edge_Set;               // list of all edges, if display is needed
         OrAccum @visited;
         STRING sourceName;
         INT iter;
         BOOL negativeCycle;
-        total = {source};                       # the connected vertices
+        total = {source};                       // the connected vertices
         start = {source};
 
               
-        ##### Get the connected vertices
+        // Get the connected vertices
         start = SELECT s
                 FROM start:s
                 ACCUM s.@minPath += pathTuple(0, s),
@@ -29,8 +33,8 @@ CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph 
                 total = total UNION start;
         END;
         
-  ##### Do V-1 iterations: Consider whether each edge lowers the best-known distance.
-        iter = total.size() - 1;    # the max iteration is V-1
+  // Do V-1 iterations: Consider whether each edge lowers the best-known distance.
+        iter = total.size() - 1;    // the max iteration is V-1
         WHILE TRUE LIMIT iter DO 
                 tmp = SELECT s
                       FROM total:s -(flight_route:e)- :t
@@ -40,13 +44,13 @@ CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph 
                             END;     
         END;
         
-  ##### Calculate the paths #####
+  // Calculate the paths 
         start = {source};
         tmp = SELECT s
               FROM total:s
               WHERE s != source
               ACCUM s.@visited = FALSE;
-        WHILE start.size() > 0 LIMIT iter DO # Limit the number of hops
+        WHILE start.size() > 0 LIMIT iter DO // Limit the number of hops
                 start = SELECT t
                         FROM start:s -(flight_route:e)- :t
                         WHERE NOT t.@visited
@@ -57,12 +61,12 @@ CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph 
                               END;
         END;
           
-  ##### Print the results #####
+ // Print the results
         PRINT total[total.@minPath.top().dist, total.@path];
         IF display THEN
                 tmp = SELECT s
                       FROM total:s -(flight_route:e)- :t
-                      ACCUM @@edgeSet += e;
-                PRINT @@edgeSet;
+                      ACCUM @@edge_Set += e;
+                PRINT @@edge_Set;
         END;
 }

@@ -1,27 +1,28 @@
-CREATE QUERY kcore_max (STRING vertexType, STRING edgeType, BOOL inducedEdges, INT verbosity) FOR GRAPH MyGraph SYNTAX V2 {
+CREATE QUERY kcore_max (STRING vertex_type, STRING edge_type, BOOL induced_edges, 
+  INT verbosity) FOR GRAPH MyGraph SYNTAX V2 {
 /* An implementation of Algorithm 2 in
  * Scalable K-Core Decomposition for Static Graphs Using a Dynamic Graph Data Structure,
  * Tripathy et al., IEEE Big Data 2018.
  */
  
-   MapAccum<INT, SetAccum<VERTEX>> @@coreListMap; // Map <k, k-core_vertex_set>
-  SetAccum<VERTEX> @@kcoreVertices;              // vertex set for kMax
-  ListAccum<EDGE> @@inducedEdges;                // optional output
+  MapAccum<INT, SetAccum<VERTEX>> @@core_list_map; // Map <k, k-core_vertex_set>
+  SetAccum<VERTEX> @@kcore_vertices;              // vertex set for kMax
+  ListAccum<EDGE> @@induced_edges;                // optional output
   INT k;
   
-  @@coreListMap += kcore_sub(vertexType, edgeType, verbosity); // get vertex core numnbers
-  k = @@coreListMap.size() - 1;
-  @@kcoreVertices = @@coreListMap.get(k);   
-  coreV = @@kcoreVertices;
+  @@core_list_map += kcore_sub(vertex_type, edge_type, verbosity); // get vertex core numnbers
+  k = @@core_list_map.size() - 1;
+  @@kcore_vertices = @@core_list_map.get(k);   
+  coreV = @@kcore_vertices;
   
   // Print the results
-  IF verbosity > 0 THEN PRINT "verbosity", @@coreListMap; END;
-  PRINT k, @@kcoreVertices.size(), @@kcoreVertices;
-  IF inducedEdges THEN
+  IF verbosity > 0 THEN PRINT "verbosity", @@core_list_map; END;
+  PRINT k, @@kcore_vertices.size(), @@kcore_vertices;
+  IF induced_edges THEN
       Q = SELECT s
-          FROM coreV:s -(edgeType:e)- :t
-          WHERE t IN @@kcoreVertices
-          ACCUM @@inducedEdges += e;
-      PRINT @@inducedEdges;
+          FROM coreV:s -(edge_type:e)- :t
+          WHERE t IN @@kcore_vertices
+          ACCUM @@induced_edges += e;
+      PRINT @@induced_edges;
   END;
 }

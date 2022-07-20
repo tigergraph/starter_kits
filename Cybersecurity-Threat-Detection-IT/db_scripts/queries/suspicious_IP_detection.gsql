@@ -1,0 +1,29 @@
+CREATE QUERY suspicious_IP_detection(vertex<IP> inputIP, int k) FOR GRAPH MyGraph SYNTAX V2 { 
+  
+	// this query does feature extraction for malicious IP prediction.
+	// the feature is number of shortest paths to banned ips.
+	// input parameter, inputIP: 188.117.3.237 k: any integer number from 4 to 7
+	
+	ListAccum<edge> @edges;
+	SumAccum<int> @@shortest_path_to_banned_ip, @number_of_path;
+	SetAccum<vertex> @@banned_IP_set;
+	
+	start (ANY) = {inputIP};
+	
+	start = SELECT s from start:s POST-ACCUM s.@number_of_path = 1;
+	
+	WHILE start.size() > 0 LIMIT k DO
+	  start = SELECT t FROM start:s-(:e)-:t
+	          WHERE t.@number_of_path == 0
+	          ACCUM t.@number_of_path += s.@number_of_path,
+	                t.@edges += e, t.@edges += s.@edges
+	          POST-ACCUM CASE WHEN t.banned == TRUE THEN
+	                       @@shortest_path_to_banned_ip += t.@number_of_path,
+	                       @@banned_IP_set += t
+	                     END;
+	END;
+	
+	PRINT @@shortest_path_to_banned_ip;
+	start = @@banned_IP_set;
+	PRINT start;
+}

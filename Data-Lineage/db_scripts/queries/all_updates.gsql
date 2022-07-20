@@ -1,0 +1,17 @@
+CREATE QUERY all_updates(vertex<Contact> input) FOR GRAPH MyGraph { 
+    /*
+     * Given an input Contact, find all of his/her updates.
+     * Sample input:
+     * input: Chris-Xi
+     */
+  
+    SetAccum<vertex> @@specific_person_set;
+  
+    start = {input};
+  
+    get_updates = SELECT t FROM start:s-(wasUpdated:e)-ContactOnDate:t
+               ACCUM @@specific_person_set += s, @@specific_person_set += t;
+  
+    print_set = @@specific_person_set;
+    PRINT print_set;
+}

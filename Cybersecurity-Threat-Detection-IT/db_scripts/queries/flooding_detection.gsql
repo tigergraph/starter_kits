@@ -1,0 +1,51 @@
+CREATE QUERY flooding_detection(/* Parameters here */) FOR GRAPH MyGraph { 
+  
+  /* this query detects the addresses that flooded one service with large number of requests.
+     and possibly the ip addresses have logged in to many accounts 
+     [IP] -> [login event] -> [user id] -> [request event] -> [service] */
+  
+  TYPEDEF TUPLE<vertex entity, vertex service, int cnt, float mean, float std> result_tuple;
+  AvgAccum @mean;
+  SumAccum<float> @std;
+  MapAccum<vertex, SumAccum<int>> @count_map;
+  ListAccum<result_tuple> @@result_list;
+  
+  IPs = {IP.*};
+  
+  login_events = SELECT event FROM IPs-(Has_IP)-:event
+                 WHERE event.Event_Type == "login"
+                 ACCUM event.@count_map += (IPs->1);
+  
+  users = SELECT user FROM login_events-(User_Event)-:user
+          ACCUM user.@count_map += login_events.@count_map;
+  
+  events = SELECT event FROM users-(User_Event:e)-:event
+           where event.Event_Type == "request"
+           ACCUM event.@count_map += users.@count_map;
+  
+  services = SELECT s FROM events-(To_Service)-:s
+             ACCUM s.@count_map += events.@count_map
+             POST-ACCUM
+               CASE WHEN s.@count_map.size() > 1 THEN
+                 // calculate the mean
+                 FOREACH (user,cnt) in s.@count_map DO
+                   s.@mean += cnt
+                 END,
+                 // calculate the standard deviation
+                 FOREACH (user,cnt) in s.@count_map DO
+                   s.@std += pow(cnt - s.@mean, 2)
+                 END,
+                 s.@std = sqrt(s.@std/(s.@count_map.size()-1)),
+                 CASE WHEN s.@std != 0 THEN
+                   // calculate the out lier
+                   FOREACH (user,cnt) IN s.@count_map DO
+                     CASE WHEN cnt-s.@mean > 3*s.@std THEN
+                       @@result_list += result_tuple(user,s,cnt,s.@mean,s.@std)
+                     END
+                   END
+                 END
+               END;
+  
+  PRINT @@result_list;
+  PRINT services;
+}

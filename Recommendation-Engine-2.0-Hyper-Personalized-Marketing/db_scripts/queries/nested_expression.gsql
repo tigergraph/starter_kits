@@ -9,15 +9,15 @@ c: GW
   TYPEDEF TUPLE<vertex<product> v, double f0> OrderTuple_3;
 
   AvgAccum @Agg_3_avg_score;
-  HeapAccum<OrderTuple_3>(1, f0 DESC) @@OrderHeap_3;
-  SetAccum<vertex<product>> @@OrderVertexSet_3;
-  SetAccum<edge> @@FinalEdgeSet_5;
-  SetAccum<edge> @@FinalEdgeSet_6;
-  SetAccum<edge> @@FinalEdgeSet_7;
-  SetAccum<vertex<customer>> @@FinalVertexSet_1;
-  SetAccum<vertex<feature>> @@FinalVertexSet_2;
-  SetAccum<vertex<product>> @@FinalVertexSet_3;
-  SetAccum<vertex<context>> @@FinalVertexSet_4;
+  HeapAccum<OrderTuple_3>(1, f0 DESC) @@Order_Heap_3;
+  SetAccum<vertex<product>> @@Order_Vertex_Set_3;
+  SetAccum<edge> @@Final_Edge_Set_5;
+  SetAccum<edge> @@Final_Edge_Set_6;
+  SetAccum<edge> @@Final_Edge_Set_7;
+  SetAccum<vertex<customer>> @@Final_Vertex_Set_1;
+  SetAccum<vertex<feature>> @@Final_Vertex_Set_2;
+  SetAccum<vertex<product>> @@Final_Vertex_Set_3;
+  SetAccum<vertex<context>> @@Final_Vertex_Set_4;
 
   VertexSet_1 = { p };
   VertexSet_4 = { c };
@@ -27,45 +27,45 @@ c: GW
              product:alias_schema_3 -(product_feature:pf)- feature:alias_schema_2,
              product:alias_schema_3 -(product_context:alias_schema_7)- VertexSet_4:alias_schema_4
         ACCUM alias_schema_3.@Agg_3_avg_score += (cf.affinity * pf.weight)
-        POST-ACCUM @@OrderHeap_3 += OrderTuple_3(alias_schema_3, alias_schema_3.@Agg_3_avg_score)
+        POST-ACCUM @@Order_Heap_3 += OrderTuple_3(alias_schema_3, alias_schema_3.@Agg_3_avg_score)
         ;
 
-  WHILE (@@OrderHeap_3.size() > 0) DO
-    @@OrderVertexSet_3 += @@OrderHeap_3.pop().v;
+  WHILE (@@Order_Heap_3.size() > 0) DO
+    @@Order_Vertex_Set_3 += @@Order_Heap_3.pop().v;
   END;
-  VertexSet_3 = { @@OrderVertexSet_3 };
+  VertexSet_3 = { @@Order_Vertex_Set_3 };
 
   VertexSet_3 = 
         SELECT alias_schema_3
         FROM VertexSet_1:alias_schema_1 -(customer_feature:cf)- feature:alias_schema_2,
              VertexSet_3:alias_schema_3 -(product_feature:pf)- feature:alias_schema_2,
              VertexSet_3:alias_schema_3 -(product_context:alias_schema_7)- VertexSet_4:alias_schema_4
-        ACCUM @@FinalEdgeSet_5 += cf,
-              @@FinalEdgeSet_6 += pf,
-              @@FinalEdgeSet_7 += alias_schema_7
-        POST-ACCUM @@FinalVertexSet_1 += alias_schema_1
-        POST-ACCUM @@FinalVertexSet_2 += alias_schema_2
-        POST-ACCUM @@FinalVertexSet_3 += alias_schema_3
-        POST-ACCUM @@FinalVertexSet_4 += alias_schema_4
+        ACCUM @@Final_Edge_Set_5 += cf,
+              @@Final_Edge_Set_6 += pf,
+              @@Final_Edge_Set_7 += alias_schema_7
+        POST-ACCUM @@Final_Vertex_Set_1 += alias_schema_1
+        POST-ACCUM @@Final_Vertex_Set_2 += alias_schema_2
+        POST-ACCUM @@Final_Vertex_Set_3 += alias_schema_3
+        POST-ACCUM @@Final_Vertex_Set_4 += alias_schema_4
         ;
 
-  PRINT @@FinalEdgeSet_5;
+  PRINT @@Final_Edge_Set_5;
 
-  PRINT @@FinalEdgeSet_6;
+  PRINT @@Final_Edge_Set_6;
 
-  PRINT @@FinalEdgeSet_7;
+  PRINT @@Final_Edge_Set_7;
 
-  VertexSet_1 = { @@FinalVertexSet_1 };
+  VertexSet_1 = { @@Final_Vertex_Set_1 };
   PRINT VertexSet_1[
     VertexSet_1.name AS name
   ];
 
-  VertexSet_2 = { @@FinalVertexSet_2 };
+  VertexSet_2 = { @@Final_Vertex_Set_2 };
   PRINT VertexSet_2[
     VertexSet_2.name AS name
   ];
 
-  VertexSet_3 = { @@FinalVertexSet_3 };
+  VertexSet_3 = { @@Final_Vertex_Set_3 };
   PRINT VertexSet_3[
     VertexSet_3.name AS name,
     VertexSet_3.latitude AS latitude,
@@ -73,7 +73,7 @@ c: GW
     VertexSet_3.@Agg_3_avg_score AS avg_score
   ];
 
-  VertexSet_4 = { @@FinalVertexSet_4 };
+  VertexSet_4 = { @@Final_Vertex_Set_4 };
   PRINT VertexSet_4[
     VertexSet_4.ctxValue AS ctxValue
   ];

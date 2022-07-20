@@ -1,5 +1,6 @@
 CREATE QUERY weight_initialization() FOR GRAPH CitationGraph SYNTAX V2 { 
-	/*This query initializes the weights for the neural network. The neural network has 1433 neurons in the input layer, 16 neurons in the hidden layer and 7 neurons in the output layer*/	
+	/*This query initializes the weights for the neural network.
+	The neural network has 1433 neurons in the input layer, 16 neurons in the hidden layer and 7 neurons in the output layer */	
 	INT input_dim = 1433;
 	INT hidden_dim = 16;
 	INT output_dim = 7;

@@ -35,30 +35,30 @@ CREATE QUERY investor_successful_exits(STRING investor_name="Accel Partners",
     INT SECS_PER_YR = 31556952; // accounting for leap years
 
     // Prep: Initialize the search differently depending on investor_type
-    Start (ANY) = {};
+    start (ANY) = {};
     CASE lower(trim(investor_type))
-        WHEN "person"       THEN Start = {person.*};
-        WHEN "company"      THEN Start = {company.*};
-        WHEN "financialorg" THEN Start = {financialORG.*};
+        WHEN "person"       THEN start = {person.*};
+        WHEN "company"      THEN start = {company.*};
+        WHEN "financialorg" THEN start = {financialORG.*};
     END;
 
     // Prep: Find the investor with a name matching input 'investor_name'
-    Investor (ANY) = SELECT inv
-        FROM Start :inv
+    investor (ANY) = SELECT inv
+        FROM start :inv
         WHERE ( inv.type == "person"
                 AND lower(trim(inv.fullname)) == lower(trim(investor_name))
             ) OR lower(trim(inv.name)) == lower(trim(investor_name));
 
     // 1. Find funding rounds that the investor has participated in
     Funding_rounds = SELECT tgt
-        FROM Investor :s - ((investment_from_company | investment_from_person | 
+        FROM investor :s - ((investment_from_company | investment_from_person | 
             investment_from_financialORG) :e) - funding_rounds :tgt
         ACCUM
             tgt.@parent_vertex_set += s,   
             tgt.@parent_edge_set += e;
 
     // 2. Get companies invested in in the funding rounds from step(1)
-    Invested_companies = SELECT tgt
+    invested_companies = SELECT tgt
         FROM Funding_rounds :s - ((company_funding_rounds) :e) - company :tgt
         ACCUM
             tgt.@parent_vertex_set += s,
@@ -67,11 +67,11 @@ CREATE QUERY investor_successful_exits(STRING investor_name="Accel Partners",
             
     // 3. Determine which companies from step(2) have IPOed or been Acquired
     IPO_acquired_companies = SELECT tgt
-        FROM Invested_companies :s - ((company_ipo | acquired_by>) :e) - :tgt
+        FROM invested_companies :s - ((company_ipo | acquired_by>) :e) - :tgt
         ACCUM
             tgt.@parent_vertex_set += s,
             tgt.@parent_edge_set += e,
-            // See if IPO occured within `years` after Investor's investment
+            // See if IPO occured within `years` after investor's investment
             IF (e.type == "company_ipo"
                 AND datetime_diff(tgt.public_at, s.@min_invested_time) > 0
                 AND datetime_diff(
@@ -85,25 +85,25 @@ CREATE QUERY investor_successful_exits(STRING investor_name="Accel Partners",
             END;
 
     // Trace back from exits to investor, to get output vertices & edges
-    Children = {@@result_vertex_set};
-    PRINT Children.size() as Num_Successful_Exits;
-    WHILE(Children.size() > 0) DO
-        Start = SELECT s
-            FROM Children :s
-            ACCUM
-                @@parents += s.@parent_vertex_set,
-                @@result_edge_set += s.@parent_edge_set;
+    children = {@@result_vertex_set};
+    PRINT children.size() AS Num_Successful_Exits;
+    WHILE(children.size() > 0) DO
+        start = SELECT s
+                FROM children :s
+                ACCUM
+                    @@parents += s.@parent_vertex_set,
+                    @@result_edge_set += s.@parent_edge_set;
 
         @@result_vertex_set += @@parents;
-        Children = {@@parents};
+        children = {@@parents};
         @@parents.clear();
     END;
 
     // Output the results
-    Results = {@@result_vertex_set}; // convert so to output more that just id
-    //PRINT Results.size() AS num_vertices;
+    results = {@@result_vertex_set}; // convert so to output more that just id
+    //PRINT results.size() AS num_vertices;
     //PRINT @@result_edge_set.size() AS num_edges;
-    PRINT Investor;    
-    PRINT Results;
+    PRINT investor;    
+    PRINT results;
     PRINT @@result_edge_set;
 }

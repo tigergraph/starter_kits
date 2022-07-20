@@ -1,0 +1,68 @@
+CREATE query feature_collection(vertex<phone> phoneId, int durationLimit = 600, int numOfCallLimit = 10) for graph sdmGraph SYNTAX V2 {
+  TYPEDEF TUPLE <Edge e, int totalDuration, int numOfCall> CallInfo;
+  SumAccum<int> @stableCount;
+  GroupByAccum<vertex<phone> tid, ListAccum<CallInfo> callInfo> @NB_Info;
+  OrAccum @is_In_Target_Group = false;
+  OrAccum @is_In_Stable_Group = false;
+
+  /* for the purpose of visualization */ 
+  // List store in each target vertex to store its own stable in group neighbor
+  ListAccum<vertex<phone>> @in_Group_Stable_NB;
+  // Global variable used to store all in group stable connections edges
+  ListAccum<Edge> @@in_Group_Stable_Connection_List;
+  // Global variable used to store all edges connecting Seed and its outgoing targets
+  ListAccum<Edge> @@target_Group_Edge_List;
+
+  Seed = {phoneId};
+  //collect its target group
+  TargetGroup = SELECT tgt
+                FROM Seed:src - ((phone_phone>|phone_phone_reversed>):e) - phone: tgt
+                ACCUM
+                  CASE WHEN e.type == "phone_phone" 
+                         THEN @@target_Group_Edge_List += e, // only for visualization purpose
+                              tgt.@is_In_Target_Group = true
+                  END,
+                  // if the connection is stable, add one to its target @stableCount
+                  IF e.total_duration > durationLimit AND e.num_of_call > numOfCallLimit THEN
+                    tgt.@stableCount += 1
+                  END
+                POST-ACCUM
+                  // if the target has @stableCount == 2 it is a stable connected target
+                  IF tgt.@stableCount == 2 THEN
+                     tgt.@is_In_Stable_Group = true
+                  END
+                HAVING tgt.@is_In_Target_Group == true
+                ;
+
+  // connections among the target group
+  X = SELECT src
+      FROM TargetGroup:src - ((phone_phone>|phone_phone_reversed>):e) - phone: tgt
+      WHERE tgt.@is_In_Target_Group == true
+      ACCUM 
+        // update the neighbor info
+        src.@NB_Info += (tgt -> CallInfo(e, e.total_duration, e.num_of_call))
+      POST-ACCUM
+        FOREACH (tid, infolist) in src.@NB_Info DO
+          // if ListAccum<CallInfo> has two element then it has both call and callback from this target
+          int stableCount = 0,
+          IF infolist.size() == 2 THEN
+            FOREACH info in infolist DO
+              IF info.totalDuration > durationLimit AND info.numOfCall > numOfCallLimit THEN
+                 stableCount = stableCount + 1
+              END
+            END
+          END,
+          // if it is stable connected in group target, increase its count
+          IF stableCount == 2 THEN
+            src.@in_Group_Stable_NB += tid, //for visualization purpose
+            FOREACH info in infolist DO
+              @@in_Group_Stable_Connection_List += info.e //for visualization purpose
+            END
+          END
+        END
+      ;
+  PRINT Seed;
+  PRINT TargetGroup;
+  PRINT @@target_Group_Edge_List;
+  PRINT @@in_Group_Stable_Connection_List;
+}

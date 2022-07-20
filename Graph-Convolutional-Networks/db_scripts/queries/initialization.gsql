@@ -1,6 +1,9 @@
 CREATE QUERY initialization(/* Parameters here */) FOR GRAPH CitationGraph SYNTAX V2 {
-	/*This query normalizes the weights on CITE edges according to the outdegrees(CITE) of the source and target vertices, normalizes the weights on HAS edges according the outdegrees(HAS) of the PAPER vertices, populates the words attribute with (word indx -> weight), and splits PAPER vertices into testing, validation and training sets, */
-	MapAccum<INT,DOUBLE> @wordMap;
+	/*This query normalizes the weights on CITE edges according to the outdegrees(CITE) of the source
+  and target vertices, normalizes the weights on HAS edges according the outdegrees(HAS) of the PAPER vertices,
+  populates the words attribute with (word indx -> weight),
+  and splits PAPER vertices into testing, validation and training sets, */
+	MapAccum<INT,DOUBLE> @word_Map;
 	
   Papers = {PAPER.*};
 	
@@ -9,13 +12,13 @@ CREATE QUERY initialization(/* Parameters here */) FOR GRAPH CitationGraph SYNTA
 		
 	Papers = SELECT s FROM Papers:s -(HAS:e)- WORD:t
 	         ACCUM 
-	           s.@wordMap += (t.indx->e.weight/s.outdegree("HAS"))
+	           s.@word_Map += (t.indx->e.weight/s.outdegree("HAS"))
 	         POST-ACCUM 
 	           CASE 
 	             WHEN s.indx <= 139 THEN s.train = TRUE
 	             WHEN 139 < s.indx AND s.indx <= 639 THEN s.validation = TRUE
 	             WHEN 1708 <= s.indx AND s.indx < 2708 THEN s.test = TRUE
 	           END,
-	           s.words = s.@wordMap;
-  PRINT "initialization finishes!";
+	           s.words = s.@word_Map;
+  PRINT "initialization finished!";
 }

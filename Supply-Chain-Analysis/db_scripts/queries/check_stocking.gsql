@@ -1,0 +1,74 @@
+create query check_stocking (vertex<product> input, uint amount) for graph demo_graph syntax v2
+{
+  /*
+  Given a product and ordering amount, calculate the needed amount for all the 
+  raw materials, also the query calculates the current in stock raw material amount
+  by checking the ordering and stocking records in the history. In the end, the query 
+  output the BOM subgraph and show the calculated values on the leaf nodes 
+
+  Sample input
+  input:CAR WHEEL SET
+  amount:5
+  */
+  SumAccum<int> @consumed_Amount;
+  SumAccum<int> @needed_Amount;
+  SumAccum<int> @instock_Amount;
+
+  OrAccum @has_Enough_Of_Material;
+
+  SetAccum<edge> @@display_Set;
+
+  // Start from all order hisotry vertexes
+  Start (ANY) = {p_order.*};
+
+  // calcuate ordered amount for the finished products
+  Start = select t
+          from Start:s-(prodOrder:e)-:t
+          accum t.@consumed_Amount += e.amount;
+
+  // traverse down to the raw materials, calculate the amount of raw materials has been comsumed
+  while (Start.size() > 0) do
+    Start = select t
+            from Start:s-(reverseUsedBy>:e)-:t
+            accum 
+                t.@consumed_Amount += s.@consumed_Amount*e.useAmount
+            post-accum
+                // if there is stocking record in the history calculate its in stock amount
+                case when t.outdegree("prodStocking") > 0 then
+                  t.@instock_Amount = SUM(t.edgeattribute("prodStocking","amount")) - t.@consumed_Amount 
+                end
+    ;
+  end;
+
+  // start from the input product
+  Start = {input};
+  Start = select s
+          from Start:s
+          accum
+              s.@needed_Amount = amount
+  ;
+
+  print Start;
+
+  // again from the input product traverse down to the raw material, and see 
+  // if is there enough raw material in stock
+  // @hasEnoughOfMaterial will be true when there is enough
+  while (Start.size() > 0) do
+    Start = select t
+            from Start:s-(reverseUsedBy>:e)-:t
+            accum
+                t.@needed_Amount += s.@needed_Amount*e.useAmount,
+                @@display_Set += e
+            post-accum
+                case when t.@instock_Amount != 0 then
+                    case when t.@instock_Amount > (t.@needed_Amount) then
+                      t.@has_Enough_Of_Material += true
+                    end
+                end
+    ;
+
+    print Start;
+  end;
+
+  print @@display_Set;
+}

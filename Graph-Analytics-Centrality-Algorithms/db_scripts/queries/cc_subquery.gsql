@@ -1,25 +1,25 @@
-CREATE QUERY cc_subquery (VERTEX source, INT numVert, INT maxHops) FOR GRAPH MyGraph RETURNS(FLOAT) SYNTAX V2 {
-# Subquery returns closeness centrality for vertex source in graph with numVert vertices 
-        SumAccum<int> @@currDist, @@totalDist;
+CREATE QUERY cc_subquery (VERTEX source, INT num_vert, INT maxhops) FOR GRAPH MyGraph RETURNS(FLOAT) SYNTAX V2 {
+// Subquery returns closeness centrality for vertex source in graph with num_vert vertices 
+        SumAccum<int> @@curr_dist, @@total_dist;
          OrAccum<bool> @visited;
  
-# Initialize: Set the input vertex source as the starting point
-        Start = {source};
-        Start = SELECT s FROM Start:s
-                ACCUM s.@visited += true;
+// Initialize: Set the input vertex source as the starting point
+        start = {source};
+        start = SELECT s FROM start:s
+                ACCUM s.@visited += TRUE;
  
-# totalDist = sum (distance between vertex s and all connected neighbors)
-        WHILE (Start.size() > 0) LIMIT maxHops DO    # explore up to (maxHops) hops FROM s
-                @@currDist += 1;
-                # Move FROM the current start set to the neighboring set of (unvisited) vertices
-                Start = SELECT t FROM Start:s -(flight_to>:e)- :t
-                        WHERE t.@visited == false AND t != s
-                        POST-ACCUM t.@visited += true;
-                                   @@totalDist += Start.size() * @@currDist;
+// total_dist = sum (distance between vertex s and all connected neighbors)
+        WHILE (start.size() > 0) LIMIT maxhops DO    // explore up to (maxhops) hops FROM s
+                @@curr_dist += 1;
+                // Move FROM the current start set to the neighboring set of (unvisited) vertices
+                start = SELECT t FROM start:s -(flight_to>:e)- :t
+                        WHERE t.@visited == FALSE AND t != s
+                        POST-ACCUM t.@visited += TRUE;
+                                   @@total_dist += start.size() * @@curr_dist;
         END;
  
-        IF @@totalDist > 0 THEN
-                RETURN ((numVert - 1) * 1.0) / (@@totalDist * 1.0);
+        IF @@total_dist > 0 THEN
+                RETURN ((num_vert - 1) * 1.0) / (@@total_dist * 1.0);
         ELSE
                 RETURN (-1.0);
         END;

@@ -1,51 +1,53 @@
-CREATE QUERY transferred_amount (vertex<User> sender, dateTime start_date = to_dateTime("2000/12/31"), dateTime end_date = to_dateTime("2020/12/31")) for GRAPH AntiFraud syntax v2 {
-  /*
-    This query answer the question that given a user, find out how much money has been transferred out from 
-    her connected users within a date range. 
+CREATE QUERY transferred_amount (VERTEX<User> sender, INT num_hops=4,
+    DATETIME start_date = to_dateTime("2000/12/31"), DATETIME end_date = 
+    to_dateTime("2020/12/31")) FOR GRAPH AntiFraud SYNTAX v2 {
+/*
+    Find out how much money has been transferred out from a user's connected
+    users within a date range. 
 
-    1) Start from a user "sender", find all other users connected via Device_Tokent or 
-       Payment_Instrument within 4 steps.
-    2) Then start from all the connected users, find transferred transactions between 
-       input start date "start_date" and end date "end_date".
-    3) Calculate total transferred money amount of the transactions collected in step 2)
+    1) From a user "sender", find all other users connected by Device_Token
+       or Payment_Instrument within k steps.
+    2) From these connected users, find transfer (send) transactions between 
+       "start_date" and "end_date".
+    3) Calculate total transferred money of the transactions in step 2)
 
     Sample input:
-    sender :         any random integer between 1 and 500
+    sender ID:       any integer between 1 and 500
     start_date :     2000-12-31 00:00:00
     end_date :       2020-12-31 00:00:00
-  */
-  SumAccum<FLOAT> @@sum_transaction_amount;
-  OrAccum<BOOL> @visited;
-  SetAccum<EDGE> @@edge_set;
-  INT ITER_NUM = 0;
-
-  Start (ANY) = {sender};
-
-  // 1. From the input user, go 4 steps with a while loop to find her connected users.
-  WHILE (Start.size() > 0) LIMIT 4 DO
-      Start = SELECT t 
-          FROM Start:s-((User_to_Device|User_to_Payment):e)-:t
-          WHERE t.@visited == false 
-              AND (t.type != "User" OR t != sender)
-          ACCUM @@edge_set += e
-          POST-ACCUM
-              t.@visited += true;
-
-            // 2. Collect the transferred money number for the users found in 2nd and 4th iteration  
-              CASE WHEN 
-                ITER_NUM % 2 == 1 
-              THEN
-                tmp = SELECT s 
-                    FROM Start:s-(User_Transfer_Transaction>:e)-:t
-                    WHERE epoch_to_datetime(t.ts) BETWEEN start_date AND end_date
-                    ACCUM 
-                        @@sum_transaction_amount += t.amount,
-                        @@edge_set += e;
-              END;
-              ITER_NUM = ITER_NUM + 1;
-  END;
+*/
   
+    SumAccum<FLOAT> @@sum_transaction_amount;
+    OrAccum<BOOL> @visited;
+    SetAccum<EDGE> @@edges_to_display;
+    INT ITER_NUM = 0;
+
+    // Iteratively perform NUM_HOPS 
+    Start (ANY) = {sender};
+
+    // 1. From sender, go 4 steps with a while loop to find her connected users.
+    // Note: It takes 2 hops to go from a User to another User.
+    WHILE (Start.size() > 0) LIMIT num_hops DO
+        Start = SELECT t 
+            FROM Start:s -((User_to_Device|User_to_Payment):e)- :t
+            WHERE t.@visited == FALSE 
+                AND (t.type != "User" OR t != sender)
+            ACCUM @@edges_to_display += e
+            POST-ACCUM t.@visited += TRUE;
+
+        // 2. Count the money sent by the users in 2nd and 4th hops.
+        IF ITER_NUM % 2 == 1 THEN
+            tmp = SELECT s 
+                FROM Start:s - (User_Transfer_Transaction>:e) - :t
+                WHERE epoch_to_datetime(t.ts) BETWEEN start_date AND end_date
+                ACCUM 
+                    @@sum_transaction_amount += t.amount,
+                    @@edges_to_display += e;
+        END;
+        ITER_NUM = ITER_NUM + 1;
+  END;
+
   // Output the result
   PRINT @@sum_transaction_amount;
-  PRINT @@edge_set;
+  PRINT @@edges_to_display;
 }

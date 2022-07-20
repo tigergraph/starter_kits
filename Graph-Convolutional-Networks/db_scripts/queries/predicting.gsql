@@ -11,7 +11,7 @@ CREATE QUERY predicting() FOR GRAPH CitationGraph SYNTAX V2 {
   
 	
 	INT test_cnt = 1000;
-	## load weights into @@W_0 and @@W_1
+	// load weights into @@W_0 and @@W_1
 	WORDs = {WORD.*};
 	LAYER_0s = SELECT t FROM WORDs:s -(:e)- LAYER_0:t
 	           ACCUM 
@@ -22,10 +22,10 @@ CREATE QUERY predicting() FOR GRAPH CitationGraph SYNTAX V2 {
 	           ACCUM
 	             @@W_1[s.indx][t.indx] += e.weight;
 	
-	## forward propagation
+	// forward propagation
 	Start = {PAPER.*};
 
-	## input -> hidden layer0
+	// input -> hidden layer0
 	@@accurate_cnt = 0;
 
 	Start = SELECT s FROM Start:s
@@ -34,16 +34,16 @@ CREATE QUERY predicting() FOR GRAPH CitationGraph SYNTAX V2 {
 	          s.@zeta_0 += product_Matrix_SparseVector(@@W_0, s.words)
 	          ;
 
-	## convolve
+	// convolve
 	Start = SELECT s FROM Start:s -(CITE:e)- PAPER:t
 	        ACCUM t.@z_0 += product_ArrayAccum_const(s.@zeta_0,e.weight)
 	        POST-ACCUM
 	          s.@z_0 = ReLU_ArrayAccum(s.@z_0),
-## hidden layer0 -> hidden layer1
+  // hidden layer0 -> hidden layer1 */
 	          s.@zeta_1 += product_Matrix_Vector(@@W_1, s.@z_0)
 	          ;
 	          
-	## convolve
+	// convolve
 	Start = SELECT t FROM Start:s -(CITE:e)- PAPER:t
 	        WHERE t.test
 	        ACCUM 

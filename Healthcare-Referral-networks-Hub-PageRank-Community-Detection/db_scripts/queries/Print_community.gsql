@@ -1,4 +1,4 @@
-CREATE OR REPLACE QUERY Print_community(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
+CREATE OR REPLACE QUERY print_community(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
   /* Write query logic here */ 
   //PRINT "Print_community works!";
 	
