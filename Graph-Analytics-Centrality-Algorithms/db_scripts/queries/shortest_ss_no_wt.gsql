@@ -9,27 +9,27 @@ The attribute version only store the distance into attribute, not the path.
         ListAccum<vertex> @path;
         SetAccum<edge> @@edge_set;
 
-  ##### Initialization  #####
+  // Initialization  
         source_set = {source};
         source_set = SELECT s 
                      FROM source_set:s
-                     ACCUM s.@visited += true, 
+                     ACCUM s.@visited += TRUE, 
                           s.@dis = 0,
                           s.@path = s; 
         result_set = {source};
 
-  ##### Calculate distances and paths #####
+  // Calculate distances and paths 
         WHILE(source_set.size()>0) DO
                 source_set = SELECT t
                          FROM source_set:s -(:e)- :t
-                         WHERE t.@visited == false
+                         WHERE t.@visited == FALSE
                          ACCUM t.@dis += s.@dis + 1,
                                t.@path = s.@path + [t],
-                               t.@visited += true;
+                               t.@visited += TRUE;
                 result_set = result_set UNION source_set;
         END;
 
-  ##### Print the results #####
+  // Print the results 
 
         PRINT result_set[result_set.@dis, result_set.@path];
         IF display THEN

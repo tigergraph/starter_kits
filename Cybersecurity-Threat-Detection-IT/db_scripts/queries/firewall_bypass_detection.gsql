@@ -9,25 +9,25 @@ CREATE QUERY firewall_bypass_detection(/* Parameters here */) FOR GRAPH MyGraph 
 	
   	resources = {Resource.*};
 	
-	resources = select res from resources:res 
-	            where res.Firewall_Required == true;
+	resources = SELECT res FROM resources:res 
+	            WHERE res.Firewall_Required == TRUE;
 	
-	events = select event from resources-(Read_From_Resource)-:event
-	         where event.Event_Type == "read";
+	events = SELECT event FROM resources-(Read_From_Resource)-:event
+	         WHERE event.Event_Type == "read";
 	
-  	IP_userID = select t from events:s-((Has_IP|User_Event):e)-:t
-	            accum t.@read_time += s.Start_Date;
+  	IP_userID = SELECT t FROM events:s-((Has_IP|User_Event):e)-:t
+	            ACCUM t.@read_time += s.Start_Date;
 	
-	IP_userID_firewall = select s from IP_userID:s-((Has_IP|User_Event):e)-:event
-	                     where event.Event_Type == "firewall"
-	                     accum s.@firewall_time += event.Start_Date;
+	IP_userID_firewall = SELECT s FROM IP_userID:s-((Has_IP|User_Event):e)-:event
+	                     WHERE event.Event_Type == "firewall"
+	                     ACCUM s.@firewall_time += event.Start_Date;
 	
-	IP_userID_no_firewall = IP_userID minus IP_userID_firewall;
+	IP_userID_no_firewall = IP_userID MINUS IP_userID_firewall;
 	
-	print IP_userID_no_firewall;
+	PRINT IP_userID_no_firewall;
 	
-	IP_userID_bypass_firewall = select s from IP_userID_firewall:s
-	                            where s.@read_time.size() > s.@firewall_time.size();
+	IP_userID_bypass_firewall = SELECT s FROM IP_userID_firewall:s
+	                            WHERE s.@read_time.size() > s.@firewall_time.size();
 	
-	print IP_userID_bypass_firewall;
+	PRINT IP_userID_bypass_firewall;
 }

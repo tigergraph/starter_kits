@@ -77,11 +77,11 @@ CREATE QUERY scc (INT iter = 500, INT iter_wcc = 5, INT top_k_dist = 10) FOR GRA
                                        POST-ACCUM
                                                 CASE WHEN t.@wcc_id_prev != t.@wcc_id_curr THEN // If t's id has changed
                                                           t.@wcc_id_prev = t.@wcc_id_curr,
-                                                          t.@wcc_active = true
+                                                          t.@wcc_active = TRUE
                                                 ELSE 
-                                                          t.@wcc_active = false
+                                                          t.@wcc_active = FALSE
                                                 END
-                                        HAVING t.@wcc_active == true;       
+                                        HAVING t.@wcc_active == TRUE;       
                         END;
                         active = SELECT s
                                  FROM active:s

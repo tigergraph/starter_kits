@@ -1,4 +1,4 @@
-CREATE QUERY edge_crawl()FOR GRAPH MyGraph SYNTAX V2 { 
+CREATE QUERY edge_crawl() FOR GRAPH MyGraph SYNTAX V2 { 
   /**************************************
 	* S1 = Grabbing all Patients that a Patient Infected
 	* S2 = Grabbing all Patients belonging to a well known Case
