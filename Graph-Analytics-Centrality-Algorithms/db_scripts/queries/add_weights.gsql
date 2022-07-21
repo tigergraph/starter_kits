@@ -1,4 +1,4 @@
-CREATE QUERY add_weights(STRING e_type, BOOL overwrite=True) FOR GRAPH MyGraph SYNTAX V2 {
+CREATE QUERY add_weights(STRING e_type, BOOL overwrite=TRUE) FOR GRAPH MyGraph SYNTAX V2 {
 /* This query uses the haversine formula to calculate the distances 
 between airports by using their latitude and longitude coordinates.
 The calculated distances are measured in miles and are added as edge weights.
@@ -15,7 +15,7 @@ The calculated distances are measured in miles and are added as edge weights.
 	
 	heavy = SELECT t FROM start:s-(e_type:e)-Airport:t
 	    ACCUM 
-	      IF overwrite == False AND e.miles != 0 THEN
+	      IF overwrite == FALSE AND e.miles != 0 THEN
 	        @@dont_change_list += e
 	      ELSE
 	          double lat1 = s.latitude * pi / 180, // lat1 to radians

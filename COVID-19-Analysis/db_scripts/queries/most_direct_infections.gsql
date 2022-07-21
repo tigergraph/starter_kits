@@ -8,10 +8,10 @@ CREATE QUERY most_direct_infections() FOR GRAPH MyGraph SYNTAX V2 {
 	start (ANY) = {Patient.*};
 	
 	//while Start.size() > 0 do
-	start = select s from start:s-(reverse_INFECTED_BY>:e)-Patient:t
-	        accum s.@num_direct_infections += 1
-	        order by s.outdegree("reverse_INFECTED_BY") desc
-	        limit 1;
+	start = SELECT s FROM start:s-(reverse_INFECTED_BY>:e)-Patient:t
+	        ACCUM s.@num_direct_infections += 1
+	        ORDER BY s.outdegree("reverse_INFECTED_BY") DESC
+	        LIMIT 1;
 	
-	print start as Answer;
+	PRINT start AS Answer;
 }

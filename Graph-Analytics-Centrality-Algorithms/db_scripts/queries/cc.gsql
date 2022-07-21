@@ -1,20 +1,20 @@
 CREATE QUERY cc (BOOL display, INT output_limit, INT max_hops) FOR GRAPH MyGraph SYNTAX V2 {
-# Closeness Centrality main query
+// Closeness Centrality main query
 
         TYPEDEF TUPLE<VERTEX Vertex_ID, FLOAT score> Vertex_Score;
         HeapAccum<Vertex_Score>(output_limit, score DESC) @@top_scores;
         SumAccum<float> @score;
-        SetAccum<EDGE> @@edge_set;                   # list of all edges, if display is needed
+        SetAccum<EDGE> @@edge_set;                   // list of all edges, if display is needed
   
         INT num_vert;
-        #INT max_hops = 10;      # measure distance for vertices up to 10 hops away
+        // INT max_hops = 10;      // measure distance for vertices up to 10 hops away
   
         start = {Airport.*};
 
-        #Total number of vertices considered in graph
+        // Total number of vertices considered in graph
         num_vert = start.size();
 
-        # get closeness centrality for each vertex
+        // get closeness centrality for each vertex
         start = SELECT s FROM start:s
                 POST-ACCUM s.@score = cc_subquery(s,num_vert,max_hops),
                            @@top_scores += Vertex_Score(s, cc_subquery(s,num_vert,max_hops));

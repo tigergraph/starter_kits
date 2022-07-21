@@ -18,7 +18,7 @@ The calculated distances are measured in miles and are added as edge weights.
   
 	Heavy = SELECT t FROM Start:s-(flight_route:e)-Airport:t
 	    ACCUM
-	      IF overwrite == False AND e.miles != 0 THEN
+	      IF overwrite == FALSE AND e.miles != 0 THEN
 	        @@dont_Change_List += e
 	      ELSE
 	          double lat1 = s.latitude * pi / 180, // lat1 to radians

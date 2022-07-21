@@ -10,18 +10,18 @@ CREATE QUERY customer_journey(vertex<Contact> customer, set<string> campaign_typ
 	SumAccum<string> @cam_type, @cam_name, @cam_desc;
 	start = { customer };
 
-  	print start;
+  	PRINT start;
 
-	Company = select t from start -(belongs_to)-> Account:t;
-	print Company;
-	campaign = select c
-	           from start-(is_connected_to)-> CampaignMember:c
-	           where c.CreatedDate >= start_time and c.CreatedDate <= end_time
+	Company = SELECT t FROM start -(belongs_to)-> Account:t;
+	PRINT Company;
+	campaign = SELECT c
+	           FROM start-(is_connected_to)-> CampaignMember:c
+	           WHERE c.CreatedDate >= start_time AND c.CreatedDate <= end_time
 	           ;
-	campaign = select c from campaign:c -(is_part_of)-> Campaign:t
-	           where campaign_types.size() == 0 or t.Campaign_Type in campaign_types
-	           accum c.@cam_type = t.Campaign_Type,
+	campaign = SELECT c FROM campaign:c -(is_part_of)-> Campaign:t
+	           WHERE campaign_types.size() == 0 OR t.Campaign_Type IN campaign_types
+	           ACCUM c.@cam_type = t.Campaign_Type,
 	                 c.@cam_name = t.Name,
 	                 c.@cam_desc = t.Description;
-	print campaign as Campaign;
+	PRINT campaign AS Campaign;
 }
