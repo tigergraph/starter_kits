@@ -1,9 +1,9 @@
 CREATE QUERY footprinting_detection(datetime start_date = to_datetime("2019-05-01 11:10:00"), datetime end_date = to_datetime("2019-05-01 11:15:00")) FOR GRAPH MyGraph SYNTAX V2 { 
 	
-	// this query detects user id that calls many endpoints of a service in short period of time in order to find its vulnerability
-	// [user id] -> [request events] -> [service]
+	/* this query detects user id that calls many endpoints of a service in short period of time in order to find its vulnerability
+	   [user id] -> [request events] -> [service] */
 	
-	TypeDef tuple<vertex user, vertex service, int cnt, float mean, float std> result_tuple;
+	TYPEDEF TUPLE<vertex user, vertex service, int cnt, float mean, float std> result_tuple;
 	AvgAccum @mean;
 	SumAccum<float> @std;
 	MapAccum<vertex,SetAccum<string>> @api_map;
@@ -11,36 +11,36 @@ CREATE QUERY footprinting_detection(datetime start_date = to_datetime("2019-05-0
   
   events = {Event.*};
 	
-	events = select s from events:s 
-           where s.Start_Date > start_date and s.Start_Date < end_date
-	           and s.Event_Type == "request";
+	events = SELECT s FROM events:s 
+           WHERE s.Start_Date > start_date AND s.Start_Date < end_date
+	           AND s.Event_Type == "request";
 	
-	events = select event from events:event-(User_Event)-:user
-	         accum event.@api_map += (user -> event.Endpoint);
+	events = SELECT event FROM events:event-(User_Event)-:user
+	         ACCUM event.@api_map += (user -> event.Endpoint);
 	
-	services = select s from events:event-(To_Service)-:s
-	           accum s.@api_map += event.@api_map
-	           post-accum
-	              case when s.@api_map.size() > 1 then
+	services = SELECT s from events:event-(To_Service)-:s
+	           ACCUM s.@api_map += event.@api_map
+	           POST-ACCUM
+	              CASE WHEN s.@api_map.size() > 1 THEN
 	               // calculate the mean
-	               foreach (user,cnt) in s.@api_map do
+	               FOREACH (user,cnt) in s.@api_map DO
 	                 s.@mean += cnt.size()
-	               end,
+	               END,
 	               // calculate the standard deviation
-	               foreach (user,cnt) in s.@api_map do
+	               FOREACH (user,cnt) in s.@api_map DO
 	                 s.@std += pow(cnt.size() - s.@mean, 2)
-	               end,
+	               END,
 	               s.@std = sqrt(s.@std/(s.@api_map.size()-1)),
-	               case when s.@std != 0 then
+	               CASE WHEN s.@std != 0 THEN
 	                 // calculate the out lier
-	                 foreach (user,cnt) in s.@api_map do
-	                   case when cnt.size()-s.@mean > 3*s.@std then
+	                 FOREACH (user,cnt) in s.@api_map DO
+	                   CASE WHEN cnt.size()-s.@mean > 3*s.@std THEN
 	                     @@result_list += result_tuple(user,s,cnt.size(),s.@mean,s.@std)
-	                   end
-	                 end
-	               end
-	             end;
+	                   END
+	                 END
+	               END
+	             END;
 	
-	print @@result_list;
-	print services;
+	PRINT @@result_list;
+	PRINT services;
 }
