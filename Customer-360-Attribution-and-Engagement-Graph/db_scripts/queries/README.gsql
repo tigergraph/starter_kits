@@ -1,0 +1,16 @@
+CREATE QUERY README() FOR GRAPH MyGraph {
+    STRING graph_description = "Create a real-time 360-degree view of the " + 
+      "customer journey for attribution and engagement insights";
+    
+    STRING query_order = "No order";
+    
+    STRING cust_journey_subgraph = "Print the edges related to a customer's " +
+      "journey into a Campaign";
+    STRING customer_journey = "Get the campaign members of a certain " +
+      "customer, filtering by date created and campaign type";
+    STRING similar_contacts = "Jaccard similarity for contacts";
+    STRING similar_customers = "Jaccard similarity for customers";
+    
+    PRINT graph_description, query_order, cust_journey_subgraph, 
+      customer_journey, similar_contacts, similar_customers;
+}

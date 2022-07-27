@@ -17,6 +17,7 @@ CREATE QUERY similar_contacts(VERTEX<Contact> source_customer,
   
   Jaccard jaccard_similarity = size_intersect / (size_A + size_B - size_intersect)
 */
+
     SumAccum<INT> @size_intersect, @@size_set_A, @size_set_B;
     SumAccum<FLOAT> @jaccard_similarity;
 

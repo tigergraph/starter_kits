@@ -25,6 +25,7 @@ CREATE QUERY similar_customers(VERTEX<Contact> source_customer,
     Similarity Algorithms in GSQL
         https://github.com/tigergraph/gsql-graph-algorithms/tree/master/algorithms/examples/Similarity
 */
+
         SumAccum<INT> @intersection_size, @@set_size_A, @set_size_B;
         SumAccum<FLOAT> @similarity;
 
@@ -63,6 +64,5 @@ CREATE QUERY similar_customers(VERTEX<Contact> source_customer,
             ORDER BY t.@similarity DESC
             LIMIT top_k;
 
-        //PRINT B;
         PRINT B[B.FirstName, B.LastName, B.@similarity];
 }
