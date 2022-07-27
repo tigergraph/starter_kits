@@ -1,35 +1,38 @@
 CREATE QUERY cust_journey_subgraph(VERTEX<Contact> customer)
-  SYNTAX v2{ 
+  FOR GRAPH MyGraph SYNTAX v2 { 
 /*
-  Sample input:
+    Print the edges related to a customer's journey into a Campaign
+    
+    Sample inputs:
     customer: Sam-Eisenberg
+
+    Starting from an input customer,
+    (1) Accumulate vertices and edges connected to the cutomer,
+      including the Account, Opporuntiy, CampaignMember, and Campaign
 */
+
     SetAccum<EDGE> @@display_set;
     SetAccum<VERTEX> @@vertex_set;
 
     cust = { customer };
     
-    acct = SELECT t FROM cust:c -(belongs_to>:e)- Account:t
+    acct = SELECT t  // connected accounts
+        FROM cust:c -(belongs_to>:e)- Account:t
         ACCUM @@display_set += e, @@vertex_set += t;
   
-    opp = SELECT t FROM cust -(Has_Role>:e)- Opportunity:t 
+    opp = SELECT t // connected opportunities
+        FROM cust -(Has_Role>:e)- Opportunity:t 
         ACCUM @@display_set += e, @@vertex_set += t;
   
-    campaign_members =
-        SELECT t
+    campaign_members = SELECT t // connected campaign members
         FROM cust -(is_connected_to>:e)- CampaignMember:t
         ACCUM @@vertex_set += cust, @@vertex_set += t,
-            @@display_set += e;
+          @@display_set += e;
   
-    campaigns =
-        SELECT t
+    campaigns = SELECT t // connected campaigns
         FROM campaign_members -(is_part_of>:e)- Campaign:t
         ACCUM @@vertex_set += t, @@display_set += e;
   
-    vertices = @@vertex_set;
-  
-    PRINT vertices;
-    //print@@vertex_set;
-
+    PRINT @@vertex_set AS vertices; // print values
     PRINT @@display_set;
 }
