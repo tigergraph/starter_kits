@@ -40,7 +40,7 @@ CREATE QUERY shortest_ss_pos_wt (VERTEX source, BOOL display) FOR GRAPH MyGraph 
                             END;     
         END;
         
-  // Calculate the paths #####
+  // Calculate the paths
         start = {source};
         tmp = SELECT s
               FROM total:s

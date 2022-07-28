@@ -1,7 +1,7 @@
 CREATE QUERY cc_subquery (VERTEX source, INT num_vert, INT maxhops) FOR GRAPH MyGraph RETURNS(FLOAT) SYNTAX V2 {
 // Subquery returns closeness centrality for vertex source in graph with num_vert vertices 
-        SumAccum<int> @@curr_dist, @@total_dist;
-         OrAccum<bool> @visited;
+        SumAccum<INT> @@curr_dist, @@total_dist;
+         OrAccum<BOOL> @visited;
  
 // Initialize: Set the input vertex source as the starting point
         start = {source};

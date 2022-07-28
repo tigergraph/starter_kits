@@ -3,7 +3,7 @@ CREATE QUERY cc (BOOL display, INT output_limit, INT max_hops) FOR GRAPH MyGraph
 
         TYPEDEF TUPLE<VERTEX Vertex_ID, FLOAT score> Vertex_Score;
         HeapAccum<Vertex_Score>(output_limit, score DESC) @@top_scores;
-        SumAccum<float> @score;
+        SumAccum<FLOAT> @score;
         SetAccum<EDGE> @@edge_set;                   // list of all edges, if display is needed
   
         INT num_vert;

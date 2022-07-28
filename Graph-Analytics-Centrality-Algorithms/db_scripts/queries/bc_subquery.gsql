@@ -1,12 +1,12 @@
 CREATE QUERY bc_subquery (VERTEX source, INT max_hops) FOR GRAPH MyGraph 
-	RETURNS(MapAccum<vertex, float>) SYNTAX V2 {
+	RETURNS(MapAccum<VERTEX, FLOAT>) SYNTAX V2 {
 /* The TigerGraph implementation is based on A Faster Algorithm for Betweenness Centrality by Ulrik Brandes, Journal of Mathematical Sociology 25(2):163-177, (2001). According to the algorithm, sigma is the number of shortest paths from source; delta is the pair dependency from source; and dist is the shortest distance from source. The subquery returns a map of (s.id->s.@delta)
 */
-  SumAccum<float> @sigma;              
-	SumAccum<float> @delta;              
-	MaxAccum<int> @dist;                 
-	SumAccum<int> @@curr_dist = 0;
-	MapAccum<vertex, float> @@delta_map;   
+  SumAccum<FLOAT> @sigma;              
+	SumAccum<FLOAT> @delta;              
+	MaxAccum<INT> @dist;                 
+	SumAccum<INT> @@curr_dist = 0;
+	MapAccum<VERTEX, FLOAT> @@delta_map;   
 	
 	all = {any};
 	start = {source};
@@ -44,6 +44,6 @@ CREATE QUERY bc_subquery (VERTEX source, INT max_hops) FOR GRAPH MyGraph
 	          ELSE @@delta_map += (s->0)
 	          END;
 
-	return @@delta_map;
+	RETURN @@delta_map;
 
  }
