@@ -67,8 +67,8 @@ SYNTAX v2 {
   
   /* Start search
   1) Do bidirectional search for the subgraph of all loops from source_id
-    2) Then validate each path inside the subgraph using path filters, 
-     i.e. time must increase along the path
+  2) Then validate each path inside the subgraph using path filters, 
+    i.e. time must increase along the path
   */
 
   // Set Fwd_set and Rev_set as Seed
