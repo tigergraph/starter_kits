@@ -10,5 +10,5 @@ CREATE OR REPLACE QUERY get_patients(vertex<Prescriber> inputPrescriber) FOR GRA
 	patients = SELECT t FROM claims:s-(associated>:e)-:t
 	           ACCUM @@list +=e;
 	
-	print claims, @@list;
+	PRINT claims, @@list;
 }

@@ -22,6 +22,6 @@ CREATE OR REPLACE QUERY ex2_create_referral_edge(VERTEX<Prescriber> inputPrescri
 	
 	prescribers = SELECT t FROM claims-(submitted_by>:e)-:t
 	              POST-ACCUM INSERT INTO referral VALUES(inputPrescriber, t, 1);
-	print start_set;
+	PRINT start_set;
 	
 }
