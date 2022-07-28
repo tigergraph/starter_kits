@@ -1,4 +1,4 @@
-CREATE QUERY connect_weighted_match(float threshold=0.2, bool verbose=false) FOR GRAPH Entity_Resolution SYNTAX v2{ 
+CREATE QUERY connect_weighted_match(FLOAT threshold=0.2, BOOL verbose=false) FOR GRAPH Entity_Resolution SYNTAX v2{ 
   /*
   Connect users that have sufficient shared attributes. The linking score between
   two users is defined as the weighted sum of their shared attributes.
