@@ -6,9 +6,9 @@ CREATE QUERY get_account_interest(vertex<Account> input_acc, int k) FOR GRAPH En
 	 **********************************************************/
 	
   	SetAccum<VERTEX<Account>> @@connected_accounts;
-	MapAccum<VERTEX, int> @map;
+	MapAccum<VERTEX, INT> @map;
 	OrAccum @visited;
-	SumAccum<uint> @cnt;
+	SumAccum<UINT> @cnt;
 	ListAccum<EDGE> @@list;
 	
 	start = {input_acc};
