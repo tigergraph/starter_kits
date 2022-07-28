@@ -1,6 +1,6 @@
-CREATE QUERY app_impact(vertex<Application> a, float decay, int k) FOR GRAPH Storage SYNTAX V2 { 
+CREATE QUERY app_impact(VERTEX<Application> a, FLOAT decay, INT k) FOR GRAPH Storage SYNTAX V2 { 
   
-  int iteration = 0;
+  INT iteration = 0;
   
   SumAccum<FLOAT>
   @impact_score;
@@ -17,11 +17,11 @@ CREATE QUERY app_impact(vertex<Application> a, float decay, int k) FOR GRAPH Sto
                   t.@edge_set += e, t.@edge_set += s.@edge_set;
     iteration = iteration + 1;
     result = result UNION start;
-  end;
+  END;
   
-  Result = SELECT s from result:s
+  Result = SELECT s FROM result:s
            ORDER BY s.@impact_score DESC
            LIMIT k;
   
-  print Result;
+  PRINT Result;
 }
