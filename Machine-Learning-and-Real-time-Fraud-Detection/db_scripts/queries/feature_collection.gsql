@@ -1,17 +1,17 @@
-CREATE query feature_collection(vertex<phone> phoneId, int durationLimit = 600, int numOfCallLimit = 10) for graph sdmGraph SYNTAX V2 {
-  TYPEDEF TUPLE <Edge e, int totalDuration, int numOfCall> CallInfo;
-  SumAccum<int> @stableCount;
-  GroupByAccum<vertex<phone> tid, ListAccum<CallInfo> callInfo> @NB_Info;
-  OrAccum @is_In_Target_Group = false;
-  OrAccum @is_In_Stable_Group = false;
+CREATE query feature_collection(vertex<phone> phoneId, INT durationLimit = 600, INT numOfCallLimit = 10) for graph sdmGraph SYNTAX V2 {
+  TYPEDEF TUPLE <EDGE e, INT totalDuration, INT numOfCall> CallInfo;
+  SumAccum<INT> @stableCount;
+  GroupByAccum<VERTEX<phone> tid, ListAccum<CallInfo> callInfo> @NB_Info;
+  OrAccum @is_In_Target_Group = FALSE;
+  OrAccum @is_In_Stable_Group = FALSE;
 
   /* for the purpose of visualization */ 
   // List store in each target vertex to store its own stable in group neighbor
-  ListAccum<vertex<phone>> @in_Group_Stable_NB;
+  ListAccum<VERTEX<phone>> @in_Group_Stable_NB;
   // Global variable used to store all in group stable connections edges
-  ListAccum<Edge> @@in_Group_Stable_Connection_List;
+  ListAccum<EDGE> @@in_Group_Stable_Connection_List;
   // Global variable used to store all edges connecting Seed and its outgoing targets
-  ListAccum<Edge> @@target_Group_Edge_List;
+  ListAccum<EDGE> @@target_Group_Edge_List;
 
   Seed = {phoneId};
   //collect its target group
@@ -29,20 +29,20 @@ CREATE query feature_collection(vertex<phone> phoneId, int durationLimit = 600, 
                 POST-ACCUM
                   // if the target has @stableCount == 2 it is a stable connected target
                   IF tgt.@stableCount == 2 THEN
-                     tgt.@is_In_Stable_Group = true
+                     tgt.@is_In_Stable_Group = TRUE
                   END
-                HAVING tgt.@is_In_Target_Group == true
+                HAVING tgt.@is_In_Target_Group == TRUE
                 ;
 
   // connections among the target group
   X = SELECT src
       FROM TargetGroup:src - ((phone_phone>|phone_phone_reversed>):e) - phone: tgt
-      WHERE tgt.@is_In_Target_Group == true
+      WHERE tgt.@is_In_Target_Group == TRUE
       ACCUM 
         // update the neighbor info
         src.@NB_Info += (tgt -> CallInfo(e, e.total_duration, e.num_of_call))
       POST-ACCUM
-        FOREACH (tid, infolist) in src.@NB_Info DO
+        FOREACH (tid, infolist) IN src.@NB_Info DO
           // if ListAccum<CallInfo> has two element then it has both call and callback from this target
           int stableCount = 0,
           IF infolist.size() == 2 THEN
@@ -55,7 +55,7 @@ CREATE query feature_collection(vertex<phone> phoneId, int durationLimit = 600, 
           // if it is stable connected in group target, increase its count
           IF stableCount == 2 THEN
             src.@in_Group_Stable_NB += tid, //for visualization purpose
-            FOREACH info in infolist DO
+            FOREACH info IN infolist DO
               @@in_Group_Stable_Connection_List += info.e //for visualization purpose
             END
           END
