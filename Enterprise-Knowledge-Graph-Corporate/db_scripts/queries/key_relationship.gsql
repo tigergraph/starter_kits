@@ -16,7 +16,7 @@ CREATE QUERY key_relationship(vertex<Company> company, int step)
   OrAccum @visited = FALSE;
   SetAccum<edge> @@edge_set;
 
-  int loop_step;
+  INT loop_step;
 
   // limit the maximum traverse steps
   IF (step > 8) THEN
