@@ -6,7 +6,7 @@ CREATE QUERY recipient_user_fraudulent_device() FOR GRAPH MyGraph SYNTAX v2 {
    *  involved in fraud along with the fraudulent device.
    **********************************************************/
   
-  SetAccum<edge> @@edges;
+  SetAccum<EDGE> @@edges;
   
   payments = {payment.*};
 

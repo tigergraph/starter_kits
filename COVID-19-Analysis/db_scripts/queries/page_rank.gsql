@@ -1,11 +1,12 @@
 CREATE DISTRIBUTED QUERY page_rank (FLOAT max_change, INT max_iter, FLOAT damping, 
     BOOL display, INT output_limit) FOR GRAPH MyGraph SYNTAX V2 {
-# Compute the pageRank score for each vertex in the GRAPH
-# In each iteration, compute a score for each vertex:
-#   score = (1-damping) + damping*sum(received scores FROM its neighbors).
-# The pageRank algorithm stops when either of the following is true:
-#  a) it reaches maxIter iterations;
-#  b) the max score change for any vertex compared to the last iteration <= maxChange.
+/* Compute the pageRank score for each vertex in the GRAPH
+In each iteration, compute a score for each vertex:
+score = (1-damping) + damping*sum(received scores FROM its neighbors).
+The pageRank algorithm stops when either of the following is true:
+a) it reaches maxIter iterations;
+b) the max score change for any vertex compared to the last iteration <= maxChange.
+*/
 
         TYPEDEF TUPLE<vertex Vertex_ID, FLOAT score> vertex_score;
         HeapAccum<vertex_score>(output_limit, score DESC) @@top_scores;

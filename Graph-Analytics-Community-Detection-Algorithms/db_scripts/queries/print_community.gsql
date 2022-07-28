@@ -1,0 +1,20 @@
+CREATE QUERY print_community(VERTEX<Prescriber> input_prescriber) FOR GRAPH MyGraph SYNTAX V2 { 
+  /* Write query logic here */ 
+  //PRINT "Print_community works!";
+	
+	ListAccum<EDGE> @@edge_list;
+	
+	SumAccum<INT> @@cid;
+	
+	start={input_prescriber};
+	start= SELECT s FROM start:s POST-ACCUM @@cid += s.communityId;
+	
+	start = {Prescriber.*};
+	
+	start = SELECT s FROM start:s-(referral>:e)-:t 
+	        WHERE s.communityId == @@cid AND s.communityId == t.communityId
+	        ACCUM @@edge_list += e;
+	
+	PRINT start;
+	PRINT @@edge_list;
+}

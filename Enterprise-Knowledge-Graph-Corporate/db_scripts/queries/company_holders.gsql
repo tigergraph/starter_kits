@@ -16,9 +16,9 @@ CREATE QUERY company_holders(vertex<Company> company, uint step)
 	// @visited is used to mark visited vertices
   OrAccum @visited = FALSE;
 	// @@edge_set is used to hold all touched edges
-  SetAccum<edge> @@edge_set;
+  SetAccum<EDGE> @@edge_set;
 
-  int loop_step;
+  INT loop_step;
 
   // limit the maximum traverse steps
   IF (step > 8) THEN

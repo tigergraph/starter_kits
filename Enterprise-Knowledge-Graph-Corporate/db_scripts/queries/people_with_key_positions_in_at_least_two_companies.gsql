@@ -4,11 +4,11 @@ CREATE QUERY people_with_key_positions_in_at_least_two_companies()
 Find all the people who are a CEO, Director or Vice President in at least two different companies
 */
 
-  SetAccum<edge> @@final_edge_set_4;
-  SetAccum<edge> @@final_edge_set_5;
-  SetAccum<vertex<Company>> @@final_vertex_set_1;
-  SetAccum<vertex<Person>> @@final_vertex_set_2;
-  SetAccum<vertex<Company>> @@final_vertex_set_3;
+  SetAccum<EDGE> @@final_edge_set_4;
+  SetAccum<EDGE> @@final_edge_set_5;
+  SetAccum<VERTEX<Company>> @@final_vertex_set_1;
+  SetAccum<VERTEX<Person>> @@final_vertex_set_2;
+  SetAccum<VERTEX<Company>> @@final_vertex_set_3;
 
   vertex_set_1 = 
         SELECT c2

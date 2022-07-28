@@ -4,10 +4,10 @@ The JSON version also show visualization of the network.
 The attribute version only store the distance into attribute, not the path.
 */
 
-        MinAccum<int> @dis;
+        MinAccum<INT> @dis;
         OrAccum @visited;
-        ListAccum<vertex> @path;
-        SetAccum<edge> @@edge_Set;
+        ListAccum<VERTEX> @path;
+        SetAccum<EDGE> @@edge_Set;
 
   // Initialization  
         Source = {source};

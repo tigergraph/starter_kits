@@ -45,7 +45,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
   INT iteration2;
   INT partitions;
   INT loop;
-  INT debug = 0;  // debug: 0, no modularity info; 1, show debug log; 2, modularity for each iteration
+  INT debug = 0;  // debug: 0, no modularity info; 1, show debug LOG; 2, modularity for each iteration
   
   partitions = split;
   CASE WHEN split < 1 THEN
@@ -84,7 +84,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
   ;
   @@modularity = @@modularity / @@total_weight;                      
   PRINT iteration AS Phase1Iter, @@modularity;
-  log(debug > 0, "[redrain]#move", iteration, @@modularity);
+  LOG(debug > 0, "[redrain]#move", iteration, @@modularity);
 
 
 // Phase 1 -- Move
@@ -115,7 +115,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
       POST-ACCUM INT best_cluster = s.@cid,
         FLOAT max_delta_Q = 0.0,
         FLOAT deltaQ_new = 0.0,
-        FOREACH (cluster, weightToC) IN s.@weight_to_cluster DO   #would be better if this can be distributed
+        FOREACH (cluster, weightToC) IN s.@weight_to_cluster DO   // would be better if this can be distributed
           FLOAT incident = @@tot_incident_cluster.get(cluster),
           deltaQ_new = weightToC - 2 * incident * s.@weight/ @@total_weight,
           IF deltaQ_new > max_delta_Q OR (abs(deltaQ_new - max_delta_Q) < epsilon AND cluster < best_cluster) THEN   // when deltaQ_new is equal to max_delta_Q, and the cluster label is smaller, also change 
@@ -141,7 +141,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
     ;
     @@modularity = @@modularity / @@total_weight;                      
     PRINT iteration AS Phase1Iter, @@modularity;
-    log(debug > 0, "[redrain]#move", iteration, @@modularity);
+    LOG(debug > 0, "[redrain]#move", iteration, @@modularity);
   END; // outer WHILE
 
 // Phase 2 --  Merge     
@@ -163,7 +163,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
     represent = {@@represent_set};
     @@represent_map.clear();
     @@represent_set.clear();
-    log(debug > 0, "[redrain]#2_merge", represent.size()); #@@cluster_sizes.size());
+    LOG(debug > 0, "[redrain]#2_merge", represent.size()); #@@cluster_sizes.size());
     
     // Get @cweight from totalIncident
     represent = SELECT s
@@ -171,7 +171,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
       ACCUM s.@cweight = @@tot_incident_cluster.get(s.@uid),
         @@cluster_sizes += (s.@cid -> 1)
     ;
-    log(debug > 1, "[redrain]#2_merge", @@weight_to_cluster_map.size());
+    LOG(debug > 1, "[redrain]#2_merge", @@weight_to_cluster_map.size());
     iteration = 0;
     last_modularity = 0;
     @@modularity = 0;
@@ -210,9 +210,9 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
             s.@cid = best_cluster
           END
       ;
-      log(debug > 1, "[redrain]#2_merge", @@weight_to_cluster_map.size()); 
+      LOG(debug > 1, "[redrain]#2_merge", @@weight_to_cluster_map.size()); 
       @@weight_to_cluster_map.clear();
-      log(debug > 1, "[redrain]#2_move:", @@move_comm.size());
+      LOG(debug > 1, "[redrain]#2_move:", @@move_comm.size());
       // move nodes
       S = SELECT s
         FROM start:s
@@ -232,7 +232,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
       ;
       @@modularity = @@modularity / @@total_weight;
       PRINT iteration AS Phase1Iter, @@modularity;
-      log(debug > 0, "[redrain]#2_move", iteration, @@modularity);
+      LOG(debug > 0, "[redrain]#2_move", iteration, @@modularity);
     END; // inner WHILE
     S = SELECT s
       FROM represent:s
@@ -242,7 +242,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
     last_modularity2 = @@modularity2;
     @@modularity2 = @@modularity;
     PRINT iteration2 AS Phase2Iter, @@modularity2;
-    log(debug > 0, "[redrain]#2_merge", iteration2, @@modularity2);
+    LOG(debug > 0, "[redrain]#2_merge", iteration2, @@modularity2);
   END; // outer WHILE
        
 
@@ -283,7 +283,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
     ;
     @@modularity = @@modularity / @@total_weight;                      
     PRINT iteration AS Phase3Iter, @@modularity;
-    log(debug > 0, "[redrain]#refine", iteration, @@modularity);
+    LOG(debug > 0, "[redrain]#refine", iteration, @@modularity);
   END; // WHILE
 
   //PRINT start.@cid;
@@ -291,7 +291,7 @@ CREATE QUERY algo_louvain_enhanced(STRING vertex_type, STRING edge_type,
   start = SELECT s FROM start:s
     POST-ACCUM @@cluster_sizes += (s.@cid -> 1),s.communityId=s.@cid
   ;
-  log(TRUE, @@cluster_sizes.size());
+  LOG(TRUE, @@cluster_sizes.size());
   IF output_level ==0 THEN
     FOREACH (cluster, csize) IN @@cluster_sizes DO
       @@cluster_map += (csize -> 1);

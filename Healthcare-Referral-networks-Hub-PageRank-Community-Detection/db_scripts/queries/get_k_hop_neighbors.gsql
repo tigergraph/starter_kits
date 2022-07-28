@@ -12,5 +12,5 @@ CREATE OR REPLACE QUERY get_k_hop_neighbor(int k, vertex input) FOR GRAPH MyGrap
 	          POST-ACCUM t.@visited = TRUE;
 	END;
 	
-	print @@edgeList;
+	PRINT @@edgeList;
 }

@@ -8,8 +8,8 @@ CREATE QUERY person_knows_who(VERTEX <Person> source) FOR GRAPH connectivity SYN
   Source:276
 
 	DEMO - This query infers all of the people a particular person knows */ 
-  SumAccum<int> @knows_Count;
-	SetAccum <Vertex> @@person_Set;
+  	SumAccum<INT> @knows_Count;
+	SetAccum <VERTEX> @@person_Set;
 	
 	@@person_Set+= source;
 	startPerson = {source};
