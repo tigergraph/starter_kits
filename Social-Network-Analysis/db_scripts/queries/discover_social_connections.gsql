@@ -1,4 +1,4 @@
-CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int k) for graph connectivity SYNTAX v2
+CREATE QUERY discover_social_connections(VERTEX<Person> A, VERTEX<Person> B, INT k) for graph connectivity SYNTAX v2
 {
   
 	/* 
@@ -14,12 +14,12 @@ CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int
 	/***********************************
    * Variables for phase one
    ***********************************/
-   SumAccum<int> @score = 0;
-   OrAccum @know_A = false, @know_B = false;
-   SetAccum<edge> @evidence, @@edge_Set;
-   SetAccum<vertex> @@ver_Set;
+   SumAccum<INT> @score = 0;
+   OrAccum @know_A = FALSE, @know_B = FALSE;
+   SetAccum<EDGE> @evidence, @@edge_Set;
+   SetAccum<VERTEX> @@ver_Set;
 
-   bool isFirstIter = true;
+   BOOL isFirstIter = TRUE;
 
    L0 (ANY) = {A,B};
 
@@ -51,7 +51,7 @@ CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int
 
     // do it twice, go two steps to find the related citizens via 
     // hotel, flight, train, bus, case
-    log(true, " hotel, flight, train, bus, case");
+    LOG(true, " hotel, flight, train, bus, case");
     WHILE true LIMIT 2 DO
       L1 = SELECT t
            FROM L1:s-((hasHomeAddress|hasHotelStay|hasFlight|hasTrainRide|hasBusRide|hasCaseReport):e)-:t
@@ -71,7 +71,7 @@ CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int
     // go 4 steps, 
     // A/B-->PHONE NUMBER-->PHONE CALL-->PHONE NUMBER-->RELATED PEOPLE
     // A/B-->BANK ACCOUNT-->MONEY TRANS-->BANK ACCOUNT-->RELATED PEOPLE
-    log(true, "PHONE CALL, MONEY TRANS");
+    LOG(TRUE, "PHONE CALL, MONEY TRANS");
     L1 = SELECT t 
            FROM L1:s-((hasPhone|hasBankAccount):e)-:t 
            WHERE t.@score == 0
@@ -81,7 +81,7 @@ CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int
                  ,t.@evidence += s.@evidence
                  ,t.@evidence += e
     ;
-    WHILE true LIMIT 2 DO 
+    WHILE TRUE LIMIT 2 DO 
       L1 = SELECT t 
            FROM L1:s-((hasFundsTransfer|hasPhoneCall):e)-:t 
            WHERE t.@score == 0
@@ -106,24 +106,24 @@ CREATE QUERY discover_social_connections(vertex<Person> A, vertex<Person> B, int
     // add the newly found citizens to the related set
     RELATED = RELATED UNION L1;
 
-    log(true, "get COMMON_AB");
+    LOG(true, "get COMMON_AB");
     // Extract the people having common relations 
     // and keep the top k
     COMMON_AB = SELECT t
          FROM RELATED:t
-         WHERE t.@know_A == true AND t.@know_B == true
+         WHERE t.@know_A == TRUE AND t.@know_B == TRUE
          ORDER BY t.@score
          LIMIT k
     ;
 
-    COMMON_AB = SELECT s from COMMON_AB:s
+    COMMON_AB = SELECT s FROM COMMON_AB:s
                 ACCUM @@edge_Set += s.@evidence
     ;
 
-    IF isFirstIter == true THEN
+    IF isFirstIter == TRUE THEN
       // find the person that knows only A or B
       L0 = RELATED MINUS COMMON_AB;
-			log(true,L0.size());
+			LOG(true,L0.size());
     END;
     isFirstIter = false;
   END;

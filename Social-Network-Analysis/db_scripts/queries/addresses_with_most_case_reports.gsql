@@ -2,15 +2,15 @@ CREATE QUERY addresses_with_most_case_reports() FOR GRAPH connectivity API("v2")
 /**
 Find the top 10 addresses with the most number of case reports
 */
-  TYPEDEF TUPLE<vertex<Address> v, double f0> OrderTuple_3;
+  TYPEDEF TUPLE<VERTEX<Address> v, DOUBLE f0> OrderTuple_3;
 
-  SetAccum<vertex> @Agg_3_number_Of_People_With_Case_Reports_set;
-  SumAccum<int> @Agg_3_number_Of_People_With_Case_Reports;
+  SetAccum<VERTEX> @Agg_3_number_Of_People_With_Case_Reports_set;
+  SumAccum<INT> @Agg_3_number_Of_People_With_Case_Reports;
   HeapAccum<OrderTuple_3>(10, f0 DESC) @@Order_Heap_3;
-  SetAccum<vertex<Address>> @@Order_Vertex_Set_3;
-  SetAccum<edge> @@Final_Edge_Set_5;
-  SetAccum<vertex<Person>> @@Final_Vertex_Set_2;
-  SetAccum<vertex<Address>> @@Final_Vertex_Set_3;
+  SetAccum<VERTEX<Address>> @@Order_Vertex_Set_3;
+  SetAccum<EDGE> @@Final_Edge_Set_5;
+  SetAccum<VERTEX<Person>> @@Final_Vertex_Set_2;
+  SetAccum<VERTEX<Address>> @@Final_Vertex_Set_3;
 
   VertexSet_3 = 
         SELECT alias_schema_3
