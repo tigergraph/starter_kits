@@ -4,9 +4,9 @@ CREATE QUERY factorization(DOUBLE learning_rate = 0.001, DOUBLE regularization_f
 	// The query inputs are the learning rate, regularization_factor and the number of iterations
 	// The query output the root mean square error (RMSE) between the loaded matrix and the product of matrices U and the transpose of V for each iteration
 	ListAccum<DOUBLE> @tmp;
-	ArrayAccum<SumAccum<double>> @u[19];     // row vector of matrix U 
-	ArrayAccum<SumAccum<double>> @v[19];         // row vector of matrix V
-	ArrayAccum<SumAccum<double>> @Gradient[19];  // gradient of the row vector
+	ArrayAccum<SumAccum<DOUBLE>> @u[19];     // row vector of matrix U 
+	ArrayAccum<SumAccum<DOUBLE>> @v[19];         // row vector of matrix V
+	ArrayAccum<SumAccum<DOUBLE>> @Gradient[19];  // gradient of the row vector
 	SumAccum<DOUBLE> @@RMSE;            // RMSE for the training data
 	
 	// The length of row vectors is set as 19. This number has to be the same as the len_of_rowVector in the initialization query
@@ -39,7 +39,7 @@ CREATE QUERY factorization(DOUBLE learning_rate = 0.001, DOUBLE regularization_f
 	        POST-ACCUM
 	          s.@Gradient.reallocate(len_of_rowVector);
 
-  MATRIX_V = SELECT s FROM MATRIX_V:s
+  	MATRIX_V = SELECT s FROM MATRIX_V:s
 	        POST-ACCUM
 	          s.@Gradient.reallocate(len_of_rowVector);
 

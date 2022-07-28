@@ -1,15 +1,15 @@
 CREATE QUERY nested_expr_demo2() FOR GRAPH recommendation API("v2") SYNTAX v2 {
-  TYPEDEF TUPLE<vertex<demographic> v, double f0> OrderTuple_1;
+  TYPEDEF TUPLE<VERTEX<demographic> v, DOUBLE f0> OrderTuple_1;
 
   AvgAccum @Agg_1_avg_of_cf_affinity_times_df_affinity;
   HeapAccum<OrderTuple_1>(1, f0 DESC) @@Order_Heap_1;
-  SetAccum<vertex<demographic>> @@Order_Vertex_Set_1;
-  SetAccum<edge> @@Final_Edge_Set_4;
-  SetAccum<edge> @@Final_Edge_Set_6;
-  SetAccum<edge> @@Final_Edge_Set_5;
-  SetAccum<vertex<demographic>> @@Final_Vertex_Set_1;
-  SetAccum<vertex<customer>> @@Final_Vertex_Set_2;
-  SetAccum<vertex<feature>> @@Final_Vertex_Set_3;
+  SetAccum<VERTEX<demographic>> @@Order_Vertex_Set_1;
+  SetAccum<EDGE> @@Final_Edge_Set_4;
+  SetAccum<EDGE> @@Final_Edge_Set_6;
+  SetAccum<EDGE> @@Final_Edge_Set_5;
+  SetAccum<VERTEX<demographic>> @@Final_Vertex_Set_1;
+  SetAccum<VERTEX<customer>> @@Final_Vertex_Set_2;
+  SetAccum<VERTEX<feature>> @@Final_Vertex_Set_3;
 
   VertexSet_1 = 
         SELECT alias_schema_1

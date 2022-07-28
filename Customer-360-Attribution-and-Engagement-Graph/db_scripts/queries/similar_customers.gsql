@@ -63,6 +63,6 @@ CREATE QUERY similar_customers(VERTEX<Contact> source_customer,
             ORDER BY t.@similarity DESC
             LIMIT top_k;
 
-        //PRINT B;
+        // PRINT B;
         PRINT B[B.FirstName, B.LastName, B.@similarity];
 }

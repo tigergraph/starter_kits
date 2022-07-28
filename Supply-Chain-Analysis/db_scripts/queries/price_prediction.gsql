@@ -1,4 +1,4 @@
-create query price_prediction(set<string> input, int maxIteration, bool doUpdate) for graph demo_graph syntax v2
+create query price_prediction(SET<STRING> input, INT maxIteration, BOOL doUpdate) for graph demo_graph syntax v2
 {
   /* 
    With a set of string as input, in the format of PRODUCT_NAME,NEW_PRICE, recalculate the new price for the connected BOM subgraph.
@@ -13,43 +13,43 @@ create query price_prediction(set<string> input, int maxIteration, bool doUpdate
     doUpdate:false
   */
 
-  SumAccum<int> @@depth = 0;
-  MaxAccum<int> @max_Depth = 0;
-  OrAccum @visited_1 = false;
+  SumAccum<INT> @@depth = 0;
+  MaxAccum<INT> @max_Depth = 0;
+  OrAccum @visited_1 = FALSE;
 
-  OrAccum @is_Start = false;
+  OrAccum @is_Start = FALSE;
 
-  MapAccum<string,float> @@result;
-  MapAccum<string,float> @mapping;
-  MapAccum<string,int>   @amount_Map;
-  OrAccum @visited = false;
-  SumAccum<float> @new_price;
+  MapAccum<STRING,FLOAT> @@result;
+  MapAccum<STRING,FLOAT> @mapping;
+  MapAccum<STRING,INT>   @amount_Map;
+  OrAccum @visited = FALSE;
+  SumAccum<FLOAT> @new_price;
 
-  MapAccum<vertex,double> @@input_Map;
-  SetAccum<vertex> @@start_Set;
+  MapAccum<VERTEX,DOUBLE> @@input_Map;
+  SetAccum<VERTEX> @@start_Set;
 
-  SetAccum<edge> @@display_Set;
-  SetAccum<vertex> @@display_V;
+  SetAccum<EDGE> @@display_Set;
+  SetAccum<VERTEX> @@display_V;
 
-  String input_key = "";
-  String input_val = "";
+  STRING input_key = "";
+  STRING input_val = "";
 
   // parse the input strings and put them in to a vertex set
-  foreach str in input do
+  FOREACH str IN input DO
     GetKeyVal(str, input_key, input_val);
     @@input_Map += (to_vertex(input_key, "product") -> str_to_double(input_val));
     @@start_Set += to_vertex(input_key, "product");
-  end;
+  END;
 
   // traverse from the input vertexe set 
   Start = {@@start_Set};
 
-  Start1 = select s from Start:s
-          accum s.@is_Start = true,
-                s.@visited_1 = true,
-                s.@visited = true,
+  Start1 = SELECT s FROM Start:s
+          ACCUM s.@is_Start = TRUE,
+                s.@visited_1 = TRUE,
+                s.@visited = TRUE,
                 s.@new_price = @@input_Map.get(s)
-          post-accum s.price = @@input_Map.get(s)
+          POST-ACCUM s.price = @@input_Map.get(s)
   ;
 
   @@depth = 1;
@@ -57,28 +57,28 @@ create query price_prediction(set<string> input, int maxIteration, bool doUpdate
 
   // traverse down to the raw materials, each vertex will only serve as start
   // vertex for once, and mark them with their maximum depth value
-  while (Start1.size() > 0) limit maxIteration do
-    Start1 = select u
-        from Start1:o-(usedBy>)- product:u
-        post-accum 
+  WHILE (Start1.size() > 0) LIMIT maxIteration DO
+    Start1 = SELECT u
+        FROM Start1:o-(usedBy>)- product:u
+        POST-ACCUM
             // when start product is on the path of other start product
-            case when u.@is_Start == true then
+            CASE WHEN u.@is_Start == TRUE THEN
                 u.@max_Depth += @@depth
-            end,
+            END,
             // if first time visit just pass the depth along
-            case when u.@visited_1 == false then
+            CASE WHEN u.@visited_1 == FALSE THEN
                 u.@visited_1 = true
             // keep the largest depth
-            else 
+            ELSE 
                 u.@max_Depth += @@depth
-            end
-        having u.@max_Depth == 0;
+            END
+        HAVING u.@max_Depth == 0;
         @@depth += 1;
-  end;
+  END;
 
   // start from the input vertex set again
-  Start2 = select s from Start:s
-          where s.@max_Depth == 0;
+  Start2 = SELECT s FROM Start:s
+          WHERE s.@max_Depth == 0;
 
   // reset the depth
   @@depth = 1;
@@ -86,50 +86,50 @@ create query price_prediction(set<string> input, int maxIteration, bool doUpdate
   // traverse down to the raw materials again, each vertex will wait
   // until the iteration equals to its maximum depth value stored on it 
   // to calculate its new price
-  while (Start2.size() > 0) limit maxIteration do
+  WHILE (Start2.size() > 0) LIMIT maxIteration DO
     
-    print @@depth;
+    PRINT @@depth;
 
     // search first
-    Start2 = select u
-      from Start2:o -(usedBy>)- product:u
-      where (u.@max_Depth == 0 or u.@max_Depth <= @@depth) and u.@visited == false ;
+    Start2 = SELECT u
+      FROM Start2:o -(usedBy>)- product:u
+      WHERE (u.@max_Depth == 0 OR u.@max_Depth <= @@depth) AND u.@visited == FALSE;
 
     // then do the calculation
-    Start2 = select o
-      from Start2:o -(reverseUsedBy>:e)- product:u
-      accum case 
-          when u.@visited == true then  
+    Start2 = SELECT o
+      FROM Start2:o -(reverseUsedBy>:e)- product:u
+      ACCUM CASE
+          WHEN u.@visited == TRUE THEN
               o.@mapping += (e.formula_order->u.@new_price)
-          else 
+          ELSE 
               o.@mapping += (e.formula_order->u.price)
-          end
+          END
           ,o.@amount_Map += (e.formula_order->e.useAmount)
           ,@@display_Set += e
           ,@@display_V += u
-      post-accum
+      POST-ACCUM
             // dynamically evaluate the formula string stored as an attribute
-            string formula = o.formula,
-            foreach (key,val) in o.@mapping do
+            STRING formula = o.formula,
+            FOREACH (key,val) IN o.@mapping DO
               // replace the $1 string with the runtime value
               formula = replaceStr(formula,"$"+key,to_string(val*o.@amount_Map.get(key)))
-            end,
+            END,
             o.@new_price = evaluate(formula,"double"),
 
-            log(true,o.@new_price, formula, o.formula, o.name, o.@mapping),
+            LOG(TRUE,o.@new_price, formula, o.formula, o.name, o.@mapping),
 
-            case when doUpdate == true then
+            CASE WHEN doUpdate == TRUE THEN
               o.price = o.@new_price
-            end,
-            o.@visited =true
+            END,
+            o.@visited = TRUE
     ;
 
     @@depth += 1;
-  end;
+  END;
 
-  print @@display_Set;
+  PRINT @@display_Set;
 
   final = {@@display_V};
 
-  print final;
+  PRINT final;
 }

@@ -4,9 +4,9 @@ between airports by using their latitude and longitude coordinates.
 The calculated distances are measured in miles and are added as edge weights.
 */
 	
-	ListAccum<edge> @@dont_Change_List;
-	double pi = 3.14159265359; // pi
-	double R = 3958.8; // earth's radius in miles
+	ListAccum<EDGE> @@dont_Change_List;
+	DOUBLE pi = 3.14159265359; // pi
+	DOUBLE R = 3958.8; // earth's radius in miles
 	
 	//to_vertex_set("CNX-3931", "Airport");
 	
@@ -21,16 +21,16 @@ The calculated distances are measured in miles and are added as edge weights.
 	      IF overwrite == FALSE AND e.miles != 0 THEN
 	        @@dont_Change_List += e
 	      ELSE
-	          double lat1 = s.latitude * pi / 180, // lat1 to radians
-	          double lat2 = t.latitude * pi / 180, // lat2 to radians
-	          double deltalat = (t.latitude - s.latitude) * pi / 180, // lat change in radians
-	          double deltalong = (t.longitude - s.longitude) * pi / 180, // long change in radians
-	          double a = sin(deltalat/2) * sin(deltalat/2)
+	          DOUBLE lat1 = s.latitude * pi / 180, // lat1 to radians
+	          DOUBLE lat2 = t.latitude * pi / 180, // lat2 to radians
+	          DOUBLE deltalat = (t.latitude - s.latitude) * pi / 180, // lat change in radians
+	          DOUBLE deltalong = (t.longitude - s.longitude) * pi / 180, // long change in radians
+	          DOUBLE a = sin(deltalat/2) * sin(deltalat/2)
 	                     + cos(lat1) * cos(lat2)
 	                     * sin(deltalong/2) * sin(deltalong/2),
-	          //double atanp1 = sqrt(a), // temp
-	          //double atanp2 = sqrt(1-a), // temp
-	          double c = 2 * atan2(sqrt(a), sqrt(1-a)),
+	          //DOUBLE atanp1 = sqrt(a), // temp
+	          //DOUBLE atanp2 = sqrt(1-a), // temp
+	          DOUBLE c = 2 * atan2(sqrt(a), sqrt(1-a)),
 	          e.miles = ceil(R * c)
 	      END;
 	      PRINT @@dont_Change_List;

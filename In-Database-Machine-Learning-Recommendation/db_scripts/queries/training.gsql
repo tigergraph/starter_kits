@@ -4,9 +4,9 @@ CREATE QUERY training(DOUBLE learning_rate = 0.001, DOUBLE regularization_factor
 	//The query inputs are the learning rate, regularization_factor and the number of training iterations
 	//The query output the root mean square error (RMSE) for each iteration
 	ListAccum<DOUBLE> @tmp;
-	ArrayAccum<SumAccum<double>> @theta[19];     // movie latent factor vector
-	ArrayAccum<SumAccum<double>> @x[19];         // user latent factor vector
-	ArrayAccum<SumAccum<double>> @Gradient[19];  // gradient of the latent factor vector
+	ArrayAccum<SumAccum<DOUBLE>> @theta[19];     // movie latent factor vector
+	ArrayAccum<SumAccum<DOUBLE>> @x[19];         // user latent factor vector
+	ArrayAccum<SumAccum<DOUBLE>> @Gradient[19];  // gradient of the latent factor vector
 	SumAccum<DOUBLE> @@RMSE_training;            // RMSE for the training data
 	SumAccum<DOUBLE> @@RMSE_validation;          // RMSE for the validation data
 	AndAccum @label;

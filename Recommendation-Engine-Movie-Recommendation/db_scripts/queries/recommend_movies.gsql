@@ -1,8 +1,8 @@
-CREATE QUERY recommend_movies(vertex<person> p, int k1, int k2) FOR GRAPH MyGraph SYNTAX V2{
+CREATE QUERY recommend_movies(VERTEX<person> p, INT k1, INT k2) FOR GRAPH MyGraph SYNTAX V2{
  OrAccum @rated;
- SumAccum<double> @rating_ByP;
- SumAccum<double> @length_ASqr, @length_BSqr, @dot_ProductAB;
- SumAccum<double> @cosine_Similarity;
+ SumAccum<DOUBLE> @rating_ByP;
+ SumAccum<DOUBLE> @length_ASqr, @length_BSqr, @dot_ProductAB;
+ SumAccum<DOUBLE> @cosine_Similarity;
  AvgAccum @recommend_Score;
 
  PSet = { p };
@@ -10,7 +10,7 @@ CREATE QUERY recommend_movies(vertex<person> p, int k1, int k2) FOR GRAPH MyGrap
  PRatedMovies =
     SELECT m
     FROM PSet-(rate>:r)-movie:m
-    ACCUM m.@rated = true, m.@rating_ByP = r.rating;
+    ACCUM m.@rated = TRUE, m.@rating_ByP = r.rating;
 
  PeopleRatedSameMovies =
     SELECT tgt

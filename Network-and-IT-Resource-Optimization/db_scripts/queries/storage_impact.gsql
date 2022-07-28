@@ -13,7 +13,7 @@ CREATE QUERY storage_impact(string vertexType, vertex input) FOR GRAPH Storage S
     WHERE e.goUpper == TRUE
     ACCUM @@edgeList += e
     HAVING t.type != vertexType;
-  end;
+  END;
   
   PRINT @@edgeList;
 }

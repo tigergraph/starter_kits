@@ -2,10 +2,10 @@ CREATE QUERY conn_comp_enhanced (SET<VERTEX> vertex_types, STRING vt2,
         STRING edge_type, STRING rev_edge_type, INT output_level) FOR GRAPH MyGraph SYNTAX V2 {
 // This query identifies the Connected Components (undirected edges)
 
-        MinAccum<int> @cc_id = 0;       //each vertex's tentative component id
-        SumAccum<int> @old_id = 0;
-        OrAccum<bool> @active;
-        MapAccum<int, int> @@comp_sizes;
+        MinAccum<INT> @cc_id = 0;       //each vertex's tentative component id
+        SumAccum<INT> @old_id = 0;
+        OrAccum<BOOL> @active;
+        MapAccum<INT, INT> @@comp_sizes;
   
         start = {vertex_types};
 

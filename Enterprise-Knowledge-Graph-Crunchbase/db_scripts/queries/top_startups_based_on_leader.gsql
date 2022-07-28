@@ -127,7 +127,7 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
             AND c.status != "acquired"
             AND c.status != "ipo"
             AND e.title LIKE "%ounder%"
-            AND lower(trim(c.category_code)) == lower(trim(sector))
+            AND lower(trim(c.category_code)) == lower(TRIM(sector))
             AND datetime_diff(e.start_at, TNULL) != 0
             AND datetime_diff(e.end_at, TNULL) != 0
         ACCUM
@@ -155,7 +155,7 @@ CREATE QUERY top_startups_based_on_leader(STRING max_funding_round = "c",
         @@output_vertex_set += item.company;
     END;
 
-  // OUTPUT: Build sets of vertices and edges to output and display
+    // OUTPUT: Build sets of vertices and edges to output and display
     // The top `return_size` companies
     result = {@@output_vertex_set};
 

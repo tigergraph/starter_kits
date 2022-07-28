@@ -8,11 +8,11 @@ CREATE QUERY page_rank_pers (SET<VERTEX> source, FLOAT max_change, INT max_iter,
    a) it reaches max_iter iterations;
    b) the max score change for any vertex compared to the last iteration <= max_change.*/
 
-        TYPEDEF TUPLE<vertex Vertex_ID, FLOAT score> Vertex_Score;
+        TYPEDEF TUPLE<VERTEX Vertex_ID, FLOAT score> Vertex_Score;
         HeapAccum<Vertex_Score>(output_limit, score DESC) @@top_scores;
-        MaxAccum<float> @@max_diff = 9999; // max score change in an iteration
-        SumAccum<float> @received_score = 0; // sum of scores each vertex receives FROM neighbors
-        SumAccum<float> @score = 0;   // Initial score for every vertex is 0.
+        MaxAccum<FLOAT> @@max_diff = 9999; // max score change in an iteration
+        SumAccum<FLOAT> @received_score = 0; // sum of scores each vertex receives FROM neighbors
+        SumAccum<FLOAT> @score = 0;   // Initial score for every vertex is 0.
         SetAccum<EDGE> @@edge_set;                   // list of all edges, if display is needed
         OrAccum @is_source;   
        

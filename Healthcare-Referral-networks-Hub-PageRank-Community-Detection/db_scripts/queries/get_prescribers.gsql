@@ -18,5 +18,5 @@ CREATE OR REPLACE QUERY get_prescribers(vertex<Prescriber> inputPrescriber) FOR 
 	prescribers = SELECT t FROM claims-(submitted_by>:e)-:t
 	              ACCUM @@list +=e;
 	
-	print prescribers, @@list;
+	PRINT prescribers, @@list;
 }
