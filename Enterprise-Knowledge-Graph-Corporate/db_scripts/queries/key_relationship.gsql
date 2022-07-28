@@ -14,7 +14,7 @@ CREATE QUERY key_relationship(vertex<Company> company, int step)
    */
 
   OrAccum @visited = FALSE;
-  SetAccum<edge> @@edge_set;
+  SetAccum<EDGE> @@edge_set;
 
   INT loop_step;
 
