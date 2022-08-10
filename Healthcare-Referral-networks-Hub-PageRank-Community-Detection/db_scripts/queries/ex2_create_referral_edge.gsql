@@ -6,22 +6,22 @@ CREATE OR REPLACE QUERY ex2_create_referral_edge(VERTEX<Prescriber> inputPrescri
 	start_set = {inputPrescriber};
 	
 	claims = SELECT t FROM start_set:s-(<submitted_by:e)-:t
-	         POST-ACCUM t.@visited = TRUE;
+	         POST-ACCUM t.@visited = true;
 	
 	patients = SELECT t FROM claims:s-(associated>:e)-:t
 	           ACCUM t.@date_List += s.rx_fill_date;
 	
 	claims = SELECT t FROM patients:s-(<associated:e)-:t
-	         WHERE t.@visited == FALSE
+	         WHERE t.@visited == false
 	         ACCUM FOREACH dt in s.@date_List do
 	                 CASE WHEN datetime_diff(dt, t.rx_fill_date) BETWEEN 0 AND 2592000 THEN
-	                   t.@is_Referred_Claim = TRUE
+	                   t.@is_Referred_Claim = true
 	                 END
 	               END
-	         HAVING t.@is_Referred_Claim == TRUE;
+	         HAVING t.@is_Referred_Claim == true;
 	
 	prescribers = SELECT t FROM claims-(submitted_by>:e)-:t
 	              POST-ACCUM INSERT INTO referral VALUES(inputPrescriber, t, 1);
-	PRINT start_set;
+	print start_set;
 	
 }

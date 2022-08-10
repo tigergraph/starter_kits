@@ -14,7 +14,7 @@ FOR GRAPH AntiFraud syntax v2 {
     and received by the input user.
 
     Sample input:
-    receiver = Recommend to use 1223 as input. Or, try integer between 1 and 500.
+    receiver = 1223
 */
   
     SumAccum<INT> @num_messages_received;

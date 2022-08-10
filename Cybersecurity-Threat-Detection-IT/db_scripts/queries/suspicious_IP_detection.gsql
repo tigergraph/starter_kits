@@ -10,20 +10,20 @@ CREATE QUERY suspicious_IP_detection(vertex<IP> inputIP, int k) FOR GRAPH MyGrap
 	
 	start (ANY) = {inputIP};
 	
-	start = SELECT s from start:s POST-ACCUM s.@number_of_path = 1;
+	start = select s from start:s post-accum s.@number_of_path = 1;
 	
-	WHILE start.size() > 0 LIMIT k DO
-	  start = SELECT t FROM start:s-(:e)-:t
-	          WHERE t.@number_of_path == 0
-	          ACCUM t.@number_of_path += s.@number_of_path,
+	while start.size() > 0 limit k do
+	  start = select t from start:s-(:e)-:t
+	          where t.@number_of_path == 0
+	          accum t.@number_of_path += s.@number_of_path,
 	                t.@edges += e, t.@edges += s.@edges
-	          POST-ACCUM CASE WHEN t.banned == TRUE THEN
+	          post-accum case when t.banned == true then
 	                       @@shortest_path_to_banned_ip += t.@number_of_path,
 	                       @@banned_IP_set += t
-	                     END;
-	END;
+	                     end;
+	end;
 	
-	PRINT @@shortest_path_to_banned_ip;
+	print @@shortest_path_to_banned_ip;
 	start = @@banned_IP_set;
-	PRINT start;
+	print start;
 }

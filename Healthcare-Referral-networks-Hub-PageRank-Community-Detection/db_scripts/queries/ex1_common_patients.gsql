@@ -1,7 +1,7 @@
 CREATE OR REPLACE QUERY ex1_common_patients(vertex<Prescriber> Prescriber1, vertex<Prescriber> Prescriber2) FOR GRAPH MyGraph { 
   
 	  OrAccum @visited;
-    SetAccum<EDGE> @@edge_Set;
+    SetAccum<edge> @@edge_Set;
     Pre1 =  {Prescriber1};
     Pre2 =  {Prescriber2};
     // Step 1 – Start graph Traversal from first prescriber to find all associated claims. Use visited flag to remember claims visited.

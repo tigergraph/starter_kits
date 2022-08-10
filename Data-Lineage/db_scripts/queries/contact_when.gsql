@@ -5,64 +5,64 @@ CREATE QUERY contact_when(vertex<Contact> contact, datetime time) FOR GRAPH MyGr
     datetime: 2019-06-05
   */
   
-  TYPEDEF TUPLE <dtime datetime, attribute string, source string> updates;
+  typedef tuple <dtime datetime, attribute string, source string> updates;
   ListAccum<vertex> @@earliest_first;
-  HeapAccum<updates>(1,dtime DESC) @email_update;
-  HeapAccum<updates>(1,dtime DESC) @phone_update;
-  HeapAccum<updates>(1,dtime DESC) @title_update;
+  HeapAccum<updates>(1,dtime desc) @email_update;
+  HeapAccum<updates>(1,dtime desc) @phone_update;
+  HeapAccum<updates>(1,dtime desc) @title_update;
 
-  start = {contact};
+  Start = {contact};
   
-  get_updates = SELECT t FROM start:s-(wasUpdated:e)-ContactOnDate:t
-                WHERE t.modifiedDate <= time AND s.outdegree("wasUpdated") > 1
-                ORDER BY t.modifiedDate ASC;
+  get_updates = SELECT t FROM Start:s-(wasUpdated:e)-ContactOnDate:t
+               where t.modifiedDate <= time and s.outdegree("wasUpdated") > 1
+               order by t.modifiedDate asc;
   
-  PRINT get_updates;
+  print get_updates;
   
   updated_contacts = SELECT t FROM get_updates:s-(wasUpdated:e)-Contact:t
-                     ACCUM 
+                     accum 
                           @@earliest_first += get_updates,
-                          IF s.email != "" THEN
+                          if s.email != "" then
                             t.@email_update += updates(s.modifiedDate,s.email,s.source)
-                          END,
-                          IF s.phone != "" THEN
+                          end,
+                          if s.phone != "" then
                             t.@phone_update += updates(s.modifiedDate,s.phone,s.source)
-                          END,
-                          IF s.title != "" THEN
+                          end,
+                          if s.title != "" then
                             t.@title_update += updates(s.modifiedDate,s.title,s.source)
-                          END;
+                          end;
   
-  updated_contacts2 = SELECT t FROM get_updates:s-(wasUpdated:e)-Contact:t
-                      POST-ACCUM
-                      IF get_updates.size() > 0 THEN
-                      IF t.@email_update.size() > 0 THEN
+  updated_contacts2 = SELECT t from get_updates:s-(wasUpdated:e)-Contact:t
+                      post-accum
+                      if get_updates.size() > 0 then
+                      if t.@email_update.size() > 0 then
                           t.LastModifiedDate = t.@email_update.top().dtime,
                           t.LastModifiedByid = t.@email_update.top().source,
                           t.Email = t.@email_update.top().attribute,
-                          t.Updated = TRUE
-                      END,
-                      IF t.@phone_update.size() > 0 THEN
-                        IF t.@phone_update.top().dtime > t.@email_update.top().dtime THEN
+                          t.Updated = true
+                      end,
+                      if t.@phone_update.size() > 0 then
+                        if t.@phone_update.top().dtime > t.@email_update.top().dtime then
                           t.LastModifiedDate = t.@phone_update.top().dtime,
                           t.LastModifiedByid = t.@phone_update.top().source,
                           t.Phone = t.@phone_update.top().attribute,
-                          t.Updated = TRUE
-                        ELSE
+                          t.Updated = true
+                        else
                           t.Phone = t.@phone_update.top().attribute,
-                          t.Updated = TRUE 
-                        END
-                      END,
-                      IF t.@title_update.size() > 0 THEN
-                        IF t.@title_update.top().dtime > t.@email_update.top().dtime AND t.@title_update.top().dtime > t.@phone_update.top().dtime THEN
+                          t.Updated = true 
+                        end
+                      end,
+                      if t.@title_update.size() > 0 then
+                        if t.@title_update.top().dtime > t.@email_update.top().dtime and t.@title_update.top().dtime > t.@phone_update.top().dtime then
                           t.LastModifiedDate = t.@title_update.top().dtime,
                           t.LastModifiedByid = t.@title_update.top().source,
                           t.Title = t.@title_update.top().attribute,
-                          t.Updated = TRUE
-                        ELSE
+                          t.Updated = true
+                        else
                           t.Title = t.@title_update.top().attribute,
-                          t.Updated = TRUE 
-                        END 
-                      END
-                    END;
+                          t.Updated = true 
+                        end 
+                      end
+                    end;
   
 }

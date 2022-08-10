@@ -1,41 +1,41 @@
 CREATE QUERY common_customers(vertex<merchant_account> Merchant1, vertex<merchant_account> Merchant2) FOR GRAPH MyGraph { 
   OrAccum @visited;
-  SetAccum<EDGE> @@edge_set;
+  SetAccum<edge> @@edge_set;
   Mer1 =  {Merchant1};
   Mer2 =  {Merchant2};
 
-  // Step 1 – Start graph Traversal from first merchant to find all associated payments. Use visited flag to remember payments visited.
+  /* Step 1 – Start graph Traversal from first merchant to find all associated payments. Use visited flag to remember payments visited. */
   payments1 = SELECT t
               FROM Mer1:s -(reverse_receives_pmnt:e)-> payment:t
-              ACCUM t.@visited += TRUE;
+              ACCUM t.@visited += true;
  
   //PRINT payments1;
-  // Step 2 – For those payments, find all the linked customers.
+  /* Step 2 – For those payments, find all the linked customers. */
   customer1 = SELECT t
               FROM payments1:s -(reverse_sends:e)-> user_account:t
-              ACCUM t.@visited += TRUE;
+              ACCUM t.@visited += true;
 
   //PRINT customer1;
-  // Step 3 Start graph traversal from second merchant to find all payments
+  /* Step 3 Start graph traversal from second merchant to find all payments */
   payments2 = SELECT t
               FROM Mer2:s -(reverse_receives_pmnt:e)-> payment:t
-              ACCUM t.@visited += TRUE;
+              ACCUM t.@visited += true;
 
   //PRINT payments2;
-  // Step 4 – Find common customers by starting from payments in Step 3
+  /* Step 4 – Find common customers by starting from payments in Step 3 */    
   common_customers = SELECT t
                      FROM payments2:s -(reverse_sends:e)-> user_account:t
                      WHERE t.@visited == TRUE;
    PRINT common_customers;
   
-  // Step 5 – From common customers find all payments that have been visited in earlier steps. Collect the edges so they can be printed.
+  /* Step 5 – From common customers find all payments that have been visited in earlier steps. Collect the edges so they can be printed.*/    
   payments = SELECT t
              FROM common_customers:s -(sends:e)-> payment:t
              WHERE t.@visited == TRUE
              ACCUM @@edge_set += e;
   PRINT payments;
 
-  // Step 6 – From payments find associated merchants. Collect and print edges (payments – merchants) and merchants.
+  /* Step 6 – From payments find associated merchants. Collect and print edges (payments – merchants) and merchants. */
   merchant = SELECT t
              FROM payments:s -(receives_pmnt:e)-> merchant_account:t
              ACCUM @@edge_set += e;

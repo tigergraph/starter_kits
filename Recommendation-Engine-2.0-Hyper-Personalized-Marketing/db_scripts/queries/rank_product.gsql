@@ -19,20 +19,20 @@ CREATE QUERY rank_product(VERTEX <customer> sourceCustomer, STRING weather, STRI
 	
 	start = {sourceCustomer};
 	
-	IF timeOfDay!="" THEN minFilters = minFilters + 1; END;
-	IF weather!="" THEN minFilters = minFilters + 1; END;
+	if timeOfDay!="" then minFilters = minFilters + 1; end;
+	if weather!="" then minFilters = minFilters + 1; end;
 	
 	candidateProducts = product.* ; // start with all products
 	
-	IF minFilters!=0 THEN
+	if minFilters!=0 THEN
 	  candidateProducts = 
-	    SELECT p FROM candidateProducts:p -(product_context:pc)- context:c
+	    SELECT p from candidateProducts:p -(product_context:pc)- context:c
 	    WHERE c.id==weather OR c.id==timeOfDay
 	    ACCUM p.@filters += 1
 	    HAVING p.@filters >= minFilters;
 	
 	  candidateProducts = 
-	    SELECT p FROM candidateProducts:p
+	    SELECT p from candidateProducts:p
 	    POST-ACCUM p.@candidate_Flag = 1; // The secret!
 	END;
 	

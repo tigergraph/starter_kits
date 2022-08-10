@@ -7,5 +7,5 @@ CREATE OR REPLACE QUERY get_claims(vertex<Prescriber> inputPrescriber) FOR GRAPH
 	claims = SELECT t FROM start_set:s-(<submitted_by:e)-:t
 	         ACCUM @@list += e;
 	
-	PRINT claims, @@list;
+	print claims, @@list;
 }

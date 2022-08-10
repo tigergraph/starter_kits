@@ -1,5 +1,5 @@
 CREATE QUERY score_similar_attributes(
-  BOOL do_last_name=TRUE, BOOL do_address=TRUE, BOOL print_only=FALSE)
+  bool do_last_name=TRUE, bool do_address=TRUE, bool print_only=FALSE)
   FOR GRAPH Entity_Resolution
 SYNTAX v2 { 
   /* Considering only User-User pairs where this is already some match

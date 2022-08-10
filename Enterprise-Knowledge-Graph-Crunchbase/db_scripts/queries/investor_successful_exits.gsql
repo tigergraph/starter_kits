@@ -86,7 +86,7 @@ CREATE QUERY investor_successful_exits(STRING investor_name="Accel Partners",
 
     // Trace back from exits to investor, to get output vertices & edges
     children = {@@result_vertex_set};
-    PRINT children.size() AS Num_Successful_Exits;
+    PRINT children.size() as Num_Successful_Exits;
     WHILE(children.size() > 0) DO
         start = SELECT s
                 FROM children :s
@@ -101,8 +101,8 @@ CREATE QUERY investor_successful_exits(STRING investor_name="Accel Partners",
 
     // Output the results
     results = {@@result_vertex_set}; // convert so to output more that just id
-    // PRINT results.size() AS num_vertices;
-    // PRINT @@result_edge_set.size() AS num_edges;
+    //PRINT results.size() AS num_vertices;
+    //PRINT @@result_edge_set.size() AS num_edges;
     PRINT investor;    
     PRINT results;
     PRINT @@result_edge_set;

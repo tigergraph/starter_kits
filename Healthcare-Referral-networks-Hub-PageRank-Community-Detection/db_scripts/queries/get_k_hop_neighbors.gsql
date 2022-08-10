@@ -7,10 +7,10 @@ CREATE OR REPLACE QUERY get_k_hop_neighbor(int k, vertex input) FOR GRAPH MyGrap
 	
 	WHILE start.size() > 0 limit k DO
 	  start = SELECT t from start-(:e)-:t
-	          WHERE t.@visited == FALSE
+	          WHERE t.@visited == false
 	          ACCUM @@edgeList += e
-	          POST-ACCUM t.@visited = TRUE;
+	          POST-ACCUM t.@visited = true;
 	END;
 	
-	PRINT @@edgeList;
+	print @@edgeList;
 }

@@ -1,15 +1,15 @@
 create query show_whole_graph () for graph demo_graph syntax v2
 {
   // print all vertexes and edges
-  SetAccum<EDGE> @@display_Set;
+  SetAccum<edge> @@display_Set;
 
   Start = {ANY};
 
-  PRINT Start;
+  print Start;
 
-  Start = SELECT s 
-          FROM Start:s-((prodOrder|prodStocking|usedBy>|produce>|deliver>):e)-:t
-          ACCUM @@display_Set += e;
+  Start = select s 
+          from Start:s-((prodOrder|prodStocking|usedBy>|produce>|deliver>):e)-:t
+          accum @@display_Set += e;
 
-  PRINT @@display_Set;  
+  print @@display_Set;  
 }

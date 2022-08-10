@@ -9,9 +9,9 @@ CREATE QUERY age_distribution() FOR GRAPH MyGraph SYNTAX V2 {
   MapAccum<int, int> @@age_map;
 	start = {Patient.*};
 	
-	start = SELECT s FROM start:s
-	        WHERE s.state != "deceased"
-	        ACCUM @@age_map += ((year(now()) - s.birth_year) -> 1);
+	start = select s from start:s
+	        where s.state != "deceased"
+	        accum @@age_map += ((year(now()) - s.birth_year) -> 1);
 	
-	PRINT @@age_map;
+	print @@age_map;
 }

@@ -1,4 +1,4 @@
-CREATE QUERY nested_expression(SET<VERTEX<customer>> p, SET<VERTEX<context>> c) FOR GRAPH recommendation API("v2") SYNTAX v2 {
+CREATE QUERY nested_expression(set<vertex<customer>> p, set<vertex<context>> c) FOR GRAPH recommendation API("v2") SYNTAX v2 {
 /**
 Recommend the highest rated product for a customer while taking into account the weather and the time of the day.
 
@@ -6,18 +6,18 @@ input:
 p: C001
 c: GW
 */
-  TYPEDEF TUPLE<VERTEX<product> v, DOUBLE f0> OrderTuple_3;
+  TYPEDEF TUPLE<vertex<product> v, double f0> OrderTuple_3;
 
   AvgAccum @Agg_3_avg_score;
   HeapAccum<OrderTuple_3>(1, f0 DESC) @@Order_Heap_3;
-  SetAccum<VERTEX<product>> @@Order_Vertex_Set_3;
-  SetAccum<EDGE> @@Final_Edge_Set_5;
-  SetAccum<EDGE> @@Final_Edge_Set_6;
-  SetAccum<EDGE> @@Final_Edge_Set_7;
-  SetAccum<VERTEX<customer>> @@Final_Vertex_Set_1;
-  SetAccum<VERTEX<feature>> @@Final_Vertex_Set_2;
-  SetAccum<VERTEX<product>> @@Final_Vertex_Set_3;
-  SetAccum<VERTEX<context>> @@Final_Vertex_Set_4;
+  SetAccum<vertex<product>> @@Order_Vertex_Set_3;
+  SetAccum<edge> @@Final_Edge_Set_5;
+  SetAccum<edge> @@Final_Edge_Set_6;
+  SetAccum<edge> @@Final_Edge_Set_7;
+  SetAccum<vertex<customer>> @@Final_Vertex_Set_1;
+  SetAccum<vertex<feature>> @@Final_Vertex_Set_2;
+  SetAccum<vertex<product>> @@Final_Vertex_Set_3;
+  SetAccum<vertex<context>> @@Final_Vertex_Set_4;
 
   VertexSet_1 = { p };
   VertexSet_4 = { c };

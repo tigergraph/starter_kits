@@ -1,10 +1,10 @@
 CREATE QUERY flooding_detection(/* Parameters here */) FOR GRAPH MyGraph { 
   
-  /* this query detects the addresses that flooded one service with large number of requests.
-     and possibly the ip addresses have logged in to many accounts 
-     [IP] -> [login event] -> [user id] -> [request event] -> [service] */
+  // this query detects the addresses that flooded one service with large number of requests.
+  // and possibly the ip addresses have logged in to many accounts 
+  // [IP] -> [login event] -> [user id] -> [request event] -> [service]
   
-  TYPEDEF TUPLE<vertex entity, vertex service, int cnt, float mean, float std> result_tuple;
+  TypeDef tuple<vertex entity, vertex service, int cnt, float mean, float std> result_tuple;
   AvgAccum @mean;
   SumAccum<float> @std;
   MapAccum<vertex, SumAccum<int>> @count_map;
@@ -12,40 +12,40 @@ CREATE QUERY flooding_detection(/* Parameters here */) FOR GRAPH MyGraph {
   
   IPs = {IP.*};
   
-  login_events = SELECT event FROM IPs-(Has_IP)-:event
-                 WHERE event.Event_Type == "login"
-                 ACCUM event.@count_map += (IPs->1);
+  login_events = select event from IPs-(Has_IP)-:event
+                 where event.Event_Type == "login"
+                 accum event.@count_map += (IPs->1);
   
-  users = SELECT user FROM login_events-(User_Event)-:user
-          ACCUM user.@count_map += login_events.@count_map;
+  users = select user from login_events-(User_Event)-:user
+          accum user.@count_map += login_events.@count_map;
   
-  events = SELECT event FROM users-(User_Event:e)-:event
+  events = select event from users-(User_Event:e)-:event
            where event.Event_Type == "request"
-           ACCUM event.@count_map += users.@count_map;
+           accum event.@count_map += users.@count_map;
   
-  services = SELECT s FROM events-(To_Service)-:s
-             ACCUM s.@count_map += events.@count_map
-             POST-ACCUM
-               CASE WHEN s.@count_map.size() > 1 THEN
+  services = select s from events-(To_Service)-:s
+             accum s.@count_map += events.@count_map
+             post-accum
+               case when s.@count_map.size() > 1 then
                  // calculate the mean
-                 FOREACH (user,cnt) in s.@count_map DO
+                 foreach (user,cnt) in s.@count_map do
                    s.@mean += cnt
-                 END,
+                 end,
                  // calculate the standard deviation
-                 FOREACH (user,cnt) in s.@count_map DO
+                 foreach (user,cnt) in s.@count_map do
                    s.@std += pow(cnt - s.@mean, 2)
-                 END,
+                 end,
                  s.@std = sqrt(s.@std/(s.@count_map.size()-1)),
-                 CASE WHEN s.@std != 0 THEN
+                 case when s.@std != 0 then
                    // calculate the out lier
-                   FOREACH (user,cnt) IN s.@count_map DO
-                     CASE WHEN cnt-s.@mean > 3*s.@std THEN
+                   foreach (user,cnt) in s.@count_map do
+                     case when cnt-s.@mean > 3*s.@std then
                        @@result_list += result_tuple(user,s,cnt,s.@mean,s.@std)
-                     END
-                   END
-                 END
-               END;
+                     end
+                   end
+                 end
+               end;
   
-  PRINT @@result_list;
-  PRINT services;
+  print @@result_list;
+  print services;
 }

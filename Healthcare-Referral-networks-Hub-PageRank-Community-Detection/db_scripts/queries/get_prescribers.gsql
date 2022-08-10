@@ -6,17 +6,17 @@ CREATE OR REPLACE QUERY get_prescribers(vertex<Prescriber> inputPrescriber) FOR 
 	
 	claims = SELECT t FROM start_set:s-(<submitted_by:e)-:t
 	         ACCUM @@list += e
-	         POST-ACCUM t.@visited = TRUE;
+	         POST-ACCUM t.@visited = true;
 	
 	patients = SELECT t FROM claims:s-(associated>:e)-:t
 	           ACCUM @@list +=e;
 	
 	claims = SELECT t FROM patients:s-(<associated:e)-:t
-	         WHERE t.@visited == FALSE
+	         WHERE t.@visited == false
 	         ACCUM @@list +=e;
 	
 	prescribers = SELECT t FROM claims-(submitted_by>:e)-:t
 	              ACCUM @@list +=e;
 	
-	PRINT prescribers, @@list;
+	print prescribers, @@list;
 }

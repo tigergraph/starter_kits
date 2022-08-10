@@ -9,9 +9,9 @@ CREATE QUERY all_updates(vertex<Contact> input) FOR GRAPH MyGraph {
   
     start = {input};
   
-    get_updates = SELECT t FROM start:s-(wasUpdated:e)-ContactOnDate:t
-               ACCUM @@specific_person_set += s, @@specific_person_set += t;
+    get_updates = SELECT t from start:s-(wasUpdated:e)-ContactOnDate:t
+               accum @@specific_person_set += s, @@specific_person_set += t;
   
     print_set = @@specific_person_set;
-    PRINT print_set;
+    print print_set;
 }

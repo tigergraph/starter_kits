@@ -10,24 +10,24 @@ CREATE QUERY cust_journey_subgraph(vertex<Contact> customer,
 
   cust = { customer };
     
-  acct = SELECT t FROM cust:c -(belongs_to:e)-> Account:t
-         ACCUM @@display_set += e, @@vertex_set += t;
+  acct = select t from cust:c -(belongs_to:e)-> Account:t
+         accum @@display_set += e, @@vertex_set += t;
   
-    opp = SELECT t FROM cust -(Has_Role:e)-> Opportunity:t 
-        ACCUM @@display_set += e, @@vertex_set += t;
+    opp = select t from cust -(Has_Role:e)-> Opportunity:t 
+        accum @@display_set += e, @@vertex_set += t;
   
   campaign_members =
-          SELECT t
-          FROM cust -(is_connected_to:e)-> CampaignMember:t
-          ACCUM @@vertex_set += cust, @@vertex_set += t, @@display_set += e;
+          select t
+          from cust -(is_connected_to:e)-> CampaignMember:t
+          accum @@vertex_set += cust, @@vertex_set += t, @@display_set += e;
   
-  campaigns = SELECT t FROM campaign_members -(is_part_of:e)-> Campaign:t
-              ACCUM @@vertex_set += t, @@display_set += e;
+  campaigns = select t from campaign_members -(is_part_of:e)-> Campaign:t
+              accum @@vertex_set += t, @@display_set += e;
   
   verts = @@vertex_set;
   
-  PRINT verts;
-  // print@@vertex_set;
+  print verts;
+  //print@@vertex_set;
 
-  PRINT @@display_set;
+  print @@display_set;
 }

@@ -8,7 +8,7 @@ CREATE QUERY account_matching(vertex<Account> input_acc, float threshold) FOR GR
 	 *   threshold : 0.6
 	 *******************************************************/
 	
-	SumAccum<FLOAT> @score;
+	SumAccum<float> @score;
 	
 	start = {input_acc};
 	

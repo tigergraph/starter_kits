@@ -2,5 +2,5 @@ CREATE OR REPLACE QUERY ex2_main_query(/* Parameters here */) FOR GRAPH MyGraph 
 	
 	all_prescribers = select s from Prescriber:s accum ex2_create_referral_edge(s);
   
-  PRINT all_prescribers;
+  print all_prescribers;
 }

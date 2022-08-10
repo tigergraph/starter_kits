@@ -13,10 +13,10 @@ CREATE QUERY key_relationship(vertex<Company> company, int step)
 	 * 7. company: Discipline Base Perfume, step 4
    */
 
-  OrAccum @visited = FALSE;
-  SetAccum<EDGE> @@edge_set;
+  OrAccum @visited = false;
+  SetAccum<edge> @@edge_set;
 
-  INT loop_step;
+  int loop_step;
 
   // limit the maximum traverse steps
   IF (step > 8) THEN
@@ -32,7 +32,7 @@ CREATE QUERY key_relationship(vertex<Company> company, int step)
 
 	start = 	SELECT s
 						 	FROM start:s
-							ACCUM s.@visited = TRUE;
+							ACCUM s.@visited = true;
 
 	WHILE (true) LIMIT loop_step DO
 		start =	SELECT tgt

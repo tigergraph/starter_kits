@@ -4,32 +4,32 @@ The JSON version also show visualization of the network.
 The attribute version only store the distance into attribute, not the path.
 */
 
-        MinAccum<INT> @dis;
+        MinAccum<int> @dis;
         OrAccum @visited;
-        ListAccum<VERTEX> @path;
-        SetAccum<EDGE> @@edge_set;
+        ListAccum<vertex> @path;
+        SetAccum<edge> @@edge_set;
 
-  // Initialization  
+  ##### Initialization  #####
         source_set = {source};
         source_set = SELECT s 
                      FROM source_set:s
-                     ACCUM s.@visited += TRUE, 
+                     ACCUM s.@visited += true, 
                           s.@dis = 0,
                           s.@path = s; 
         result_set = {source};
 
-  // Calculate distances and paths 
+  ##### Calculate distances and paths #####
         WHILE(source_set.size()>0) DO
                 source_set = SELECT t
                          FROM source_set:s -(:e)- :t
-                         WHERE t.@visited == FALSE
+                         WHERE t.@visited == false
                          ACCUM t.@dis += s.@dis + 1,
                                t.@path = s.@path + [t],
-                               t.@visited += TRUE;
+                               t.@visited += true;
                 result_set = result_set UNION source_set;
         END;
 
-  // Print the results 
+  ##### Print the results #####
 
         PRINT result_set[result_set.@dis, result_set.@path];
         IF display THEN

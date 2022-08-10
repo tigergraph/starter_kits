@@ -22,40 +22,68 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
     MapAccum<INT, FLOAT> @weight_to_cluster;  // weight from one vertex incident to that cluster
 
     SumAccum<FLOAT> @@total_weight;   // total weight of all edges
+
     SumAccum<FLOAT> @weight;          // total weight incident to this vertex
+
     SumAccum<FLOAT> @cweight;       // total weight incident to this aggregate vertex
+
     SumAccum<INT> @uid;        // which vertex it belongs to
+
     SumAccum<INT> @cid;        // which cluster it belongs to
+
     SumAccum<INT> @vid;        // internal id
+
     SumAccum<FLOAT> @delta_Q;         // contribution to the modularity
+
     SumAccum<FLOAT> @@modularity;
+
     SumAccum<FLOAT> @@modularity2;
 
     MapAccum<INT, MapAccum<INT, FLOAT>> @@weight_to_cluster_map;   // calculate edges between communities 
+
     MapAccum<INT, SetAccum<INT>> @@move_comm; // map of communities that changed its community id
+
     MapAccum<INT, MinAccum<VERTEX>> @@represent_map;
+
     SetAccum<VERTEX> @@represent_set;
+
     MapAccum<INT, FLOAT> @@vertex_map;
+
     MapAccum<INT, MapAccum<INT, FLOAT>> @@edge_map;
+
     HeapAccum<cluster_num>(100, csize ASC) @@cluster_dist;
+
     MapAccum<INT, INT> @@cluster_map;
+
     MapAccum<INT, ListAccum<INT>> @@cluster_members;
 
     FLOAT last_modularity = 0;
+
     FLOAT last_modularity2 = 0;
+
     INT iteration;
+
     INT Iter1; 
+
     FLOAT epsilon = 0.0001;
+
     INT iteration2;
+
     INT partitions;
+
     INT loop;
+
     INT debug = 0;  // debug: 0, no modularity info; 1, show debug log; 2, modularity for each iteration
+
+
 
     partitions = split;
 
     CASE WHEN split < 1 THEN
         partitions = 1;
     END;
+
+        
 
 // Initialize: count edges and set a unique cluster ID for each vertex
     Start (ANY) = {Prescriber.*};
@@ -89,7 +117,9 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
 
     @@modularity = @@modularity / @@total_weight;                      
     PRINT iteration AS Phase1Iter, @@modularity;
-    LOG(debug > 0, "[redrain]//move", iteration, @@modularity);
+    log(debug > 0, "[redrain]//move", iteration, @@modularity);
+
+        
 
 // Phase 1 -- Move
 
@@ -147,7 +177,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
                  ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@total_weight);
             @@modularity = @@modularity / @@total_weight;                      
             PRINT iteration AS Phase1Iter, @@modularity;
-            LOG(debug > 0, "[redrain]//move", iteration, @@modularity);
+            log(debug > 0, "[redrain]//move", iteration, @@modularity);
         END;
 
 // Phase 2 --  Merge     
@@ -169,7 +199,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         represent = {@@represent_set};
         @@represent_map.clear();
         @@represent_set.clear();
-        LOG(debug > 0, "[redrain]//2_merge", represent.size()); //@@cluster_sizes.size());
+        log(debug > 0, "[redrain]//2_merge", represent.size()); //@@cluster_sizes.size());
 
     // Get @cweight from totalIncident
         represent = SELECT s
@@ -177,7 +207,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
                     ACCUM s.@cweight = @@tot_incident_cluster.get(s.@uid),
                           @@cluster_sizes += (s.@cid -> 1);
 
-        LOG(debug > 1, "[redrain]//2_merge", @@weight_to_cluster_map.size());
+        log(debug > 1, "[redrain]//2_merge", @@weight_to_cluster_map.size());
         iteration = 0;
         last_modularity = 0;
         @@modularity = 0;
@@ -236,7 +266,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
                 ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@total_weight);
                 @@modularity = @@modularity / @@total_weight;
                 PRINT iteration AS Phase1Iter, @@modularity;
-            LOG(debug > 0, "[redrain]//2_move", iteration, @@modularity);
+            log(debug > 0, "[redrain]//2_move", iteration, @@modularity);
         END;
         
         S = SELECT s
@@ -247,7 +277,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
         last_modularity2 = @@modularity2;
         @@modularity2 = @@modularity;
         PRINT iteration2 AS Phase2Iter, @@modularity2;
-        LOG(debug > 0, "[redrain]//2_merge", iteration2, @@modularity2);
+        log(debug > 0, "[redrain]//2_merge", iteration2, @@modularity2);
                                       
     END;
         
@@ -287,7 +317,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
              ACCUM @@modularity += e.num_patient - s.@weight * t.@weight / (@@total_weight);
         @@modularity = @@modularity / @@total_weight;                      
         PRINT iteration AS Phase3Iter, @@modularity;
-        LOG(debug > 0, "[redrain]//refine", iteration, @@modularity);
+        log(debug > 0, "[redrain]//refine", iteration, @@modularity);
     END;
     
             
@@ -296,7 +326,7 @@ CREATE OR REPLACE QUERY algo_louvain(INT iter1 = 10, INT iter2 = 10,
     Start = SELECT s FROM Start:s
             POST-ACCUM @@cluster_sizes += (s.@cid -> 1),s.communityId=s.@cid
                        ;
-    LOG(TRUE, @@cluster_sizes.size());
+    log(TRUE, @@cluster_sizes.size());
     IF output_level ==0 THEN
         FOREACH (cluster, csize) IN @@cluster_sizes DO
             @@cluster_map += (csize -> 1);

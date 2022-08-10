@@ -1,22 +1,22 @@
 CREATE QUERY conn_comp (STRING vertex_type, STRING edge_type, STRING rev_edge_type) 
         FOR GRAPH MyGraph SYNTAX V2 {
-// This query identifies the Connected Components (undirected edges)
+# This query identifies the Connected Components (undirected edges)
 
-        MinAccum<INT> @cc_id = 0;       //each vertex's tentative component id
-        SumAccum<INT> @old_id = 0;
-        OrAccum<BOOL> @active;
-        MapAccum<INT, INT> @@comp_sizes;
+        MinAccum<int> @cc_id = 0;       //each vertex's tentative component id
+        SumAccum<int> @old_id = 0;
+        OrAccum<bool> @active;
+        MapAccum<int, int> @@comp_sizes;
   
         start = {vertex_type};
 
-// Initialize: Label each vertex with its own internal ID
+# Initialize: Label each vertex with its own internal ID
         S = SELECT x 
             FROM start:x
             POST-ACCUM x.@cc_id = getvid(x),
                        x.@old_id = getvid(x)        
             ;
 
-// Propagate smaller internal IDs until no more ID changes can be DOne
+# Propagate smaller internal IDs until no more ID changes can be DOne
         WHILE (start.size()>0) DO
                 start = SELECT t
                         FROM start:s -((edge_type|rev_edge_type):e)- :t
@@ -24,11 +24,11 @@ CREATE QUERY conn_comp (STRING vertex_type, STRING edge_type, STRING rev_edge_ty
                         POST-ACCUM
                                 CASE WHEN t.@old_id != t.@cc_id THEN // If t's id has changed
                                         t.@old_id = t.@cc_id,
-                                        t.@active = TRUE
+                                        t.@active = true
                                 ELSE 
-                                        t.@active = FALSE
+                                        t.@active = false
                                 END
-                        HAVING t.@active == TRUE
+                        HAVING t.@active == true
                         ;
         END;
 

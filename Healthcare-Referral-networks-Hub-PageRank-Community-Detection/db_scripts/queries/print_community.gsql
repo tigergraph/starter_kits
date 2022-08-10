@@ -1,20 +1,20 @@
-CREATE OR REPLACE QUERY print_community(VERTEX<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
+CREATE OR REPLACE QUERY print_community(vertex<Prescriber> inputPrescriber) FOR GRAPH MyGraph { 
   /* Write query logic here */ 
   //PRINT "Print_community works!";
 	
 	ListAccum<EDGE> @@edgeList;
 	
-	SumAccum<INT> @@cid;
+	SumAccum<int> @@cid;
 	
 	Start={inputPrescriber};
-	Start= SELECT s FROM Start:s POST-ACCUM @@cid += s.communityId;
+	Start=Select s from Start:s post-accum @@cid += s.communityId;
 	
 	Start = {Prescriber.*};
 	
-	Start = SELECT s FROM Start:s-(referral>:e)-:t 
-	        WHERE s.communityId == @@cid AND s.communityId == t.communityId
-	        ACCUM @@edgeList += e;
+	Start = select s from Start:s-(referral>:e)-:t 
+	        where s.communityId == @@cid and s.communityId == t.communityId
+	        accum @@edgeList += e;
 	
-	PRINT Start;
-	PRINT @@edgeList;
+	print Start;
+	print @@edgeList;
 }

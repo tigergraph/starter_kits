@@ -21,7 +21,7 @@ CREATE OR REPLACE QUERY circleDetection (vertex<User> srcId)  FOR GRAPH AntiFrau
   MinAccum<int> @@minSrcSendTime = GSQL_INT_MAX;
   MaxAccum<int> @@maxSrcReceiveTime = 0;
 
-  OrAccum @isValid = FALSE;//flag used to record valid vertices in the subgraph
+  OrAccum @isValid = false;//flag used to record valid vertices in the subgraph
 
   int stepLowLimit = 3;
   int stepHighLimit = 6;
@@ -35,7 +35,7 @@ CREATE OR REPLACE QUERY circleDetection (vertex<User> srcId)  FOR GRAPH AntiFrau
   ListAccum<ListAccum<EdgeTuple>> @edgeTupleList;
   ListAccum<ListAccum<EdgeTuple>> @newEdgeTupleList;
   ListAccum<ListAccum<EdgeTuple>> @@circleEdgeTuples;
-  OrAccum @receiveNewPath = FALSE;
+  OrAccum @receiveNewPath = false;
 
   //The following is used for printing edges and vertices
   SetAccum<vertex> @@vSet;
@@ -261,7 +261,7 @@ CREATE OR REPLACE QUERY circleDetection (vertex<User> srcId)  FOR GRAPH AntiFrau
             END
         END,
         //reset receiveNewPath as false
-        tgt.@receiveNewPath = FALSE
+        tgt.@receiveNewPath = false
       POST-ACCUM
         CASE 
           WHEN tgt.@newEdgeTupleList.size() > 0
@@ -286,7 +286,7 @@ CREATE OR REPLACE QUERY circleDetection (vertex<User> srcId)  FOR GRAPH AntiFrau
           END
         END,
         //reset receiveNewPath as false
-        tgt.@receiveNewPath = FALSE
+        tgt.@receiveNewPath = false
       POST-ACCUM
         CASE 
           WHEN tgt.@newEdgeTupleList.size() > 0
@@ -347,10 +347,10 @@ CREATE OR REPLACE QUERY SameRecieverSender(vertex<Transaction> transaction) FOR 
   ;
 
   // traverse for 4 steps, or the paths of sender and reciever meets each other
-  WHILE Start.size() > 0 AND @@isSame == FALSE LIMIT 4 DO
+  WHILE Start.size() > 0 AND @@isSame == false LIMIT 4 DO
     Start = SELECT t FROM Start:s-((User_to_Device|User_to_Payment):e)-:t
             // do not traverse the vertexes that were visited
-            WHERE t.@fromReciever == FALSE AND t.@fromSender == FALSE
+            WHERE t.@fromReciever == false AND t.@fromSender == false
             ACCUM t.@fromReciever += s.@fromReciever,
                   t.@fromSender += s.@fromSender
                   ,@@edgeSet += e
@@ -414,7 +414,7 @@ CREATE OR REPLACE QUERY MultiTransaction (VERTEx<Transaction> transaction) FOR G
   //users to the receiver set 
   WHILE Start.size() > 0 LIMIT 4 DO
     Start = SELECT t FROM Start:s-((User_to_Device|User_to_Payment):e)-:t
-            WHERE t.@fromReciever == FALSE AND t.@fromSender == FALSE
+            WHERE t.@fromReciever == false AND t.@fromSender == false
             ACCUM 
               t.@fromReciever += s.@fromReciever,
               t.@fromSender += s.@fromSender,
@@ -475,7 +475,7 @@ CREATE OR REPLACE QUERY fraudConnectivity (VERTEX<User> inputUser, FLOAT trustSc
          FROM Start:s-(:e)-:t
          // sample clause for better visualization result
          SAMPLE 15 EDGE WHEN s.outdegree() >= 20
-         WHERE t.@visited == FALSE AND t != inputUser 
+         WHERE t.@visited == false AND t != inputUser 
          ACCUM	
            @@visResult += e
          POST-ACCUM
@@ -564,7 +564,7 @@ CREATE OR REPLACE QUERY TransferredAmount (vertex<User> sender, dateTime startDa
   // from the input user, go 4 steps with a while loop to find her connected users.
   WHILE (Start.size() > 0) limit 4 DO
     Start = select t from Start:s-((User_to_Device|User_to_Payment):e)-:t
-            where t.@visited == FALSE AND (t.type != "User" OR t != sender)
+            where t.@visited == false AND (t.type != "User" OR t != sender)
             ACCUM
               @@edgeSet += e
             POST-ACCUM

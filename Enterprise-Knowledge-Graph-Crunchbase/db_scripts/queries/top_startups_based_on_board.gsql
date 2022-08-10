@@ -101,7 +101,7 @@ CREATE QUERY top_startups_based_on_board(INT k_orgs=10, INT num_persons=2,
         FROM top_orgs: org
         POST-ACCUM org.@visited = TRUE;
 
-    // 3. Find people who work for a top k financial organization (2)
+  // 3. Find people who work for a top k financial organization (2)
   persons_at_top_orgs = SELECT p
       FROM top_orgs: o - (work_for_fOrg: e) - person: p;
  

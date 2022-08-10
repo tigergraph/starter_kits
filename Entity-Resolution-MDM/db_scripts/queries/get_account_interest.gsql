@@ -6,17 +6,17 @@ CREATE QUERY get_account_interest(vertex<Account> input_acc, int k) FOR GRAPH En
 	 **********************************************************/
 	
   	SetAccum<VERTEX<Account>> @@connected_accounts;
-	MapAccum<VERTEX, INT> @map;
+	MapAccum<VERTEX, int> @map;
 	OrAccum @visited;
-	SumAccum<UINT> @cnt;
+	SumAccum<uint> @cnt;
 	ListAccum<EDGE> @@list;
 	
 	start = {input_acc};
 	
 	WHILE start.size() > 0 DO
 	  start = SELECT t FROM start:s-(Same_Owner:e)-:t
-	          WHERE t.@visited == FALSE
-	          POST-ACCUM @@connected_accounts += t, t.@visited = TRUE;
+	          WHERE t.@visited == false
+	          POST-ACCUM @@connected_accounts += t, t.@visited = true;
 	END;
 	
 	start = @@connected_accounts;
@@ -33,10 +33,10 @@ CREATE QUERY get_account_interest(vertex<Account> input_acc, int k) FOR GRAPH En
 	         ACCUM t.@cnt += s.@cnt, t.@map += (s->s.@cnt)
 	         ORDER BY t.@cnt DESC LIMIT k;
 	
-	PRINT videos;
+	print videos;
 	
 	videos = SELECT s from videos:s-((Has_Genre|Has_Keyword):e)-:t
 	         ACCUM @@list += e;
 	
-	PRINT @@list;
+	print @@list;
 }

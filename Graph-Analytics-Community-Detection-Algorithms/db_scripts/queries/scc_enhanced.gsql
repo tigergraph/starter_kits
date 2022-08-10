@@ -79,11 +79,11 @@ CREATE QUERY scc_enhanced (INT iter = 500, INT iter_wcc = 5, INT top_k_dist = 10
                                        POST-ACCUM
                                                 CASE WHEN t.@wcc_id_prev != t.@wcc_id_curr THEN // If t's id has changed
                                                           t.@wcc_id_prev = t.@wcc_id_curr,
-                                                          t.@wcc_active = TRUE
+                                                          t.@wcc_active = true
                                                 ELSE 
-                                                          t.@wcc_active = FALSE
+                                                          t.@wcc_active = false
                                                 END
-                                        HAVING t.@wcc_active == TRUE;       
+                                        HAVING t.@wcc_active == true;       
                         END;
                         active = SELECT s
                                  FROM active:s

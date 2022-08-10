@@ -32,26 +32,25 @@ CREATE QUERY similar_contacts(VERTEX<Contact> source_customer,
         FROM A:s -(is_connected_to>:e)- CampaignMember:t;
     PRINT campaign_members_set.size();
 
-    /* From campaign_members_set, traverse 'is_part_of' edges to Campaigns, for all 
-       desired campaign_types (e.g. Webinar, Website Direct, Demo Signup/Trial) */
+    // From campaign_members_set, traverse 'is_part_of' edges to Campaigns, for all 
+    // desired campaign_types (e.g. Webinar, Website Direct, Demo Signup/Trial)
     campaign_set =
         SELECT t
         FROM campaign_members_set:s -(is_part_of>:e)- Campaign:t
         WHERE campaign_types.size() == 0 OR (t.Campaign_Type IN campaign_types);
     PRINT campaign_set.size();
 
-    /* From campaign_set, traverse reverse_is_part_of edges back to all
-       CampaignMembers */
+    // From campaign_set, traverse reverse_is_part_of edges back to all
+    // CampaignMembers
     rev_campaign_members_set =
         SELECT t
         FROM campaign_set:s -(reverse_is_part_of>:e)- CampaignMember:t;
     PRINT rev_campaign_members_set.size();
 
-    /* From CampaignMemberSet, traverse 'reverse_is_connected_to' edges back to
-       Contacts, (set B). For each Contact in set B, accumulate the intersection
-       size of the shared Campaigns, and ompute its Jaccard Similarity score as
-       intersection_size / (size_A + size_B - intersection_size) 
-    */
+    // From CampaignMemberSet, traverse 'reverse_is_connected_to' edges back to
+    // Contacts, (set B). For each Contact in set B, accumulate the intersection
+    // size of the shared Campaigns, and ompute its Jaccard Similarity score as
+    // intersection_size / (size_A + size_B - intersection_size)
     B = SELECT t
         FROM rev_campaign_members_set:s -(reverse_is_connected_to>:e)- Contact:t
         WHERE t != source_customer

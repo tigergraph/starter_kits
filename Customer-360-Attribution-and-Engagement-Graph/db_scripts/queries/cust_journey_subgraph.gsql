@@ -29,7 +29,7 @@ CREATE QUERY cust_journey_subgraph(VERTEX<Contact> customer)
     vertices = @@vertex_set;
   
     PRINT vertices;
-    // PRINT @@vertex_set;
+    //print@@vertex_set;
 
     PRINT @@display_set;
 }

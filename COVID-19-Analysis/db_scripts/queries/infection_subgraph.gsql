@@ -15,31 +15,31 @@ CREATE QUERY infection_subgraph(vertex<Patient> p) FOR GRAPH MyGraph SYNTAX V2 {
 	ENDTIME = p.released_date;
 	
 	infected (ANY) = {p};
-	infected = SELECT s FROM infected:s
-	           ACCUM s.@visited = TRUE;
+	infected = select s from infected:s
+	           accum s.@visited = true;
 	
-	WHILE infected.size() > 0 LIMIT 100 DO
-	  places = SELECT t FROM infected:s-(PATIENT_TRAVELED:e)-TravelEvent:t
-	           WHERE (t.visited_date >= STARTTIME AND 
-							      t.visited_date <= ENDTIME AND 
+	while infected.size() > 0 limit 100 do
+	  places = select t from infected:s-(PATIENT_TRAVELED:e)-TravelEvent:t
+	           where (t.visited_date >= STARTTIME and 
+							      t.visited_date <= ENDTIME and 
 							      t.outdegree("PATIENT_TRAVELED") > 1)
-	             AND t.@visited == FALSE
-	           ACCUM t.@visited = TRUE,
+	             and t.@visited == false
+	           accum t.@visited = true,
 	                 @@edge_set += e; 
 	
-	  same_place = SELECT t FROM places:s-(PATIENT_TRAVELED:e)-Patient:t
-	              WHERE t.@visited == FALSE 
-	              ACCUM t.@visited = TRUE,
+	  same_place = select t from places:s-(PATIENT_TRAVELED:e)-Patient:t
+	              where t.@visited == false 
+	              accum t.@visited = true,
 	                    @@edge_set += e; 
 	
-	  people = SELECT t FROM infected:s-(reverse_INFECTED_BY>:e)-:t
-	           WHERE (STARTTIME <= t.symptom_onset_date AND ENDTIME >= t.symptom_onset_date)
-	             AND t.@visited == FALSE
-	           ACCUM t.@visited = TRUE,
+	  people = select t from infected:s-(reverse_INFECTED_BY>:e)-:t
+	           where (STARTTIME <= t.symptom_onset_date and ENDTIME >= t.symptom_onset_date)
+	             and t.@visited == false
+	           accum t.@visited = true,
 	                 @@edge_set += e;
 	
 	  infected = same_place UNION people;
-	END;
+	end;
 	
-	PRINT @@edge_set;
+	print @@edge_set;
 }

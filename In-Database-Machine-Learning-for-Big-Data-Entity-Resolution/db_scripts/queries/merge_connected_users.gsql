@@ -9,7 +9,7 @@ CREATE QUERY merge_connected_users(FLOAT threshold=1.0, BOOL verbose=FALSE)  FOR
 	
   // MinAccum<VERTEX> selects the vertex with the minimum internal ID
 	MinAccum<VERTEX<User>> @min_user_id;
-  	INT iteration = 1;
+  INT iteration = 1;
 	bool converged = FALSE;
   
 	// Initialize each user with itself as the lead of the component

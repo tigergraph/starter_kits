@@ -1,24 +1,24 @@
 CREATE QUERY company_holders(vertex<Company> company, uint step) 
   FOR GRAPH EnterpriseGraph syntax v1 {
   /**
-    * company_holders query finds all key investors of a company within several steps.
-	  * --- Dataset has been shrunk on Nov.20th,2020 ---
-    * Some interesting input parameters you can try:
-    * 1. company: Hospice Mocha Frame, step: 5
-	  * 2. company: Psychoanalyst Purse Prior, step: 4
-	  * 3. company: Hospice Loyalty Decongestant, step: 2
-	  * 4. company: Discipline Base Perfume, step 1
-	  * 5. company: Discipline Base Perfume, step 2
-	  * 6. company: Discipline Base Perfume, step 3
-	  * 7. company: Discipline Base Perfume, step 4
-    */
+   * company_holders query finds all key investors of a company within several steps.
+	 * --- Dataset has been shrunk on Nov.20th,2020 ---
+   * Some interesting input parameters you can try:
+   * 1. company: Hospice Mocha Frame, step: 5
+	 * 2. company: Psychoanalyst Purse Prior, step: 4
+	 * 3. company: Hospice Loyalty Decongestant, step: 2
+	 * 4. company: Discipline Base Perfume, step 1
+	 * 5. company: Discipline Base Perfume, step 2
+	 * 6. company: Discipline Base Perfume, step 3
+	 * 7. company: Discipline Base Perfume, step 4
+   */
 
 	// @visited is used to mark visited vertices
-  OrAccum @visited = FALSE;
+  OrAccum @visited = false;
 	// @@edge_set is used to hold all touched edges
-  SetAccum<EDGE> @@edge_set;
+  SetAccum<edge> @@edge_set;
 
-  INT loop_step;
+  int loop_step;
 
   // limit the maximum traverse steps
   IF (step > 8) THEN
@@ -36,7 +36,7 @@ CREATE QUERY company_holders(vertex<Company> company, uint step)
 	// Mark input company as visited
   start =  SELECT s
               FROM start:s
-              ACCUM s.@visited = TRUE;
+              ACCUM s.@visited = true;
 
 	// Traverse multiple steps
   WHILE (true) LIMIT loop_step DO

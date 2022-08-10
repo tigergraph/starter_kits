@@ -1,4 +1,4 @@
-CREATE QUERY recommend_videos(vertex<Account> inputAcc, INT k=5)
+CREATE QUERY recommend_videos(vertex<Account> inputAcc, int k=5)
 FOR GRAPH Entity_Resolution SYNTAX v2 { 
 	/* Recommend videos to User:
   1. Find all the accounts related to the input account
@@ -13,9 +13,9 @@ FOR GRAPH Entity_Resolution SYNTAX v2 {
 	 **********************************************************/
 	
   SetAccum<VERTEX<Account>> @@connected_accts;
-	MapAccum<VERTEX, INT> @map;
+	MapAccum<VERTEX, int> @map;
 	OrAccum @visited;
-	SumAccum<UINT> @cnt;
+	SumAccum<uint> @cnt;
 	ListAccum<EDGE> @@edge_list;  // record all the edges we want to display
 	
 	Source_acct = {inputAcc};

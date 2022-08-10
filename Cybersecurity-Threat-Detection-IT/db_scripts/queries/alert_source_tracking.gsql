@@ -14,40 +14,40 @@ CREATE QUERY alert_source_tracking(int days=7, int k=3) FOR GRAPH MyGraph SYNTAX
 	
 	start = {@@alert_type_set};
 	
-	file_corrupted_alerts = SELECT alert FROM start-(Alert_Has_Type:e)-:alert
-	                        ACCUM alert.@path_list += e;
+	file_corrupted_alerts = select alert from start-(Alert_Has_Type:e)-:alert
+	                        accum alert.@path_list += e;
 	
-	service = SELECT serv FROM file_corrupted_alerts:alert-(Service_Alert:e)-:serv
-	          ACCUM serv.@alert_date += alert.Alert_Date, serv.@path_list += alert.@path_list, serv.@path_list += e;
+	service = select serv from file_corrupted_alerts:alert-(Service_Alert:e)-:serv
+	          accum serv.@alert_date += alert.Alert_Date, serv.@path_list += alert.@path_list, serv.@path_list += e;
 	
-	read_events = SELECT event FROM service:s-(From_Service:e)-:event
+	read_events = select event from service:s-(From_Service:e)-:event
 	              // the read date is within one day before the alert
-	              WHERE datetime_diff(s.@alert_date,event.Start_Date) BETWEEN 0 AND 3600*24*days
-	              AND event.Event_Type == "read"
-	              ACCUM event.@path_list += s.@path_list, event.@path_list += e;
+	              where datetime_diff(s.@alert_date,event.Start_Date) between 0 and 3600*24*days
+	              and event.Event_Type == "read"
+	              accum event.@path_list += s.@path_list, event.@path_list += e;
 	
-	resource = SELECT res FROM read_events:s-(Read_From_Resource:e)-:res
+	resource = select res from read_events:s-(Read_From_Resource:e)-:res
 	            // keep the most recent read date of the resource
-	            ACCUM res.@read_date += s.Start_Date, res.@path_list += s.@path_list, res.@path_list += e; 
+	            accum res.@read_date += s.Start_Date, res.@path_list += s.@path_list, res.@path_list += e; 
 	
-	write_events = SELECT event FROM resource:s-(Output_To_Resource:e)-:event
+	write_events = select event from resource:s-(Output_To_Resource:e)-:event
 	               // the write date is within one day before the read
-	               WHERE datetime_diff(s.@read_date,event.Start_Date) BETWEEN 0 AND 3600*24*days
-	                 AND event.Event_Type == "write"
-	               ACCUM event.@path_list += s.@path_list, event.@path_list += e;
+	               where datetime_diff(s.@read_date,event.Start_Date) between 0 and 3600*24*days
+	                 and event.Event_Type == "write"
+	               accum event.@path_list += s.@path_list, event.@path_list += e;
 	
 	// get the users who behaved the file writing operation
-	users = SELECT user FROM write_events:s-(User_Event:e)-:user
-	          ACCUM user.@count += 1, user.@path_list += s.@path_list, user.@path_list += e;
+	users = select user from write_events:s-(User_Event:e)-:user
+	          accum user.@count += 1, user.@path_list += s.@path_list, user.@path_list += e;
 	
-	login_events = SELECT event FROM users:s-(User_Event:e)-:event
+	login_events = select event from users:s-(User_Event:e)-:event
 	               where event.Event_Type == "login"
-	               ACCUM event.@count += s.@count, event.@path_list += s.@path_list, event.@path_list += e;
+	               accum event.@count += s.@count, event.@path_list += s.@path_list, event.@path_list += e;
 	
-	login_IP = SELECT ip FROM login_events:s-(Has_IP:e)-:ip
-	           ACCUM ip.@count += s.@count, ip.@path_list += s.@path_list, ip.@path_list += e
-	           ORDER BY ip.@count DESC
-	           LIMIT k;
+	login_IP = select ip from login_events:s-(Has_IP:e)-:ip
+	           accum ip.@count += s.@count, ip.@path_list += s.@path_list, ip.@path_list += e
+	           order by ip.@count desc
+	           limit k;
 	
-	PRINT login_IP [login_IP.@count, login_IP.@path_list];
+	print login_IP [login_IP.@count, login_IP.@path_list];
 }

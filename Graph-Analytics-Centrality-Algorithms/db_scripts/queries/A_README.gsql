@@ -1,5 +1,5 @@
 CREATE QUERY A_README() FOR GRAPH MyGraph SYNTAX V2 { 
-  	/************************************************************
+  /************************************************************
 	 * IMPORTANT : PLEASE INSTALL AND RUN THE add_weights QUERY
 	 *             BEFORE RUNNING OTHER QUERIES.
 	 ***********************************************************/

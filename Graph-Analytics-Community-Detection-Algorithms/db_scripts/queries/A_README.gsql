@@ -5,5 +5,5 @@ CREATE QUERY A_README() FOR GRAPH MyGraph {
 	THE REFERRAL EDGE IS USED IN OTHER QUERIES.
 */
 	
-	PRINT "I read this!";
+	print "I read this!";
 }

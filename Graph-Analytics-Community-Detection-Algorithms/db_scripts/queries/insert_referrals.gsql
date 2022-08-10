@@ -8,19 +8,19 @@ CREATE QUERY insert_referrals(VERTEX<Prescriber> input_prescriber)
 	start_set = {input_prescriber};
 	
 	claims = SELECT t FROM start_set:s-(reverse_submitted_by>:e)-:t
-	         POST-ACCUM t.@visited = TRUE;
+	         POST-ACCUM t.@visited = true;
 	
 	patients = SELECT t FROM claims:s-(associated>:e)-:t
 	           ACCUM t.@date_list += s.rx_fill_date;
 	
 	claims = SELECT t FROM patients:s-(reverse_associated>:e)-:t
-	         WHERE t.@visited == FALSE
+	         WHERE t.@visited == false
 	         ACCUM FOREACH dt in s.@date_list do
 	                 CASE WHEN datetime_diff(dt, t.rx_fill_date) BETWEEN 0 AND 2592000 THEN
-	                   t.@is_referred_claim = TRUE
+	                   t.@is_referred_claim = true
 	                 END
 	               END
-	         HAVING t.@is_referred_claim == TRUE;
+	         HAVING t.@is_referred_claim == true;
 	
 	prescribers = SELECT t FROM claims-(submitted_by>:e)-:t
 	              POST-ACCUM INSERT INTO referral VALUES(input_prescriber, t, 1),

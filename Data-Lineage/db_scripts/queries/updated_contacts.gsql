@@ -4,8 +4,8 @@ CREATE QUERY updated_contacts() FOR GRAPH MyGraph {
 	 */
   	start = {Contact.*};
 	
-	updated = SELECT s FROM start:s
-	          WHERE s.Updated == TRUE;
+	updated = SELECT s from start:s
+	          where s.Updated == true;
 	
-	PRINT updated;
+	print updated;
 }
