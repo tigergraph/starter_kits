@@ -14,7 +14,7 @@ CREATE QUERY k_hop_flagged(Vertex input, int k) FOR GRAPH MyGraph {
 	
   SetAccum<VERTEX> @@warnings;	
 	
-	Start (ANY) = {INPUT};
+	Start (ANY) = {input};
 	
 	FOREACH i IN RANGE [1,k] DO 
 	  Start = SELECT t FROM Start:s-((authenticated_by_num | reverse_authenticated_by_num | sets_up | reverse_sets_up | authenticated_by_email | reverse_authenticated_by_email | used_with | reverse_used_with | associated_with | reverse_associated_with | sends | reverse_sends | receives | reverse_receives | user_account_bank | reverse_user_account_bank | merchant_account_device | reverse_merchant_account_device | receives_pmnt | reverse_receives_pmnt | sends_pmnt | reverse_sends_pmnt | merchant_account_bank | reverse_merchant_account_bank):e)-:t
